@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.10 — 17/11/2026
+- Download de clipes mais resistente: quando o Pixabay/Pexels pede para esperar (erro 429) o app
+  espera e tenta de novo; se um clipe não baixar, ele é pulado e outro entra no lugar (o vídeo não para).
+
 ## 1.9 — 17/11/2026
 - **Títulos do canal guardados**: com o link do canal em ⚙ Canal, o painel busca 1x por dia os vídeos
   publicados (feed oficial e página pública do canal) e guarda os títulos em `dados/videos-do-canal.json`.

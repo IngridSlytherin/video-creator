@@ -288,12 +288,37 @@ def melhor_arquivo(video):
     return arquivos[0] if arquivos else None
 
 
-def baixar(url, destino: Path):
-    with requests.get(url, stream=True, timeout=180) as r:
-        r.raise_for_status()
-        with open(destino, "wb") as f:
-            for bloco in r.iter_content(1 << 16):
-                f.write(bloco)
+def baixar(url, destino: Path, tentativas=4):
+    """Baixa o arquivo. Se o site pedir para esperar (429) ou falhar por um instante (5xx, rede),
+    espera e tenta de novo; se não der, apaga o pedaço baixado e levanta o erro."""
+    for n in range(tentativas):
+        try:
+            with requests.get(url, stream=True, timeout=180) as r:
+                if r.status_code == 429 or r.status_code >= 500:
+                    espera = int(r.headers.get("Retry-After") or 0) or 3 * 2**n
+                    raise requests.HTTPError(f"{r.status_code}", response=r) if n == tentativas - 1 \
+                        else _Esperar(min(60, espera))
+                r.raise_for_status()
+                with open(destino, "wb") as f:
+                    for bloco in r.iter_content(1 << 16):
+                        f.write(bloco)
+            return
+        except _Esperar as e:
+            time.sleep(e.segundos)
+        except (requests.ConnectionError, requests.Timeout):
+            if n == tentativas - 1:
+                destino.unlink(missing_ok=True)
+                raise
+            time.sleep(3 * 2**n)
+        except requests.HTTPError:
+            destino.unlink(missing_ok=True)
+            raise
+
+
+class _Esperar(Exception):
+    def __init__(self, segundos):
+        super().__init__(segundos)
+        self.segundos = segundos
 
 
 # Guarda as buscas já feitas: o vídeo longo e os Shorts dele repetem consultas,
@@ -342,14 +367,24 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
         novos = 0
         for k in range(qtd):
             inicio = seg["inicio"] + k * dur_clipe
-            if pool and novos < limite:
-                video = pool.pop(0)
-                usados.add(video["id"])
+            video = None
+            while pool and novos < limite and video is None:
+                candidato = pool.pop(0)
+                usados.add(candidato["id"])
                 # nome = número do vídeo no Pexels: ao trocar clipes ruins, os bons não são baixados de novo
-                destino = pasta / f"clipe_{video['id']}.mp4"
+                destino = pasta / f"clipe_{candidato['id']}.mp4"
                 if not destino.exists():
-                    baixar(melhor_arquivo(video)["link"], destino)
+                    try:
+                        baixar(melhor_arquivo(candidato)["link"], destino)
+                    except requests.RequestException as e:
+                        # um clipe que não baixa não pode parar o vídeo: pula e tenta o próximo
+                        log(f"  clipe pulado (não baixou: {e.__class__.__name__}); tentando outro")
+                        continue
                     n_arquivos += 1
+                    if candidato.get("_fonte") == "pixabay":
+                        time.sleep(0.5)  # o Pixabay recusa downloads muito seguidos
+                video = candidato
+            if video is not None:
                 novos += 1
                 meus.append({"arquivo": f"projetos/{slug}/{destino.name}",
                              "duracaoTotal": float(video.get("duration", 0)),

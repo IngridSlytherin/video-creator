@@ -108,9 +108,16 @@ def baixar_clipes(partes, evitar_geral, pasta):
             if arq:
                 lista.append({"arquivo": pasta / f"p{i}_{v['id']}.mp4", "link": arq["link"],
                               "duracao": float(v["duration"]), "autor": v["user"]["name"], "url": v["url"]})
-        # 4 downloads ao mesmo tempo
+        # 4 downloads ao mesmo tempo; um clipe que não baixa é deixado de fora (não para o vídeo)
+        def tentar(c):
+            try:
+                gv.baixar(c["link"], c["arquivo"])
+                return c
+            except Exception as e:  # noqa: BLE001
+                log(f"  clipe pulado (não baixou: {e.__class__.__name__})")
+                return None
         with ThreadPoolExecutor(4) as ex:
-            list(ex.map(lambda c: gv.baixar(c["link"], c["arquivo"]), lista))
+            lista = [c for c in ex.map(tentar, lista) if c]
         if not lista:
             sys.exit(f"Nenhuma imagem encontrada para '{p['titulo']}'. Mude as buscas no roteiro.")
         log(f"  {len(lista)} clipes")
