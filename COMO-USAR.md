@@ -103,6 +103,20 @@ Copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote os n�
 YouTube Studio (retenção, horários do público, o que deu certo). O Claude lê esse arquivo antes
 de sugerir ideias e escrever roteiros.
 
+## Atualizar o app
+- O painel confere no GitHub, ao abrir e a cada 6 horas, se saiu versão nova. Se saiu, aparece a faixa
+  **"Nova versão do app disponível"** com as novidades.
+- **Atualizar agora**: baixa a versão nova (`git pull`), instala só o que mudou (`npm install` /
+  `pip install`) e reinicia o painel sozinho. **Depois** esconde o aviso até a próxima versão.
+- Seus dados (canal, `.env`, roteiros, vídeos) não fazem parte do GitHub e não são tocados.
+- Se você mudou arquivos do app, o botão fica bloqueado para não apagar suas mudanças: peça ao
+  Claude Code para atualizar com `git pull` mantendo as mudanças.
+- O que mudou em cada versão: [CHANGELOG.md](CHANGELOG.md).
+
+**Para quem publica versões novas** (dona do repositório): faça as mudanças, anote no `CHANGELOG.md`
+e envie (`git push`). O título de cada commit aparece no aviso do painel de quem usa o app, então
+escreva títulos claros, em português, do ponto de vista de quem usa ("Vídeos em inglês e espanhol").
+
 ## Ver/ajustar no Remotion Studio
 ```bash
 npx remotion studio

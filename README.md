@@ -151,6 +151,14 @@ copy one and change the parts and minutes.
 Full guide (in Portuguese), covering hand-written scripts, long videos, hashtags and settings:
 **[COMO-USAR.md](COMO-USAR.md)**.
 
+## Updates
+
+When a new version is out, the panel shows a **"Nova versão do app disponível"** banner with what
+changed. Click **Atualizar agora**: it downloads the new version, installs only what changed and
+restarts the panel by itself. Your channel settings, Pexels key, scripts and videos are kept.
+What changed in each version: **[CHANGELOG.md](CHANGELOG.md)**. You can also update from the
+project folder with `git pull`.
+
 ## Tips
 
 - **Retention**: copy `dados/aprendizados.exemplo.md` to `dados/aprendizados.md` and write down what

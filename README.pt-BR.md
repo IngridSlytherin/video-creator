@@ -137,6 +137,14 @@ em `relax/`; copie e mude as partes e os minutos.
 
 Guia completo, com roteiro à mão, vídeo longo, hashtags e configurações: **[COMO-USAR.md](COMO-USAR.md)**.
 
+## Atualizações
+
+Quando sai uma versão nova, o painel mostra a faixa **"Nova versão do app disponível"** com o que
+mudou. Clique em **Atualizar agora**: ele baixa a versão nova, instala só o que mudou e reinicia o
+painel sozinho. Seu canal, sua chave do Pexels, seus roteiros e vídeos continuam como estão.
+O que mudou em cada versão: **[CHANGELOG.md](CHANGELOG.md)**. Também dá para atualizar pela pasta do
+projeto com `git pull`.
+
 ## Dicas
 
 - **Retenção**: copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote o que
