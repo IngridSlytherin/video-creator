@@ -1,49 +1,67 @@
 # video-creator
 
-Gerador **gratuito** de vídeos para YouTube, feito para rodar no seu computador com o
-[Claude Code](https://claude.com/claude-code). Você informa o **nome do seu canal** e a **categoria**
-(animais, história, ciência, culinária...). O sistema acha temas em alta, escreve o roteiro, grava a
-narração com voz neural, busca clipes no Pexels, monta o vídeo com legendas e entrega tudo pronto
-para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário de postar.
+🇺🇸 **English** · 🇧🇷 [Português](README.pt-BR.md)
 
-- **Shorts** verticais (30 s a 2 min) e **vídeos longos** horizontais, que viram vários Shorts automaticamente
-- **Radar de temas em alta**: Wikipedia, Google Notícias, Google Trends e YouTube
-- **Ideias e roteiros pelo painel**: o Claude sugere ângulos, confere os fatos e escreve o roteiro
-- **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
-- **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 10 minutos a horas, com som sintetizado
-- Tudo numa interface no navegador; você só publica no YouTube
+A **free** YouTube video generator that runs on your own computer with
+[Claude Code](https://claude.com/claude-code). Tell it your **channel name**, your **niche** (animals,
+history, science, cooking...) and the **video language** (English, Spanish or Brazilian Portuguese).
+It finds trending topics, writes the script, records a neural voice-over, pulls footage from Pexels,
+edits the video with captions, and hands you everything ready to publish: video, title, description,
+tags, thumbnail and the best time to post.
 
-![Painel: vídeos prontos](docs/prints/videos.png)
+- **Shorts** (vertical, 30 s to 2 min) and **long videos** (horizontal) that are automatically cut into Shorts
+- **Trending topic radar**: Wikipedia, Google News, Google Trends and YouTube
+- **Ideas and scripts from the panel**: Claude suggests angles, fact-checks and writes the script
+- **Dub your own videos**: paste a script and your video gets voice-over and captions
+- **Relaxing sound videos** (rain, wind, birds) from 10 minutes to hours, with synthesized audio
+- Videos in **English, Spanish or Portuguese**: voice, captions, script, description and the radar's country all follow the language
+- Everything in a browser panel; you just upload to YouTube
 
-## Prints
+> The panel's interface is in Portuguese. The videos it makes can be in English or Spanish.
 
-| Novo vídeo: ideias do Claude | Radar de temas em alta |
+![Panel: finished videos](docs/prints/videos.png)
+
+## Screenshots
+
+| New video: ideas from Claude | Trending topic radar |
 |---|---|
-| ![Novo vídeo](docs/prints/novo.png) | ![Radar](docs/prints/radar.png) |
+| ![New video](docs/prints/novo.png) | ![Radar](docs/prints/radar.png) |
 
-| Roteiros: gerar com um clique | Dublar o seu vídeo |
+| Scripts: render with one click | Dub your own video |
 |---|---|
-| ![Roteiros](docs/prints/roteiros.png) | ![Dublar](docs/prints/dublar.png) |
+| ![Scripts](docs/prints/roteiros.png) | ![Dub](docs/prints/dublar.png) |
 
-| Primeira vez: configure o seu canal |
+| First run: set up your channel |
 |---|
-| ![Configurar canal](docs/prints/configurar.png) |
+| ![Channel setup](docs/prints/configurar.png) |
 
-## Instalação (Windows)
+## Installation (Windows)
 
-### 1. Programas necessários (todos gratuitos)
+### Fastest way: let Claude Code install it
 
-| Programa | Para quê | Como instalar |
+If you have Claude Code, open it in the folder where you want the project and paste:
+
+```text
+Install https://github.com/IngridSlytherin/video-creator for me following the "Installation (Windows)" section of its README: install whatever is missing among Node.js 18+, Python 3.11+, ffmpeg and Git with winget; clone the repo; run npm install and python -m pip install -r requirements.txt (check that python -I -c "import edge_tts, requests, numpy, scipy" works, otherwise use python -s -m pip install -r requirements.txt); install the Remotion skills with npx skills add remotion-dev/skills; create .env from .env.exemplo and explain how to get a free Pexels API key (don't ask me for the key in the chat, I'll paste it into .env myself); then tell me how to open the panel and run a final test.
+```
+
+Approve each command it asks to run. That's it.
+
+### Manual installation
+
+#### 1. Required software (all free)
+
+| Software | What for | How to install |
 |---|---|---|
-| [Node.js](https://nodejs.org) 18 ou mais novo | Remotion (montagem do vídeo) | `winget install OpenJS.NodeJS.LTS` |
-| [Python](https://www.python.org) 3.11 ou mais novo | Narração, radar, painel | `winget install Python.Python.3.13` |
-| [ffmpeg](https://ffmpeg.org) | Áudio e vídeo | `winget install Gyan.FFmpeg` |
-| [Git](https://git-scm.com) | Baixar o projeto | `winget install Git.Git` |
-| [Claude Code](https://claude.com/claude-code) | Ideias, roteiros e o comando `/radar` | Opcional, mas recomendado |
+| [Node.js](https://nodejs.org) 18+ | Remotion (video editing) | `winget install OpenJS.NodeJS.LTS` |
+| [Python](https://www.python.org) 3.11+ | Voice-over, radar, panel | `winget install Python.Python.3.13` |
+| [ffmpeg](https://ffmpeg.org) | Audio and video | `winget install Gyan.FFmpeg` |
+| [Git](https://git-scm.com) | Download the project | `winget install Git.Git` |
+| [Claude Code](https://claude.com/claude-code) | Ideas, scripts and the `/radar` command | Optional, but recommended (requires a Claude plan) |
 
-Depois de instalar, feche e abra o terminal de novo para os comandos funcionarem.
+Close and reopen the terminal after installing so the new commands are found.
 
-### 2. Baixar o projeto e instalar as dependências
+#### 2. Download the project and install dependencies
 
 ```bash
 git clone https://github.com/IngridSlytherin/video-creator.git
@@ -61,100 +79,99 @@ npm install
 python -m pip install -r requirements.txt
 ```
 
-### 3. Chave gratuita do Pexels (imagens)
+#### 3. Free Pexels API key (footage)
 
-1. Crie uma conta em [pexels.com/api](https://www.pexels.com/api/) e copie a sua chave.
-2. Copie o arquivo `.env.exemplo` com o nome `.env` e cole a chave em `PEXELS_API_KEY=`.
+1. Create an account at [pexels.com/api](https://www.pexels.com/api/) and copy your key.
+2. Copy `.env.exemplo` to `.env` and paste the key after `PEXELS_API_KEY=`.
 
 ```bash
 copy .env.exemplo .env
 ```
 
-### 4. Música de fundo (opcional)
+#### 4. Background music (optional)
 
-Coloque arquivos `.mp3` de música **instrumental** em `public/musica/`. Uma boa fonte é o
-YouTube Studio > Biblioteca de áudio, que tem músicas que você pode usar nos seus vídeos.
-Sem música, o vídeo sai só com a narração.
+Put **instrumental** `.mp3` files in `public/musica/`. YouTube Studio > Audio Library is a good
+source of music you're allowed to use. Without music, videos only have the voice-over.
 
-### 5. Skills do Remotion para o Claude Code (opcional)
+#### 5. Remotion skills for Claude Code (optional)
 
-Ensinam o Claude a mexer no visual dos vídeos (efeitos, legendas, mapas):
+They teach Claude how to change the look of the videos (effects, captions, maps):
 
 ```bash
 npx skills add remotion-dev/skills
 ```
 
-## Como usar
+## How to use
 
-### Abrir o painel
+### Open the panel
 
-Dê dois cliques em **`Abrir painel.bat`**. O painel abre no navegador em `http://localhost:8765`.
-A janela preta precisa ficar aberta enquanto você usa; fechar a janela desliga o painel.
+Double-click **`Abrir painel.bat`**. The panel opens in your browser at `http://localhost:8765`.
+Keep the black window open while you use it; closing it shuts the panel down.
 
-**Na primeira vez**, o painel pede o **nome do seu canal** e a **categoria**. É isso que faz o radar,
-as ideias e os roteiros seguirem o assunto do *seu* canal, e o nome aparecer nos vídeos. Para
-categorias que não são "Animais e natureza", o Claude Code monta a lista de temas do radar (2 a 4 minutos).
-Para mudar depois, clique em **⚙ Canal**.
+**On the first run**, the panel asks for your **channel name**, **niche** and **video language**.
+That's what makes the radar, ideas and scripts follow *your* channel's topic, the voice-over speak
+the right language and your channel name appear in the videos. If your niche isn't "Animais e
+natureza" (or your language isn't Portuguese), Claude Code builds the radar's topic list for you
+(2–4 minutes). Click **⚙ Canal** to change it later.
 
-### O caminho de um vídeo
+### From idea to published video
 
-1. **Radar**: clique em *Rodar radar agora* para ver os temas em alta. Em um tema que agradar,
-   clique em **Quero esse tema**.
-2. **Novo vídeo**: o Claude sugere 3 ângulos (título, gancho e por que deve funcionar).
-   Clique em **Escrever este roteiro**. Ele confere os fatos na internet e salva o roteiro.
-3. Leia a narração na prévia e clique em **Gerar vídeo agora**. Um Short leva uns 3 minutos;
-   um vídeo longo com Shorts, uns 15.
-4. **Vídeos prontos**: assista, copie título, descrição e tags com um clique, baixe a thumbnail
-   e veja o melhor horário para postar. Publique no YouTube Studio e marque **Já publiquei**.
+1. **Radar**: click *Rodar radar agora* to see trending topics. On one you like, click **Quero esse tema**.
+2. **Novo vídeo** (New video): Claude suggests 3 angles (title, hook and why it should work).
+   Click **Escrever este roteiro**: it fact-checks online and saves the script.
+3. Read the narration preview and click **Gerar vídeo agora**. A Short takes about 3 minutes;
+   a long video plus its Shorts, about 15.
+4. **Vídeos prontos** (Finished videos): watch it, copy title, description and tags with one click,
+   download the thumbnail and check the best time to post. Upload in YouTube Studio and tick **Já publiquei**.
 
-Também dá para escrever o tema direto na aba **Novo vídeo**, sem passar pelo radar.
+You can also type a topic straight into **Novo vídeo** without using the radar.
 
-### Dublar o seu próprio vídeo
+### Dub your own video
 
-Na aba **Dublar meu vídeo**: envie o vídeo, cole o texto (cada linha é um trecho da fala) e clique em
-**Dublar vídeo**. Vertical vira Short; horizontal vira vídeo longo. Você escolhe se mantém o som
-original (baixinho ou normal) e se quer legenda e música.
+In **Dublar meu vídeo**: upload your video, paste the script (each line is one sentence of the
+voice-over) and click **Dublar vídeo**. Vertical videos become Shorts; horizontal ones become long
+videos. You choose whether to keep the original audio (low or normal) and whether to add captions and music.
 
-### Pelo Claude Code
+### From Claude Code
 
-Abra a pasta do projeto no Claude Code e digite **`/radar`**: ele mostra os temas em alta do seu canal,
-você escolhe um e ele escreve o roteiro e gera o vídeo. Para mudar o visual dos vídeos, é só pedir
-("legenda com fundo escuro", "mapa mostrando onde o animal vive"...).
+Open the project folder in Claude Code and type **`/radar`**: it shows trending topics for your
+channel; pick one and it writes the script and renders the video. To change how videos look, just
+ask ("captions with a dark background", "a map showing where the animal lives"...).
 
-### Vídeos de sons relaxantes
+### Relaxing sound videos
 
 ```bash
 python -I pipeline/relaxante.py relax/chuva-vento-passaros-12min.json
 ```
 
-Gera 12 minutos de chuva fraca → chuva → vento e pássaros, com imagens de natureza e thumbnail.
-O som é sintetizado por computador, sem direitos autorais de terceiros. Cada vídeo é um arquivo
-em `relax/`; copie e mude as partes e os minutos.
+Renders 12 minutes of light rain → rain → wind and birds, with nature footage and a thumbnail.
+The audio is synthesized, so there are no third-party copyrights. Each video is a file in `relax/`;
+copy one and change the parts and minutes.
 
-Guia completo, com roteiro à mão, vídeo longo, hashtags e configurações: **[COMO-USAR.md](COMO-USAR.md)**.
+Full guide (in Portuguese), covering hand-written scripts, long videos, hashtags and settings:
+**[COMO-USAR.md](COMO-USAR.md)**.
 
-## Dicas
+## Tips
 
-- **Retenção**: copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote o que
-  funciona no seu canal (YouTube Studio > Estatísticas). O Claude lê esse arquivo antes de sugerir
-  ideias e escrever roteiros.
-- **Ao publicar**: a narração é voz sintética, então marque "Conteúdo alterado ou sintético" como
-  *Sim* no YouTube Studio.
-- **Temas**: as imagens vêm do Pexels, então funcionam melhor temas que existem em banco de imagens
-  (natureza, ciência, lugares, comida, objetos). Jogos, filmes e pessoas famosas não funcionam.
+- **Retention**: copy `dados/aprendizados.exemplo.md` to `dados/aprendizados.md` and write down what
+  works on your channel (YouTube Studio > Analytics). Claude reads it before suggesting ideas and writing scripts.
+- **Best time to post**: put your audience's peak hours in `"horarios"` in `dados/canal.json`.
+- **When publishing**: the voice-over is synthetic, so set "Altered or synthetic content" to *Yes* in YouTube Studio.
+- **Topics**: footage comes from Pexels, so topics that exist in stock footage work best (nature,
+  science, places, food, objects). Games, movies and celebrities don't.
 
-## Problemas comuns
+## Troubleshooting
 
-| Problema | Solução |
+| Problem | Fix |
 |---|---|
-| `ModuleNotFoundError` ao gerar | Rode `python -s -m pip install -r requirements.txt` (instala onde o `python -I` enxerga) |
-| `ffmpeg` não encontrado | Instale o ffmpeg e abra o terminal de novo |
-| Painel diz "não achei o Claude Code" | Instale o Claude Code; ou use o `/radar` direto no Claude Code |
-| Mudou algo e o painel não mostra | Feche a janela preta e abra o `Abrir painel.bat` de novo |
+| `ModuleNotFoundError` when rendering | Run `python -s -m pip install -r requirements.txt` (installs where `python -I` looks) |
+| `ffmpeg` not found | Install ffmpeg and reopen the terminal |
+| Panel says it can't find Claude Code ("não achei o Claude Code") | Install Claude Code, or use `/radar` inside Claude Code |
+| Changed something and the panel doesn't show it | Close the black window and open `Abrir painel.bat` again |
 
-## Créditos e licenças
+## Credits and licenses
 
-- Montagem de vídeo com [Remotion](https://www.remotion.dev): gratuito para pessoas físicas e empresas
-  de até 3 pessoas. Empresas maiores precisam de [licença](https://www.remotion.dev/license).
-- Imagens do [Pexels](https://www.pexels.com) (uso gratuito).
-- Narração com [edge-tts](https://github.com/rany2/edge-tts) (vozes neurais da Microsoft).
+- Video editing with [Remotion](https://www.remotion.dev): free for individuals and companies of up
+  to 3 people. Larger companies need a [license](https://www.remotion.dev/license).
+- Footage from [Pexels](https://www.pexels.com) (free to use).
+- Voice-over with [edge-tts](https://github.com/rany2/edge-tts) (Microsoft neural voices).

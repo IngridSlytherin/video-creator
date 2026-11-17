@@ -192,13 +192,13 @@ def escrever_publicacao(roteiro, partes, total, creditos, pasta):
 ================ DESCRIÇÃO (copie tudo até a próxima linha) ================
 {pub['descricao'].strip()}
 
-⏱️ Capítulos:
+{gv.canal_cfg.texto(canal, "capitulos")}
 {chr(10).join(capitulos)}
 
-💬 Qual som você mais gosta para dormir? Conta aqui nos comentários!
+{gv.canal_cfg.texto(canal, "relaxPergunta")}
 {canal['chamada']}
 
-Sons de natureza gerados por computador. Imagens: Pexels (uso gratuito).
+{gv.canal_cfg.texto(canal, "relaxAviso")}
 
 {com}
 =============================================================================
@@ -215,7 +215,7 @@ AO PUBLICAR NO YOUTUBE STUDIO
 - Thumbnail: envie o arquivo thumbnail.png desta pasta.
 - Dica: crie a playlist "Sons para dormir" e coloque este vídeo nela.
 
-SUGESTÃO DE DIA E HORÁRIO (horário de Brasília)
+SUGESTÃO DE DIA E HORÁRIO (no fuso do seu público)
 Vídeos para dormir são procurados à noite: publique entre 19h e 20h,
 de preferência de domingo a quinta (noites antes de dia de trabalho/escola).
 

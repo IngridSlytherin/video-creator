@@ -258,9 +258,14 @@ def descricao_canal():
     c = canal_cfg.carregar(obrigatorio=False) or {}
     sobre = f" ({c['descricao']})" if c.get("descricao") else ""
     return (f'Você trabalha para o canal de YouTube "{c.get("nome", "")}", categoria '
-            f'"{c.get("categoria", "")}"{sobre}. Vídeos em português do Brasil, narrados por voz '
+            f'"{c.get("categoria", "")}"{sobre}. Vídeos em {lingua_canal()}, narrados por voz '
             "sintética sobre clipes do Pexels. A pasta atual é o projeto que gera os vídeos. "
             "Todo tema precisa ser da categoria do canal.")
+
+
+def lingua_canal():
+    """Língua dos vídeos, por extenso (ex.: 'inglês (Estados Unidos)')."""
+    return canal_cfg.idioma(canal_cfg.carregar(obrigatorio=False))["lingua"]
 
 
 APRENDIZADOS = ("Se existir, leia dados/aprendizados.md (o que funciona no canal). "
@@ -278,6 +283,7 @@ Sugira 3 ângulos diferentes para esse vídeo. Regras:
 - Títulos variados (nem tudo "Por que..."), com 1 ou 2 palavras em MAIÚSCULA, até 70 caracteres.
 - O gancho é a primeira frase da narração: abre a curiosidade sem entregar a resposta.
 - Só fatos verdadeiros e conhecidos (serão conferidos depois).
+- Escreva titulo, gancho e resumo em {lingua} (a língua dos vídeos); "porque" pode ser em português.
 - Short: duracao "curto" (30-45 s, um fato), "padrao" (50-65 s) ou "longo" (75-120 s).
   Vídeo longo (horizontal, lista/contagem com capítulos que viram Shorts): duracao "video".
 
@@ -299,7 +305,8 @@ Passos:
    em inglês: são usados para achar clipes no Pexels, e a palavra precisa aparecer nos endereços dos
    vídeos. Em "exigir", use só palavras que não pertencem a outro assunto (ex.: camarão-louva-a-deus =
    ["shrimp"], nunca "mantis", que traria o inseto). Escolha assuntos que existam em vídeo de banco de
-   imagens (nada de jogos, filmes, marcas ou pessoas famosas). Todo o resto em português do Brasil.
+   imagens (nada de jogos, filmes, marcas ou pessoas famosas). Todo o resto (narração, tituloTela,
+   título, descrição, hashtags, títulos dos capítulos) em {lingua}.
    Números e medidas: use o valor exato da fonte; na dúvida, deixe o número de fora.
 4. Siga as regras de dados/aprendizados.md, se existir: não entregue a resposta nos primeiros 10 s,
    guarde o fato mais forte para o fim, frases curtas e faladas.
@@ -315,16 +322,17 @@ PROMPT_TEMAS = """{canal}
 
 Crie a lista de temas que o radar de tendências vai acompanhar para este canal.
 Salve em {arquivo} uma lista JSON com 80 a 120 itens, neste formato (veja dados/temas/animais.json):
-{{"pt": "nome em português, minúsculo", "en": "nome em inglês", "wiki_pt": "título exato do artigo na
-Wikipedia em português", "wiki_en": "título exato na Wikipedia em inglês", "grupo": "subgrupo curto",
-"busca": ["termos em português para achar o tema em manchetes, com plural; nada de palavras com outro
-sentido comum (ex.: 'leão' também é a Receita Federal)"]}}
+{{"pt": "nome em {lingua}, minúsculo (o campo se chama pt mesmo se a língua for outra)",
+"en": "nome em inglês", "wiki_{wiki}": "título exato do artigo na Wikipedia em {lingua}",
+"wiki_en": "título exato na Wikipedia em inglês", "grupo": "subgrupo curto",
+"busca": ["termos em {lingua} para achar o tema em manchetes, com plural; nada de palavras com outro
+sentido comum (ex.: em português, 'leão' também é a Receita Federal)"]}}
 Temas concretos e populares, que têm artigo na Wikipedia e aparecem em notícias, variados dentro da categoria.
 Não rode nenhum comando.
 
 No final responda SOMENTE com JSON:
-{{"buscasNoticias": ["5 ou 6 buscas curtas em português para o Google Notícias trazer novidades da categoria"],
- "buscasYoutube": ["5 buscas em português que achem vídeos da categoria no YouTube"]}}
+{{"buscasNoticias": ["5 ou 6 buscas curtas em {lingua} para o Google Notícias trazer novidades da categoria"],
+ "buscasYoutube": ["5 buscas em {lingua} que achem vídeos da categoria no YouTube"]}}
 """
 
 
@@ -535,6 +543,7 @@ class Painel(BaseHTTPRequestHandler):
                 "videos": listar_videos(), "roteiros": listar_roteiros(),
                 "radar": listar_radar(), "tarefa": TAREFA.estado(), "claude": bool(achar_claude()),
                 "canal": canal_cfg.carregar(obrigatorio=False), "categorias": canal_cfg.CATEGORIAS,
+                "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
             })
         if caminho == "/api/tarefa":
             return self.responder(TAREFA.estado())
@@ -654,16 +663,24 @@ class Painel(BaseHTTPRequestHandler):
             if not nome or not categoria:
                 return self.erro("informe o nome do canal e a categoria")
             atual = canal_cfg.carregar(obrigatorio=False) or {}
-            cfg = canal_cfg.montar(nome, categoria, str(dados.get("descricao", ""))[:200])
-            if atual.get("categoria") == categoria:  # mesma categoria: mantém o radar já ajustado
-                cfg["radar"] = atual.get("radar", cfg["radar"])
+            lingua = dados.get("idioma") if dados.get("idioma") in canal_cfg.IDIOMAS else canal_cfg.IDIOMA_PADRAO
+            cfg = canal_cfg.montar(nome, categoria, str(dados.get("descricao", ""))[:200], lingua)
+            if atual.get("categoria") == categoria and atual.get("idioma", canal_cfg.IDIOMA_PADRAO) == lingua:
+                # mesma categoria e língua: mantém o radar, os horários e as voz/hashtags já ajustados
+                manter = ["radar", "horarios", "voz", "hashtagsFim"]
+                if atual.get("nome") == nome:  # mesmo nome: mantém também as chamadas personalizadas
+                    manter += ["chamada", "chamadaFinal", "pergunta", "avisoIA", "hashtagsInicio"]
+                for chave in manter:
+                    if chave in atual:
+                        cfg[chave] = atual[chave]
             canal_cfg.salvar(cfg)
             arquivo = cfg["radar"]["temas"]
             criar = not (RAIZ / arquivo).exists() and achar_claude() is not None and not TAREFA.rodando
             if criar:
                 (RAIZ / arquivo).parent.mkdir(parents=True, exist_ok=True)
                 cmd = comando_claude(["Read", "Glob", f"Write({arquivo})"])
-                prompt = PROMPT_TEMAS.format(canal=descricao_canal(), arquivo=arquivo)
+                prompt = PROMPT_TEMAS.format(canal=descricao_canal(), arquivo=arquivo, lingua=lingua_canal(),
+                                             wiki=canal_cfg.idioma(cfg)["wiki"])
                 TAREFA.iniciar("temas", categoria, cmd, entrada=prompt, ao_terminar=ao_terminar_temas(arquivo))
             return self.responder({"ok": True, "criandoTemas": criar})
 
@@ -677,7 +694,7 @@ class Painel(BaseHTTPRequestHandler):
             if not cmd:
                 return self.erro("não achei o Claude Code neste computador", 500)
             sinais = str(dados.get("sinais", "")).strip()[:600]
-            prompt = PROMPT_IDEIAS.format(canal=descricao_canal(), aprendizados=APRENDIZADOS, pedido=pedido, formato=formato,
+            prompt = PROMPT_IDEIAS.format(canal=descricao_canal(), aprendizados=APRENDIZADOS, lingua=lingua_canal(), pedido=pedido, formato=formato,
                                           sinais=f"Sinais do radar: {sinais}\n" if sinais else "")
             ok = TAREFA.iniciar("ideias", pedido, cmd, entrada=prompt,
                                 ao_terminar=ao_terminar_ideias(pedido, dados.get("formato")))
@@ -696,7 +713,7 @@ class Painel(BaseHTTPRequestHandler):
                       if longo else "exemplos/short-exemplo.json (Short)")
             obs = str(dados.get("obs", "")).strip()[:600]
             prompt = PROMPT_ROTEIRO.format(
-                canal=descricao_canal(), modelo=modelo,
+                canal=descricao_canal(), modelo=modelo, lingua=lingua_canal(),
                 angulo=json.dumps({k: angulo.get(k) for k in ("titulo", "formato", "duracao", "gancho", "resumo")},
                                   ensure_ascii=False, indent=1),
                 obs=f"Observações do usuário: {obs}\n" if obs else "")

@@ -3,7 +3,7 @@
 Fontes gratuitas, sem chave de API:
   - Wikipedia (PT e EN): quais temas da lista tiveram pico de acessos na última semana
   - Google Notícias: notícias dos últimos 7 dias com os termos da categoria
-  - Google Trends Brasil: buscas em alta hoje que citam algum tema da lista
+  - Google Trends (país da língua do canal): buscas em alta hoje que citam algum tema da lista
   - YouTube: vídeos em português da categoria publicados esta semana e suas views
 
 A lista de temas fica em dados/temas/<categoria>.json (para Animais já vem pronta;
@@ -46,6 +46,7 @@ _spec.loader.exec_module(canal_cfg)
 
 # Preenchidos em main() a partir de dados/canal.json
 BUSCAS_NOTICIAS, BUSCAS_YOUTUBE, PESO_GRUPO = [], [], {}
+IDIOMA = canal_cfg.IDIOMAS[canal_cfg.IDIOMA_PADRAO]  # região/língua do radar
 
 
 # ---------------------------------------------------------------- utilidades
@@ -146,16 +147,25 @@ def tendencia(views):
     return {"semana": round(rec), "antes": round(base), "razao": round((rec + 10) / (base + 10), 2)}
 
 
+def titulo_wiki(tema, lang):
+    """Título do artigo na Wikipedia daquela língua (wiki_pt, wiki_en, wiki_es...)."""
+    return tema.get(f"wiki_{lang}") or (tema.get("wiki_local") if lang == IDIOMA["wiki"] else None)
+
+
 def coletar_wikipedia(animais):
-    print("Wikipedia: conferindo acessos de", len(animais), "temas (PT e EN)...")
+    """Acessos na Wikipedia da língua do canal ('local') e na inglesa ('en', interesse mundial)."""
+    local = IDIOMA["wiki"]
+    projetos = [("local", local)] + ([("en", "en")] if local != "en" else [])
+    print(f"Wikipedia: conferindo acessos de {len(animais)} temas ({', '.join(l.upper() for _, l in projetos)})...")
     res, lidas = {}, 0
-    for lang in ("pt", "en"):
-        views = views_em_lote(f"{lang}.wikipedia.org", [a[f"wiki_{lang}"] for a in animais if a.get(f"wiki_{lang}")])
+    for chave, lang in projetos:
+        titulos = [titulo_wiki(a, lang) for a in animais if titulo_wiki(a, lang)]
+        views = views_em_lote(f"{lang}.wikipedia.org", titulos)
         for a in animais:
-            t = tendencia(views.get(a.get(f"wiki_{lang}", "")))
-            res.setdefault(a["pt"], {})[lang] = t
+            t = tendencia(views.get(titulo_wiki(a, lang) or ""))
+            res.setdefault(a["pt"], {})[chave] = t
             lidas += t is not None
-    print(f"  {lidas} de {2 * len(animais)} páginas lidas")
+    print(f"  {lidas} de {len(projetos) * len(animais)} páginas lidas")
     return res
 
 
@@ -177,7 +187,7 @@ def coletar_noticias(animais):
     for busca in BUSCAS_NOTICIAS:
         r = get(
             "https://news.google.com/rss/search",
-            params={"q": f"{busca} when:7d", "hl": "pt-BR", "gl": "BR", "ceid": "BR:pt-419"},
+            params={"q": f"{busca} when:7d", **IDIOMA["noticias"]},
         )
         if not r:
             continue
@@ -202,8 +212,8 @@ def coletar_noticias(animais):
 
 
 def coletar_trends(animais):
-    print("Google Trends: buscas em alta hoje no Brasil...")
-    r = get("https://trends.google.com/trending/rss", params={"geo": "BR"})
+    print(f"Google Trends: buscas em alta hoje ({IDIOMA['trends']})...")
+    r = get("https://trends.google.com/trending/rss", params={"geo": IDIOMA["trends"]})
     if not r:
         return [], []
     todos, saida = [], []
@@ -257,7 +267,7 @@ def coletar_youtube(animais):
         r = get(
             "https://www.youtube.com/results",
             cab=UA_WEB,
-            params={"search_query": busca, "sp": "EgQIAxAB", "hl": "pt", "gl": "BR"},
+            params={"search_query": busca, "sp": "EgQIAxAB", **IDIOMA["youtube"]},
         )
         if not r:
             continue
@@ -310,7 +320,7 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
     for a in animais:
         nome = a["pt"]
         w = wiki.get(nome, {})
-        pt, en = w.get("pt"), w.get("en")
+        pt, en = w.get("local"), w.get("en")
         n_not = sum(nome in n["animais"] for n in noticias)
         n_tr = sum(nome in t["animais"] for t in trends)
         vids = [v for v in videos if nome in v["animais"]]
@@ -321,7 +331,7 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
         if pt:
             pontos += max(0, lg(pt["razao"])) * 4 + 0.6 * math.log10(1 + pt["antes"])
             if pt["razao"] >= 1.25:
-                motivos.append(f"Wikipedia PT +{round((pt['razao'] - 1) * 100)}% na semana")
+                motivos.append(f"Wikipedia {IDIOMA['wiki'].upper()} +{round((pt['razao'] - 1) * 100)}% na semana")
         if en:
             pontos += max(0, lg(en["razao"])) * 2.5
             if en["razao"] >= 1.25:
@@ -361,7 +371,7 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
 def escrever_md(hoje, ranking, noticias, trends, todos_trends, videos):
     L = [f"# Radar {NOME_CANAL} — {hoje:%d/%m/%Y}", ""]
     L.append("Fontes: Wikipedia (acessos dos últimos 7 dias contra as 4 semanas anteriores), "
-             "Google Notícias (7 dias), Google Trends Brasil (hoje) e busca do YouTube (esta semana).")
+             f"Google Notícias (7 dias), Google Trends {IDIOMA['trends']} (hoje) e busca do YouTube (esta semana).")
     L += ["", "## Temas em alta", "", "| # | Tema | Pontos | Por quê |", "|---|---|---|---|"]
     for i, r in enumerate(ranking[:15], 1):
         L.append(f"| {i} | {r['animal']} | {r['pontos']} | {'; '.join(r['motivos']) or 'interesse constante'} |")
@@ -379,7 +389,7 @@ def escrever_md(hoje, ranking, noticias, trends, todos_trends, videos):
     for v in videos[:15]:
         L.append(f"- **{mil(v['views'])} views** · {v['titulo']} — {v['canal']} ({v['duracao']}, {v['publicado']})")
 
-    L += ["", "## Google Trends Brasil (hoje)", ""]
+    L += ["", f"## Google Trends {IDIOMA['trends']} (hoje)", ""]
     if trends:
         for t in trends:
             L.append(f"- **{t['termo']}** ({t['trafego']} buscas) — {t['noticia']} · _{', '.join(t['animais'])}_")
@@ -395,10 +405,11 @@ NOME_CANAL = ""
 
 
 def main():
-    global BUSCAS_NOTICIAS, BUSCAS_YOUTUBE, PESO_GRUPO, NOME_CANAL
+    global BUSCAS_NOTICIAS, BUSCAS_YOUTUBE, PESO_GRUPO, NOME_CANAL, IDIOMA
     canal = canal_cfg.carregar()
     radar = canal.get("radar", {})
     NOME_CANAL = canal["nome"]
+    IDIOMA = canal_cfg.idioma(canal)
     BUSCAS_NOTICIAS = radar.get("buscasNoticias") or [canal["categoria"]]
     BUSCAS_YOUTUBE = radar.get("buscasYoutube") or [canal["categoria"]]
     PESO_GRUPO = radar.get("pesoGrupo", {})

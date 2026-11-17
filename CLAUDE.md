@@ -13,13 +13,17 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
   2. a categoria do canal (sugira: Animais e natureza, Ciência e espaço, História, Curiosidades
      gerais, Culinária, Viagem e lugares, Tecnologia, Esportes, Saúde e bem-estar, Sons relaxantes,
      ou outra);
-  3. em uma frase, sobre o que é o canal (opcional).
-  Depois salve com `pipeline/canal.py` (`montar(nome, categoria, descricao)` + `salvar(...)`) ou
+  3. a língua dos vídeos: `pt-BR` (português do Brasil), `en-US` (inglês) ou `es-MX` (espanhol);
+  4. em uma frase, sobre o que é o canal (opcional).
+  Depois salve com `pipeline/canal.py` (`montar(nome, categoria, descricao, idioma)` + `salvar(...)`) ou
   peça para a pessoa abrir o painel (`Abrir painel.bat`), que tem essa tela.
-- Se a categoria não for "Animais e natureza" e não existir `dados/temas/<categoria>.json`,
-  crie a lista de temas do radar no mesmo formato de `dados/temas/animais.json` (80–120 itens:
-  pt, en, wiki_pt, wiki_en, grupo, busca) e ajuste `radar.buscasNoticias` / `radar.buscasYoutube`
-  em `dados/canal.json`.
+- **Escreva roteiros, títulos, descrições e hashtags na língua do canal** (`idioma` em
+  `dados/canal.json`). A voz da narração e o país do radar seguem essa língua automaticamente.
+  Converse com a pessoa em português (o painel e as instruções são em português).
+- Se não existir o arquivo de temas indicado em `radar.temas` (`dados/canal.json`), crie a lista
+  no mesmo formato de `dados/temas/animais.json` (80–120 itens: pt = nome na língua do canal, en,
+  wiki_<língua> e wiki_en, grupo, busca na língua do canal) e ajuste `radar.buscasNoticias` /
+  `radar.buscasYoutube` (na língua do canal). A lista pronta de animais só vale para `pt-BR`.
 - `dados/aprendizados.md` (se existir) traz o que funciona no canal da pessoa: siga.
 
 ## Onde fica cada coisa

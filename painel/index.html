@@ -406,6 +406,8 @@
       <select id="cfg-categoria"></select></label>
     <label id="cfg-outra-rotulo" hidden>Qual categoria?
       <input type="text" id="cfg-outra" maxlength="80" placeholder="Ex.: Astronomia, Carros antigos, Receitas veganas"></label>
+    <label>Língua dos vídeos <small>(narração, legenda, roteiro e descrição; o painel continua em português)</small>
+      <select id="cfg-idioma"></select></label>
     <label>Em uma frase, sobre o que é o canal? <small>(opcional)</small>
       <input type="text" id="cfg-descricao" maxlength="200" placeholder="Ex.: curiosidades rápidas sobre o espaço para quem não é cientista"></label>
     <p class="sinais" id="cfg-aviso"></p>
@@ -533,7 +535,8 @@ async function mostrarPrevia(slug) {
 function desenharCanal() {
   const c = estado.canal;
   $("#nome-canal").textContent = c ? c.nome : "Seu canal";
-  $("#cat-canal").textContent = c ? c.categoria : "canal ainda não configurado";
+  const lingua = c && estado.idiomas ? estado.idiomas[c.idioma || "pt-BR"] : "";
+  $("#cat-canal").textContent = c ? `${c.categoria}${lingua ? " · " + lingua : ""}` : "canal ainda não configurado";
   document.title = (c ? c.nome : "Gerador de vídeos") + " — painel";
   if (!c && estado.categorias) abrirConfig(true);
 }
@@ -547,11 +550,14 @@ function abrirConfig(obrigatorio = false) {
   sel.value = c.categoria ? (conhecida ? c.categoria : "__outra") : lista[0];
   $("#cfg-outra").value = c.categoria && !conhecida ? c.categoria : "";
   $("#cfg-outra-rotulo").hidden = sel.value !== "__outra";
+  const idiomas = estado.idiomas || { "pt-BR": "Português (Brasil)" };
+  $("#cfg-idioma").innerHTML = Object.entries(idiomas).map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join("");
+  $("#cfg-idioma").value = c.idioma || "pt-BR";
   $("#cfg-nome").value = c.nome || "";
   $("#cfg-descricao").value = c.descricao || "";
   $("#cfg-cancelar").hidden = obrigatorio;
   $("#cfg-aviso").textContent = estado.claude
-    ? "Se a categoria não for Animais e natureza, o Claude monta a lista de temas do radar (uns 2 minutos)."
+    ? "Se a categoria não for Animais e natureza (ou a língua não for português), o Claude monta a lista de temas do radar (uns 2 a 4 minutos)."
     : "";
   $("#config").hidden = false;
   $("#cfg-nome").focus();
@@ -566,7 +572,9 @@ $("#cfg-salvar").onclick = async () => {
   if (!nome) { $("#cfg-nome").focus(); avisar("Escreva o nome do canal."); return; }
   if (!categoria) { $("#cfg-outra").focus(); avisar("Escreva a categoria."); return; }
   try {
-    const r = await api("/api/configurar", { nome, categoria, descricao: $("#cfg-descricao").value.trim() });
+    const r = await api("/api/configurar", {
+      nome, categoria, idioma: $("#cfg-idioma").value, descricao: $("#cfg-descricao").value.trim(),
+    });
     $("#config").hidden = true;
     tarefaFechada = false;
     avisar(r.criandoTemas ? "Canal salvo! Agora o Claude está montando os temas do radar." : "Canal salvo!", 4000);

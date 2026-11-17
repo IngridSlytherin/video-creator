@@ -6,8 +6,9 @@ Instalação e visão geral: veja o [README](README.md). Este guia detalha cada 
 Dê dois cliques em **`Abrir painel.bat`**. Abre `http://localhost:8765` no navegador; a janela preta
 precisa ficar aberta enquanto você usa (fechar = desligar o painel).
 
-- **Primeira vez**: o painel pede o **nome do canal** e a **categoria**. Isso define a marca nos
-  vídeos e o assunto do radar, das ideias e dos roteiros. Para trocar depois, clique em **⚙ Canal**.
+- **Primeira vez**: o painel pede o **nome do canal**, a **categoria** e a **língua dos vídeos**
+  (português do Brasil, inglês ou espanhol). Isso define a marca nos vídeos, o assunto do radar, das
+  ideias e dos roteiros, a voz da narração e o país do radar. Para trocar depois, clique em **⚙ Canal**.
 - **Novo vídeo**: escreva o tema e clique em **Pedir ideias**. O Claude sugere 3 ângulos (uns 30 s);
   clique em **Escrever este roteiro** (1–3 min, ele confere os fatos na internet). Leia a narração na
   prévia e clique em **Gerar vídeo agora**. Usa o Claude Code da sua conta (modelo Sonnet); para trocar,
@@ -107,9 +108,17 @@ de sugerir ideias e escrever roteiros.
 npx remotion studio
 ```
 
+## Língua dos vídeos
+- Escolhida na configuração do canal: **português (Brasil)**, **inglês** ou **espanhol**.
+- Muda: voz da narração, legendas, roteiros escritos pelo Claude, textos da descrição (capítulos,
+  fontes, chamadas) e o país do radar (Google Notícias, Trends e YouTube). O painel continua em português.
+- A lista pronta de 133 animais é em português; em inglês/espanhol o Claude cria a lista na língua certa.
+- Para trocar a voz (ex.: masculina), mude `"voz"` em `dados/canal.json`. Vozes: `pt-BR-FranciscaNeural`,
+  `pt-BR-AntonioNeural`, `en-US-JennyNeural`, `en-US-GuyNeural`, `es-MX-DaliaNeural`, `es-MX-JorgeNeural`.
+- Os horários sugeridos ficam em `"horarios"` em `dados/canal.json`: troque pelos do seu público.
+
 ## Configurações
-- `.env`: chave do Pexels, voz (`VOZ`) e velocidade da fala (`VELOCIDADE_VOZ`).
-  Outras vozes em português: `pt-BR-AntonioNeural` (masculina), `pt-BR-ThalitaMultilingualNeural`.
+- `.env`: chave do Pexels e velocidade da fala (`VELOCIDADE_VOZ`).
 - Música de fundo: coloque arquivos `.mp3` em `public/musica/` (ex.: da Biblioteca de áudio do
   YouTube Studio). O gerador escolhe uma automaticamente, em volume baixo.
 - Cores e fonte: `src/tipos.ts`.

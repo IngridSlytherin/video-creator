@@ -114,7 +114,7 @@ def main(slug):
     roteiro = {
         "slug": slug,
         "formato": formato,
-        "avisoIA": "Narração com voz sintética.",
+        "avisoIA": gv.canal_cfg.texto(gv.canal_cfg.carregar(), "avisoDublagem"),
         "publicacao": {
             "titulo": titulo + (" #shorts" if formato == "short" and "#shorts" not in titulo else ""),
             "descricao": cfg.get("descricao") or "",

@@ -105,11 +105,17 @@ def segmentos_do_roteiro(roteiro):
 
 
 # ---------- 1. Narração ----------
+def voz_do_canal():
+    """Voz da língua do canal (dados/canal.json, campo "voz"); o .env (VOZ) só vale se o canal não tiver."""
+    canal = canal_cfg.carregar(obrigatorio=False) or {}
+    return canal.get("voz") or ENV.get("VOZ") or canal_cfg.idioma(canal)["voz"]
+
+
 async def narrar_segmento(texto, destino: Path, velocidade):
     """Gera mp3 e devolve a lista de palavras com tempo (ms)."""
     com = edge_tts.Communicate(
         texto,
-        voice=ENV.get("VOZ", "pt-BR-FranciscaNeural"),
+        voice=voz_do_canal(),
         rate=velocidade,
         boundary="WordBoundary",
     )
@@ -431,7 +437,7 @@ def criar_roteiro_short(roteiro, cap):
         "publicacao": {
             "titulo": info["titulo"],
             "descricao": info["descricao"]
-            + f"\n\n▶️ Vídeo completo no canal: {pub['titulo']}",
+            + "\n\n" + canal_cfg.texto(canal_cfg.carregar(), "videoCompleto", titulo=pub["titulo"]),
             "hashtags": info.get("hashtags", []),
             "fontes": pub.get("fontes", []),
         },
@@ -470,15 +476,16 @@ def escrever_publicacao(roteiro, props, pasta):
     aviso = roteiro.get("avisoIA") or canal["avisoIA"]  # vídeo próprio: sem "Imagens: Pexels"
     secao_creditos = ("CRÉDITOS DAS IMAGENS (Pexels, uso gratuito; não é obrigatório citar)\n" + creditos + "\n"
                       if creditos else "")
-    bloco_fontes = f"📚 Fontes:\n{fontes}\n\n" if fontes else ""
+    bloco_fontes = f"{canal_cfg.texto(canal, 'fontes')}\n{fontes}\n\n" if fontes else ""
     duracao = props["duracaoSegundos"] - 0.6
     eh_longo = roteiro.get("formato") == "longo"
+    horarios = "\n".join(canal.get("horarios") or canal_cfg.HORARIOS_PADRAO)
 
     capitulos = ""
     if props.get("capitulos"):
         linhas = [f"{tempo(c['inicio'])} {'#' + str(c['numero']) + ' ' if c['numero'] else ''}{c['titulo']}"
                   for c in props["capitulos"]]
-        capitulos = "⏱️ Capítulos:\n" + "\n".join(linhas) + "\n\n"
+        capitulos = canal_cfg.texto(canal, "capitulos") + "\n" + "\n".join(linhas) + "\n\n"
 
     descricao = f"""{pub['descricao'].strip()}
 
@@ -507,15 +514,8 @@ AO PUBLICAR NO YOUTUBE STUDIO
 - Em "Conteúdo alterado ou sintético": marque SIM (a narração é voz sintética).
 - Público: "Não, não é conteúdo para crianças" (a menos que seja o seu caso).
 {thumb}
-SUGESTÃO DE DIA E HORÁRIO (horário de Brasília, com base no seu canal)
-Publique cerca de 1 hora antes do pico do seu público{' (no vídeo longo, 2 horas antes)' if eh_longo else ''}:
-- Segunda: 18h   (pico às 19h)
-- Terça:   16h   (pico 17h–18h)
-- Quarta:  17h   (pico às 18h)
-- Quinta:  17h   (pico 18h–19h)
-- Sexta:   15h   (pico 16h–19h; também há pico ao meio-dia, então 11h é opção)
-- Sábado e domingo: 10h (público alto e estável das 10h às 21h)
-Fonte: YouTube Studio > Público > "Quando seus espectadores estão no YouTube" (16/11/2026).
+SUGESTÃO DE DIA E HORÁRIO
+{horarios}
 
 DURAÇÃO: {tempo(duracao)}
 
