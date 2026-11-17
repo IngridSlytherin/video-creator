@@ -32,9 +32,9 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 |---|---|
 | ![Roteiros](docs/prints/roteiros.png) | ![Dublar](docs/prints/dublar.png) |
 
-| Primeira vez: configure o seu canal |
-|---|
-| ![Configurar canal](docs/prints/configurar.png) |
+| Primeira vez: configure o seu canal | Resultados: os vídeos novos estão funcionando? |
+|---|---|
+| ![Configurar canal](docs/prints/configurar.png) | ![Resultados](docs/prints/resultados.png) |
 
 ## Instalação (Windows)
 

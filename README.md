@@ -35,9 +35,9 @@ tags, thumbnail and the best time to post.
 |---|---|
 | ![Scripts](docs/prints/roteiros.png) | ![Dub](docs/prints/dublar.png) |
 
-| First run: set up your channel |
-|---|
-| ![Channel setup](docs/prints/configurar.png) |
+| First run: set up your channel | Results: are the new videos working? |
+|---|---|
+| ![Channel setup](docs/prints/configurar.png) | ![Results](docs/prints/resultados.png) |
 
 ## Installation (Windows)
 
