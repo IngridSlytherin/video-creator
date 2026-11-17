@@ -179,6 +179,8 @@ project folder with `git pull`.
 
 ## Credits and licenses
 
+- This project is under the [MIT License](LICENSE): use, modify and share freely, keeping the copyright notice.
+
 - Video editing with [Remotion](https://www.remotion.dev): free for individuals and companies of up
   to 3 people. Larger companies need a [license](https://www.remotion.dev/license).
 - Footage from [Pexels](https://www.pexels.com) (free to use).

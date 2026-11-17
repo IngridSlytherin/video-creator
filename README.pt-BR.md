@@ -166,6 +166,8 @@ projeto com `git pull`.
 
 ## Créditos e licenças
 
+- Este projeto usa a [Licença MIT](LICENSE): pode usar, modificar e compartilhar à vontade, mantendo o aviso de autoria.
+
 - Montagem de vídeo com [Remotion](https://www.remotion.dev): gratuito para pessoas físicas e empresas
   de até 3 pessoas. Empresas maiores precisam de [licença](https://www.remotion.dev/license).
 - Imagens do [Pexels](https://www.pexels.com) (uso gratuito).
