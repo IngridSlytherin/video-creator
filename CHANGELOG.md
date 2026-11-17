@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.8 — 17/11/2026
+- **Tema escuro**: botão "🌙 Tema escuro" / "☀️ Tema claro" no topo do painel. Na primeira vez
+  segue o tema do Windows; depois lembra a sua escolha.
+
 ## 1.7 — 17/11/2026
 - **O que dá certo no canal**: a aba Resultados analisa formato do título, duração, dia da
   publicação, assunto e perguntas repetidas, e transforma isso em **regras do canal** que o Claude

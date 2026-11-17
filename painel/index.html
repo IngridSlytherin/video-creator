@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <title>Gerador de vídeos — painel</title>
+<script>
+  try {
+    const salvo = localStorage.getItem("tema");
+    document.documentElement.dataset.tema = salvo || (matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro");
+  } catch { document.documentElement.dataset.tema = "claro"; }
+</script>
 <style>
   :root {
     --papel: #EFF5F2;
@@ -21,6 +27,30 @@
     --linha: #D6E2DD;
     --erro: #C2410C;
     --sombra: 0 1px 2px rgba(23, 60, 50, .05), 0 10px 28px rgba(23, 60, 50, .07);
+    --verde-texto: #178A6B;   /* verde usado como cor de texto */
+    --sobre-amarelo: #1C2B27; /* texto em cima do amarelo (igual nos dois temas) */
+    --campo: #FFFFFF;         /* fundo de campos de texto */
+    --suave-hover: #C8EADD;
+    --alerta: #9A6B00;
+    color-scheme: light;
+  }
+  :root[data-tema="escuro"] {
+    --papel: #0E1614;
+    --papel-2: #1A2622;
+    --cartao: #15201D;
+    --tinta: #E4EEEA;
+    --tinta-2: #9FB2AC;
+    --verde: #1C8F70;
+    --verde-2: #13735A;
+    --verde-claro: #173A31;
+    --verde-texto: #5ED1AE;
+    --linha: #2A3A35;
+    --erro: #F0855A;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px rgba(0, 0, 0, .35);
+    --campo: #101B18;
+    --suave-hover: #1F4A3D;
+    --alerta: #F2C14E;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
@@ -34,12 +64,12 @@
     color: #fff; padding: 9px 18px; border-radius: 12px; font-weight: 700; transition: background .12s;
   }
   button:hover { background: var(--verde-2); }
-  button.leve { background: var(--cartao); color: var(--verde); border-color: var(--linha); }
+  button.leve { background: var(--cartao); color: var(--verde-texto); border-color: var(--linha); }
   button.leve:hover { background: var(--verde-claro); border-color: var(--verde); }
-  button.destaque { background: var(--amarelo); border-color: #E2B71F; color: var(--tinta); font-weight: 600; }
+  button.destaque { background: var(--amarelo); border-color: #E2B71F; color: var(--sobre-amarelo); font-weight: 600; }
   button.destaque:hover { background: #F5B70F; }
-  button.suave { background: var(--verde-claro); border-color: transparent; color: var(--verde-2); }
-  button.suave:hover { background: #C8EADD; }
+  button.suave { background: var(--verde-claro); border-color: transparent; color: var(--verde-texto); }
+  button.suave:hover { background: var(--suave-hover); }
   button:disabled { opacity: .45; cursor: not-allowed; }
   .pequeno { font-size: 13.5px; padding: 4px 11px; }
 
@@ -49,7 +79,7 @@
     max-width: 1240px; margin: 0 auto; padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap;
   }
-  .marca h1 { font-size: 24px; line-height: 1.15; color: var(--verde-2); }
+  .marca h1 { font-size: 24px; line-height: 1.15; color: var(--verde-texto); }
   .marca p { margin: 2px 0 0; font-size: 14px; color: var(--tinta-2); }
   nav { display: flex; gap: 2px; background: var(--papel); padding: 5px; border-radius: 999px; overflow-x: auto;
         max-width: 100%; min-width: 0; scrollbar-width: none; }
@@ -58,7 +88,7 @@
     background: transparent; color: var(--tinta-2); border: none; border-radius: 999px;
     padding: 8px 13px; font-size: 14.5px; font-weight: 700; white-space: nowrap;
   }
-  nav button:hover { background: var(--verde-claro); color: var(--verde-2); }
+  nav button:hover { background: var(--verde-claro); color: var(--verde-texto); }
   nav button.ativo { background: var(--verde); color: #fff; box-shadow: 0 2px 8px rgba(23, 138, 107, .3); }
   nav button .ico { margin-right: 6px; }
   button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -94,8 +124,8 @@
   }
   .etapas { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
   .etapas span { padding: 2px 10px; border-radius: 99px; background: var(--papel-2); color: var(--tinta-2); }
-  .etapas span.feita { background: var(--verde-claro); color: var(--verde); }
-  .etapas span.agora { background: var(--amarelo); color: var(--tinta); font-weight: 600; }
+  .etapas span.feita { background: var(--verde-claro); color: var(--verde-texto); }
+  .etapas span.agora { background: var(--amarelo); color: var(--sobre-amarelo); font-weight: 600; }
   details { margin-top: 10px; font-size: 13.5px; color: var(--tinta-2); }
   details summary { cursor: pointer; }
   details pre {
@@ -122,7 +152,7 @@
     display: inline-block; font-size: 11px;  font-weight: 600;
     padding: 2px 10px; border-radius: 999px; background: var(--papel-2); color: var(--tinta-2);
   }
-  .selo.longo { background: var(--verde-claro); color: var(--verde); }
+  .selo.longo { background: var(--verde-claro); color: var(--verde-texto); }
   .selo.pub { background: var(--verde); color: #fff; }
 
   #detalhe-video .cartao { padding: 22px; }
@@ -138,7 +168,7 @@
     border: 1px solid var(--linha); border-radius: 12px; background: var(--cartao); font-size: 15px;
   }
   .interruptor input { width: 17px; height: 17px; accent-color: var(--verde); }
-  .interruptor.marcado { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); font-weight: 600; }
+  .interruptor.marcado { background: var(--verde-claro); border-color: var(--verde); color: var(--verde-texto); font-weight: 600; }
   .campo { margin-bottom: 16px; }
   .campo .rot {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
@@ -158,7 +188,7 @@
   .roteiro .t { font-weight: 600; font-size: 16px; }
   .roteiro .m { font-size: 13.5px; color: var(--tinta-2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
   .roteiro .bts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-  .ok { color: var(--verde); font-weight: 600; }
+  .ok { color: var(--verde-texto); font-weight: 600; }
   .dica { margin-top: 20px; color: var(--tinta-2); font-size: 14.5px; }
   code { background: var(--papel-2); padding: 1px 6px; border-radius: 6px; font-size: 13.5px; }
 
@@ -176,7 +206,7 @@
   .tema.feito { opacity: .7; }
   .md { padding: 20px 26px; }
   .md h1 { display: none; }
-  .md h2 { font-size: 20px; margin: 22px 0 8px; color: var(--verde); }
+  .md h2 { font-size: 20px; margin: 22px 0 8px; color: var(--verde-texto); }
   .md h2:first-of-type { margin-top: 0; }
   .md li { margin: 4px 0; font-size: 14.5px; }
   .md em { color: var(--tinta-2); }
@@ -188,7 +218,7 @@
   .pedido .sub { color: var(--tinta-2); font-size: 14.5px; margin: 4px 0 12px; }
   textarea {
     width: 100%; font: inherit; font-size: 17px; padding: 10px 12px; border: 1px solid var(--linha);
-    border-radius: 12px; background: #fff; resize: vertical; color: var(--tinta);
+    border-radius: 12px; background: var(--campo); resize: vertical; color: var(--tinta);
   }
   textarea:focus { outline: 2px solid var(--amarelo); border-color: #E2B71F; }
   .linha-pedido { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
@@ -197,7 +227,7 @@
     display: flex; gap: 6px; align-items: center; cursor: pointer; font-size: 14.5px;
     padding: 6px 12px; border: 1px solid var(--linha); border-radius: 99px; background: var(--cartao);
   }
-  .formatos label:has(input:checked) { border-color: var(--verde); background: var(--verde-claro); color: var(--verde); font-weight: 600; }
+  .formatos label:has(input:checked) { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-texto); font-weight: 600; }
   .formatos input { accent-color: var(--verde); }
   .sinais { font-size: 13.5px; color: var(--tinta-2); margin: 10px 0 0; }
   .sinais:empty { display: none; }
@@ -228,7 +258,7 @@
     border: 2px dashed var(--linha); border-radius: 16px; cursor: pointer; padding: 16px;
     color: var(--tinta-2); background: var(--papel); transition: all .12s;
   }
-  .soltar:hover, .soltar.sobre { border-color: var(--verde); background: var(--verde-claro); color: var(--verde); }
+  .soltar:hover, .soltar.sobre { border-color: var(--verde); background: var(--verde-claro); color: var(--verde-texto); }
   .soltar.escolhido { min-height: 0; padding: 10px; }
   #dub-previa { width: 100%; max-height: 520px; background: #000; border-radius: 12px; margin-top: 10px; }
   .dub-campos { display: grid; gap: 10px; margin-top: 8px; }
@@ -236,12 +266,12 @@
   .dub-campos textarea { font-size: 15px; }
   input[type="text"] {
     font: inherit; font-size: 15.5px; padding: 8px 12px; border: 1px solid var(--linha); border-radius: 12px;
-    background: #fff; color: var(--tinta); width: 100%;
+    background: var(--campo); color: var(--tinta); width: 100%;
   }
   input[type="text"]:focus { outline: 2px solid var(--amarelo); border-color: #E2B71F; }
   .opcoes { display: grid; gap: 12px; }
   .opcoes .rotulo { display: block; font-size: 13px;  color: var(--tinta-2); font-weight: 600; margin-bottom: 5px; }
-  .aviso-dur { color: #9A6B00; }
+  .aviso-dur { color: var(--alerta); }
   @media (max-width: 900px) { .dublar { grid-template-columns: 1fr; } }
 
   .passos { margin: 6px 0 0; padding-left: 22px; font-size: 14.5px; }
@@ -269,10 +299,10 @@
 
   /* configuração do canal */
   .link-canal {
-    background: none; border: none; padding: 0; color: var(--verde); font: inherit; font-weight: 700;
+    background: none; border: none; padding: 0; color: var(--verde-texto); font: inherit; font-weight: 700;
     text-decoration: none; cursor: pointer;
   }
-  .link-canal:hover { background: none; text-decoration: underline; color: var(--verde-2); }
+  .link-canal:hover { background: none; text-decoration: underline; color: var(--verde-texto); }
   .fundo-config {
     position: fixed; inset: 0; background: rgba(35, 30, 20, .55); display: flex;
     align-items: center; justify-content: center; padding: 16px; z-index: 20;
@@ -306,7 +336,7 @@
   <div class="topo-dentro">
     <div class="marca">
       <h1 id="nome-canal">Seu canal</h1>
-      <p><span id="cat-canal">painel de vídeos</span> · <button class="link-canal" id="abrir-config">⚙ Canal</button></p>
+      <p><span id="cat-canal">painel de vídeos</span> · <button class="link-canal" id="abrir-config">⚙ Canal</button> · <button class="link-canal" id="trocar-tema" aria-label="Alternar tema claro e escuro"></button></p>
     </div>
     <nav>
       <button data-aba="novo"><span class="ico" aria-hidden="true">✨</span>Novo vídeo</button>
@@ -545,6 +575,9 @@ function copiar(texto, msg = "Copiado!", ms) {
 // ---------- abas
 function irPara(aba) {
   document.querySelectorAll("nav button").forEach(x => x.classList.toggle("ativo", x.dataset.aba === aba));
+  // no celular a faixa de abas rola: mostra a aba escolhida
+  const ativa = document.querySelector("nav .ativo");
+  if (ativa) ativa.scrollIntoView({ block: "nearest", inline: "nearest" });
   document.querySelectorAll(".aba").forEach(a => a.classList.toggle("ativa", a.id === "aba-" + aba));
   if (aba === "radar") carregarRadar();
   if (aba === "resultados") carregarMedicao();
@@ -702,6 +735,26 @@ async function esperarReinicio() {
   $("#tarefa-titulo").textContent = "App atualizado!";
   $("#tarefa-sub").textContent = 'Feche a janela preta e abra de novo o "Abrir painel.bat".';
 }
+
+// ---------- tema claro / escuro (a primeira vez segue o Windows; depois, a escolha fica salva)
+function rotuloTema() {
+  const escuro = document.documentElement.dataset.tema === "escuro";
+  $("#trocar-tema").textContent = escuro ? "☀️ Tema claro" : "🌙 Tema escuro";
+}
+$("#trocar-tema").onclick = () => {
+  const novo = document.documentElement.dataset.tema === "escuro" ? "claro" : "escuro";
+  document.documentElement.dataset.tema = novo;
+  try { localStorage.setItem("tema", novo); } catch {}
+  rotuloTema();
+};
+try {
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    let salvo = null;
+    try { salvo = localStorage.getItem("tema"); } catch {}
+    if (!salvo) { document.documentElement.dataset.tema = e.matches ? "escuro" : "claro"; rotuloTema(); }
+  });
+} catch {}
+rotuloTema();
 
 // ---------- configuração do canal
 function desenharCanal() {

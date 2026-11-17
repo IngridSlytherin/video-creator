@@ -24,6 +24,7 @@ precisa ficar aberta enquanto você usa (fechar = desligar o painel).
   "Só textos" refaz só o `publicacao.txt`.
 - **Radar**: roda o radar e mostra os temas em alta em cartões. **Quero esse tema** leva o tema
   (e os sinais do radar) para a aba Novo vídeo e já pede as ideias.
+- **Tema escuro**: botão "🌙 Tema escuro" no topo (ao lado de ⚙ Canal). Na primeira vez segue o Windows.
 - Atalhos: `http://localhost:8765/#radar` (ou `#novo`, `#dublar`, `#roteiros`) abre direto na aba;
   `#configurar` abre a configuração do canal.
 
