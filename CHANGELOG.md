@@ -3,6 +3,15 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.7 — 17/11/2026
+- **O que dá certo no canal**: a aba Resultados analisa formato do título, duração, dia da
+  publicação, assunto e perguntas repetidas, e transforma isso em **regras do canal** que o Claude
+  passa a seguir nas ideias e roteiros (atualizadas a cada medição).
+- O app guarda a lista de todos os vídeos já publicados e evita repetir uma pergunta
+  (o mesmo animal pode voltar com um ângulo novo).
+- O radar deixou de penalizar forte animais que já têm vídeo (os números mostram que repetir o
+  animal não atrapalha; repetir a mesma pergunta, sim).
+
 ## 1.6 — 17/11/2026
 - **Visual novo do painel**, mais claro e amigável: fundo verde-menta, cartões brancos, fonte
   arredondada (Nunito), abas em pílula com ícones e rótulos sem letras maiúsculas.

@@ -330,8 +330,9 @@ def lingua_canal():
     return canal_cfg.idioma(canal_cfg.carregar(obrigatorio=False))["lingua"]
 
 
-APRENDIZADOS = ("Se existir, leia dados/aprendizados.md (o que funciona no canal). "
-                "Leia historico.json (vídeos já feitos), se existir.")
+APRENDIZADOS = ("Se existir, leia dados/aprendizados.md (o que funciona no canal) e siga a seção "
+                "\"Regras do canal\", tirada dos números reais do canal. Leia também dados/videos-do-canal.json "
+                "(todos os vídeos já publicados, com views) e historico.json, se existirem.")
 
 PROMPT_IDEIAS = """{canal}
 
@@ -341,8 +342,13 @@ Pedido: {pedido}
 {sinais}Formato desejado: {formato}
 
 Sugira 3 ângulos diferentes para esse vídeo. Regras:
-- Só temas da categoria do canal. Não repita um tema que já está em historico.json.
-- Títulos variados (nem tudo "Por que..."), com 1 ou 2 palavras em MAIÚSCULA, até 70 caracteres.
+- Só temas da categoria do canal.
+- Nunca repita uma pergunta que já está em dados/videos-do-canal.json ou historico.json (o vídeo repetido
+  rende bem menos). O mesmo animal pode voltar, desde que com um fato ou pergunta diferente.
+- Os 3 ângulos com formatos de título DIFERENTES entre si (ex.: afirmação surpreendente, comparação,
+  verdade ou mito, pergunta). No máximo 1 deles começando com "Por que". 1 ou 2 palavras em MAIÚSCULA,
+  até 70 caracteres. Respeite o que as Regras do canal disserem sobre formatos que rendem pouco.
+- Duração: siga as Regras do canal; na dúvida, Short de até 60 s ("curto" ou "padrao").
 - O gancho é a primeira frase da narração: abre a curiosidade sem entregar a resposta.
 - Só fatos verdadeiros e conhecidos (serão conferidos depois).
 - Escreva titulo, gancho e resumo em {lingua} (a língua dos vídeos); "porque" pode ser em português.
@@ -359,7 +365,10 @@ Escreva o roteiro deste vídeo:
 {angulo}
 {obs}
 Passos:
-1. Leia COMO-USAR.md, dados/canal.json, dados/aprendizados.md (se existir) e o modelo de roteiro:
+0. Confira em dados/videos-do-canal.json (se existir) que essa pergunta ainda não foi publicada no canal;
+   se já foi, mude o ângulo (outro fato do mesmo animal) e ajuste o título.
+1. Leia COMO-USAR.md, dados/canal.json, dados/aprendizados.md (se existir; siga as "Regras do canal",
+   inclusive a duração) e o modelo de roteiro:
    {modelo}. Use exatamente a mesma estrutura de campos do modelo.
 2. Confira os fatos principais com WebSearch. Se um fato não se confirmar, troque por outro verdadeiro.
    Coloque as fontes em publicacao.fontes.

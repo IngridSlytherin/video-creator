@@ -27,7 +27,10 @@ leia só `dados/aprendizados.md` (se existir) e `historico.json` (se existir), s
    Regras:
    - Só temas da categoria do canal. Nada que dependa de imagens de terceiros (jogos, filmes,
      marcas, pessoas famosas): as imagens vêm do Pexels.
-   - Pule temas marcados "já tem vídeo no canal", a menos que o ângulo seja bem diferente.
+   - Siga as "Regras do canal" de `dados/aprendizados.md` (tiradas dos números do canal).
+   - Nunca repita uma pergunta que está em `dados/videos-do-canal.json` (vídeos já publicados):
+     o vídeo repetido rende bem menos. O mesmo animal pode voltar com um ângulo novo.
+   - Varie o formato dos títulos entre as sugestões (no máximo 1 começando com "Por que").
    - Confira se há imagens reais do assunto no Pexels (busca em inglês) antes de sugerir.
    - Vídeos do YouTube servem para ver formato e título que funcionam. Nunca copie o roteiro.
 4. Pergunte qual tema o usuário quer. Quando ele escolher, escreva o roteiro em

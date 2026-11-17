@@ -347,8 +347,9 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
             motivos.append(f"YouTube: {len(vids)} vídeo{'s' if len(vids) > 1 else ''}, {mil(yt)} views na semana")
         pontos *= PESO_GRUPO.get(a.get("grupo", ""), 1.0)
         if nome in feitos:
-            pontos *= 0.4
-            motivos.append("⚠️ já tem vídeo no canal")
+            # repetir o animal não atrapalha (só repetir a mesma pergunta): pesa pouco
+            pontos *= 0.85
+            motivos.append("já tem vídeo no canal: use um ângulo novo")
         lista.append(
             {
                 "animal": nome,

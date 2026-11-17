@@ -273,6 +273,9 @@ def medir(caminho: Path):
 
     L += ["## Conclusão", ""] + (linhas_resumo or ["- Sem dados suficientes para comparar ainda."])
     L += ["", "⏳ = vídeo novo (menos de 7 dias ou 100 views): espere antes de tirar conclusões.", ""]
+    linhas_padroes, regras = padroes(videos)
+    L += linhas_padroes
+    salvar_videos_do_canal(videos)
 
     PASTA.mkdir(parents=True, exist_ok=True)
     md = PASTA / f"{hoje:%Y-%m-%d}.md"
@@ -280,21 +283,180 @@ def medir(caminho: Path):
     (PASTA / f"{hoje:%Y-%m-%d}.json").write_text(
         json.dumps([{**v, "publicado": v["publicado"].isoformat() if v["publicado"] else None} for v in videos],
                    ensure_ascii=False, indent=1), encoding="utf-8")
-    anotar_aprendizados(hoje, linhas_resumo)
+    anotar_aprendizados(hoje, linhas_resumo, regras)
     print("\n".join(L))
     print(f"\nRelatório: {md.relative_to(RAIZ)}")
 
 
-def anotar_aprendizados(hoje, linhas):
-    """Acrescenta a conclusão em dados/aprendizados.md (o Claude lê antes de sugerir ideias)."""
-    if not linhas:
-        return
+def trocar_secao(texto, titulo, linhas):
+    """Põe (ou substitui) a seção '## titulo' no texto, sem mexer nas outras seções."""
+    bloco = titulo + "\n" + "\n".join(linhas) + "\n"
+    padrao = re.compile(r"^" + re.escape(titulo) + r"\n.*?(?=^## |\Z)", re.S | re.M)
+    if padrao.search(texto):
+        return padrao.sub(lambda _: bloco + "\n", texto).rstrip() + "\n"
+    return texto.rstrip() + "\n\n" + bloco
+
+
+def anotar_aprendizados(hoje, linhas, regras=None):
+    """Grava a conclusão e as regras do canal em dados/aprendizados.md (o Claude lê antes de
+    sugerir ideias e escrever roteiros)."""
     arq = RAIZ / "dados" / "aprendizados.md"
     texto = arq.read_text(encoding="utf-8") if arq.exists() else "# O que funciona no canal\n"
-    titulo = f"## Medição {hoje:%d/%m/%Y} (vídeos do app x antes)"
-    if titulo in texto:  # mesma data: substitui
-        texto = texto.split(titulo)[0].rstrip() + "\n"
-    arq.write_text(texto.rstrip() + "\n\n" + titulo + "\n" + "\n".join(linhas) + "\n", encoding="utf-8")
+    if regras:
+        texto = trocar_secao(texto, "## Regras do canal (tiradas dos números; atualizadas a cada medição)", regras)
+    if linhas:
+        texto = trocar_secao(texto, f"## Medição {hoje:%d/%m/%Y} (vídeos do app x antes)", linhas)
+    arq.write_text(texto, encoding="utf-8")
+
+
+# ---------------------------------------------------------------- o que dá certo no canal
+def formato_titulo(t):
+    s = norm(t)
+    if s.startswith("por que") or s.startswith("porque"):
+        return "Pergunta “Por que…”"
+    if "verdade ou mito" in s or s.startswith("mito"):
+        return "Verdade ou mito"
+    if re.match(r"^\d+ ", s):
+        return "Lista com número"
+    if "?" in t or s.startswith(("como ", "o que ", "qual ", "quem ", "e se ", "para que", "quanto")):
+        return "Outra pergunta"
+    return "Afirmação"
+
+
+def faixa_duracao(d):
+    return "até 45 s" if d <= 45 else "46 a 60 s" if d <= 60 else "61 a 70 s" if d <= 70 else "mais de 70 s"
+
+
+DIAS = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"]
+NOMES_GRUPO = {"mamifero": "mamíferos", "reptil": "répteis", "anfibio": "anfíbios", "aracnideo": "aracnídeos",
+               "inseto": "insetos", "ave": "aves", "pet": "pets", "fazenda": "animais de fazenda",
+               "marinho": "bichos do mar", "rio": "bichos de rio", "felino": "felinos", "primata": "primatas",
+               "pre-historico": "pré-históricos", "molusco": "moluscos", "savana": "savana"}
+
+
+def temas_do_canal():
+    """Lista de temas do radar (com grupo e palavras de busca), para agrupar os vídeos por assunto."""
+    try:
+        canal = json.loads((RAIZ / "dados" / "canal.json").read_text(encoding="utf-8"))
+        arq = RAIZ / canal.get("radar", {}).get("temas", "")
+        temas = json.loads(arq.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    saida = []
+    for t in temas:
+        termos = [re.sub(r"[-_]", " ", norm(b)) for b in t.get("busca", []) if b]
+        if termos:
+            saida.append((t["pt"], t.get("grupo", ""),
+                          re.compile(r"(?<![a-z0-9])(" + "|".join(map(re.escape, termos)) + r")s?(?![a-z0-9])")))
+    return saida
+
+
+def tabela_grupos(nome, videos, chave, minimo=3):
+    grupos = {}
+    for v in videos:
+        k = chave(v)
+        if k:
+            grupos.setdefault(k, []).append(v)
+    linhas = [f"### {nome}", "", "| | Vídeos | Views (mediana) | % assistida (mediana) |", "|---|---|---|---|"]
+    ordem = sorted(grupos.items(), key=lambda kv: -statistics.median(x["views"] for x in kv[1]))
+    for k, L in ordem:
+        pcts = [x["pct"] for x in L if x.get("pct") is not None]
+        aviso = " (poucos vídeos)" if len(L) < minimo else ""
+        linhas.append(f"| {k}{aviso} | {len(L)} | {fmt(statistics.median(x['views'] for x in L), '', 0)} | "
+                      f"{fmt(statistics.median(pcts), '%') if pcts else '—'} |")
+    return linhas + [""], {k: L for k, L in grupos.items()}
+
+
+def padroes(videos):
+    """Analisa os Shorts com dados firmes e devolve (linhas do relatório, regras para o aprendizados)."""
+    base = [v for v in videos if v["formato"] == "short" and not v["cedo"] and v.get("views")]
+    if len(base) < 10:
+        return [], []
+    geral = statistics.median(v["views"] for v in base)
+    L = ["## O que dá certo no canal (Shorts com 7+ dias)", "",
+         f"Base: {len(base)} Shorts. Mediana do canal: {fmt(geral, '', 0)} views por Short.", ""]
+    regras = []
+
+    def compara(grupos, minimo=5):
+        validos = {k: statistics.median(x["views"] for x in g) for k, g in grupos.items() if len(g) >= minimo}
+        return sorted(validos.items(), key=lambda kv: -kv[1])
+
+    linhas, g_titulo = tabela_grupos("Formato do título", base, lambda v: formato_titulo(v["titulo"]))
+    L += linhas
+    maior = max(g_titulo.items(), key=lambda kv: len(kv[1]))
+    if len(maior[1]) / len(base) > 0.6:
+        regras.append(f"- Títulos: {round(100 * len(maior[1]) / len(base))}% dos Shorts usam \"{maior[0]}\". "
+                      "Esse formato não rende menos, mas deixa o canal repetitivo: use em no máximo 1 de cada 3 "
+                      "vídeos e teste outros (afirmação surpreendente, número, comparação, verdade ou mito).")
+    for k, mediana in compara(g_titulo):
+        if mediana < geral * 0.6:
+            regras.append(f"- Evite o formato \"{k}\" em Shorts: mediana de {fmt(mediana, '', 0)} views, "
+                          f"bem abaixo do canal ({fmt(geral, '', 0)}).")
+    pequenos = {k: g for k, g in g_titulo.items() if 2 <= len(g) < 5}
+    for k, g in pequenos.items():
+        m = statistics.median(x["views"] for x in g)
+        if m < geral * 0.4:
+            regras.append(f"- \"{k}\" foi mal nos {len(g)} Shorts em que foi usado ({fmt(m, '', 0)} views): evite.")
+
+    linhas, g_dur = tabela_grupos("Duração", base, lambda v: faixa_duracao(v["duracao"]) if v.get("duracao") else None)
+    L += linhas
+    ranking = compara(g_dur)
+    if len(ranking) >= 2 and ranking[-1][1] < ranking[0][1] * 0.8:
+        regras.append(f"- Duração: Shorts de {ranking[0][0]} rendem mais (mediana {fmt(ranking[0][1], '', 0)} views); "
+                      f"os de {ranking[-1][0]} rendem {round(100 * (1 - ranking[-1][1] / ranking[0][1]))}% menos. "
+                      f"Evite {ranking[-1][0]}.")
+
+    linhas, g_dia = tabela_grupos("Dia da publicação", base,
+                                  lambda v: DIAS[v["publicado"].weekday()] if v.get("publicado") else None)
+    L += linhas
+    for k, mediana in compara(g_dia):
+        if mediana < geral * 0.6:
+            regras.append(f"- {k.capitalize()} tem rendido pouco ({fmt(mediana, '', 0)} views de mediana): "
+                          "prefira outros dias.")
+
+    temas = temas_do_canal()
+    if temas:
+        def grupo_de(v):
+            t = re.sub(r"[-_]", " ", norm(v["titulo"]))
+            g = next((g or nome for nome, g, r in temas if r.search(t)), "fora da lista de temas")
+            return NOMES_GRUPO.get(g, g)
+        linhas, g_assunto = tabela_grupos("Assunto", base, grupo_de)
+        L += linhas
+        ranking = compara(g_assunto)
+        if ranking:
+            regras.append(f"- Assuntos que mais rendem: {', '.join(k for k, _ in ranking[:3])}.")
+        fora = g_assunto.get("fora da lista de temas", [])
+        if len(fora) >= 5 and statistics.median(x["views"] for x in fora) < geral * 0.85:
+            regras.append(f"- Temas fora da categoria do canal rendem menos (mediana "
+                          f"{fmt(statistics.median(x['views'] for x in fora), '', 0)} views): fique na categoria.")
+
+    # mesma pergunta publicada de novo (títulos quase iguais) divide o público
+    duplicados = []
+    for i, a in enumerate(base):
+        for b in base[i + 1:]:
+            if SequenceMatcher(None, norm(a["titulo"]), norm(b["titulo"])).ratio() >= 0.75:
+                duplicados.append((a, b))
+    if duplicados:
+        L += ["### Mesma pergunta publicada mais de uma vez", ""]
+        L += [f"- {fmt(a['views'], '', 0)} e {fmt(b['views'], '', 0)} views · {a['titulo'][:70]}" for a, b in duplicados[:8]]
+        L.append("")
+        regras.append(f"- Não publique a mesma pergunta de novo ({len(duplicados)} casos no canal): o mesmo animal "
+                      "pode voltar, mas com um ângulo novo (outro fato, outra pergunta).")
+
+    top = sorted(base, key=lambda v: -v["views"])[:5]
+    L += ["### Os 5 Shorts mais vistos", ""] + [f"- {fmt(v['views'], '', 0)} views · {v['titulo']}" for v in top] + [""]
+    if regras:
+        L += ["### Regras que o app passa a seguir", ""] + regras + [""]
+    return L, regras
+
+
+def salvar_videos_do_canal(videos):
+    """Lista de todos os vídeos publicados (título, data, views), para o Claude não repetir perguntas."""
+    lista = [{"titulo": v["titulo"], "publicado": v["publicado"].isoformat() if v.get("publicado") else None,
+              "views": v.get("views"), "formato": v["formato"]} for v in videos]
+    lista.sort(key=lambda v: v["publicado"] or "", reverse=True)
+    (RAIZ / "dados" / "videos-do-canal.json").write_text(json.dumps(lista, ensure_ascii=False, indent=1),
+                                                         encoding="utf-8")
 
 
 if __name__ == "__main__":

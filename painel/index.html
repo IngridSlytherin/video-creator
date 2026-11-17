@@ -1035,7 +1035,7 @@ function desenharTemas(ranking, data) {
       </div>`).join("") + "</div>";
   el.querySelectorAll("[data-tema]").forEach(b => b.onclick = () => {
     const r = ranking[+b.dataset.tema];
-    const sinais = r.motivos.filter(m => !m.startsWith("⚠️")).join("; ") || "interesse constante";
+    const sinais = r.motivos.filter(m => !m.startsWith("⚠️") && !m.startsWith("já tem vídeo")).join("; ") || "interesse constante";
     if (!estado.claude) {
       const pedido = `/radar Quero um vídeo sobre: ${r.animal} (${r.en}). Sinais do radar de ${data}: ${sinais}.`;
       copiar(pedido, "Pedido copiado! Cole no Claude Code (Ctrl+V) e envie.", 4000);
