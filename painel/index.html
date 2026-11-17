@@ -231,6 +231,10 @@
   @media (max-width: 900px) { .dublar { grid-template-columns: 1fr; } }
 
   .passos { margin: 6px 0 0; padding-left: 22px; font-size: 14.5px; }
+  .linguas { display: grid; gap: 8px; background: var(--papel); border-radius: 6px; padding: 10px 12px; }
+  .lingua { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+  .lingua strong { min-width: 74px; }
+  .linguas .sinais { margin: 0; }
   .arquivo { font: inherit; font-size: 14.5px; padding: 6px; border: 1px dashed var(--linha); border-radius: 6px; background: var(--papel); }
   .passos li { margin: 4px 0; }
   .md h3 { font-size: 17px; margin: 18px 0 6px; }
@@ -238,8 +242,8 @@
   .md td, .md th { font-size: 14px; }
 
   /* aviso de versão nova */
-  #atualizacao { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
-  #atualizacao[hidden] { display: none; }
+  #atualizacao, #lembrete-medir { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
+  #atualizacao[hidden], #lembrete-medir[hidden] { display: none; }
   .aviso-versao {
     padding: 14px 20px; border-left: 5px solid var(--verde); display: flex; justify-content: space-between;
     align-items: center; gap: 16px; flex-wrap: wrap;
@@ -311,6 +315,18 @@
     <div class="acoes" style="margin:0">
       <button class="leve" id="atualizacao-depois">Depois</button>
       <button class="destaque" id="atualizacao-botao">Atualizar agora</button>
+    </div>
+  </div>
+</section>
+
+<section id="lembrete-medir" hidden>
+  <div class="cartao aviso-versao" style="border-left-color: var(--amarelo)">
+    <div><strong>📊 Já dá para medir os resultados</strong>
+      <p class="sinais" style="margin:4px 0 0">Seus vídeos do app já têm 7+ dias. Exporte a tabela do YouTube Studio
+        e veja se eles seguram mais o público do que os antigos (leva 2 minutos).</p></div>
+    <div class="acoes" style="margin:0">
+      <button class="leve" id="lembrete-depois">Daqui a 3 dias</button>
+      <button class="destaque" id="lembrete-ir">Medir agora</button>
     </div>
   </div>
 </section>
@@ -617,6 +633,17 @@ $("#medicao-botao").onclick = async () => {
   }
 };
 
+function desenharLembrete() {
+  let adiado = 0;
+  try { adiado = Number(localStorage.getItem("lembreteMedirAte") || 0); } catch {}
+  $("#lembrete-medir").hidden = !estado.lembreteMedir || Date.now() < adiado;
+}
+$("#lembrete-depois").onclick = () => {
+  try { localStorage.setItem("lembreteMedirAte", String(Date.now() + 3 * 864e5)); } catch {}
+  $("#lembrete-medir").hidden = true;
+};
+$("#lembrete-ir").onclick = () => { $("#lembrete-medir").hidden = true; irPara("resultados"); };
+
 // ---------- versão nova do app
 let inicioServidor = null;
 
@@ -822,6 +849,36 @@ function desenharVideos() {
   el.querySelectorAll(".item").forEach(i => i.onclick = () => abrirVideo(i.dataset.pasta));
 }
 
+const NOMES_LINGUA = { "pt-BR": "Português", "en-US": "English", "es-MX": "Español" };
+
+function blocoLinguas(pasta, pub) {
+  if (!pub.temNarracao) return "";
+  const trad = pub.traducoes || {};
+  const linguas = Object.keys(trad);
+  const link = n => `<a href="/arquivo/${encodeURIComponent(pasta)}/${encodeURIComponent(n)}" download="${esc(pasta)}-${esc(n)}"><button class="leve pequeno">${esc(n.endsWith(".srt") ? "Legenda .srt" : "Áudio .mp3")}</button></a>`;
+  const legendaBase = (pub.legendas || []).find(n => !linguas.some(l => n === `legenda.${l}.srt`));
+  let html = `<div class="campo"><div class="rot">Legendas e outras línguas</div><div class="linguas">`;
+  if (legendaBase) {
+    html += `<div class="lingua"><strong>${esc(NOMES_LINGUA[legendaBase.split(".")[1]] || legendaBase)}</strong>
+      <span class="sinais">legenda para enviar em Legendas → Adicionar → Enviar arquivo</span>${link(legendaBase)}</div>`;
+  }
+  for (const l of linguas) {
+    const t = trad[l];
+    html += `<div class="lingua"><strong>${esc(NOMES_LINGUA[l] || l)}</strong>
+      <button class="leve pequeno" data-copiar-texto="${esc(t.titulo)}">Copiar título</button>
+      <button class="leve pequeno" data-copiar-texto="${esc(t.descricaoCompleta || t.descricao)}">Copiar descrição</button>
+      ${t.legenda ? link(t.legenda) : ""}${t.audio ? link(t.audio) : ""}</div>`;
+  }
+  if (!linguas.length) {
+    html += `<p class="sinais">Gere a legenda .srt e as versões em inglês e espanhol (título, descrição e áudio dublado).</p>
+      <button class="leve" id="gerar-traducoes">Gerar legendas e traduções</button>`;
+  } else {
+    html += `<p class="sinais">No Studio: Idiomas → Adicionar idioma (título e descrição). Onde aparecer "Adicionar áudio",
+      envie o áudio da língua: o vídeo passa a tocar na língua de quem assiste.</p>`;
+  }
+  return html + "</div></div>";
+}
+
 function campo(rotulo, texto, msg) {
   if (!texto) return "";
   return `<div class="campo"><div class="rot">${esc(rotulo)}<button class="leve pequeno" data-copiar data-msg="${esc(msg || rotulo + " copiado!")}">Copiar</button></div>
@@ -857,6 +914,7 @@ async function abrirVideo(pasta) {
           ${v.thumbnail ? `<div class="campo thumb"><div class="rot">Thumbnail
               <a href="${arq(pasta, "thumbnail.png")}" download="${esc(pasta)}-thumbnail.png"><button class="leve pequeno">Baixar</button></a></div>
               <img src="${arq(pasta, "thumbnail.png")}" alt="thumbnail"></div>` : ""}
+          ${blocoLinguas(pasta, pub)}
           ${m ? `<div class="campo"><div class="rot">Melhor dia e horário</div><div class="horarios">${esc(m[1])}</div></div>` : ""}
           <p class="aviso">Ao publicar, marque <strong>"Conteúdo alterado ou sintético" → Sim</strong> (a narração é voz sintética).</p>
         </div>
@@ -873,6 +931,10 @@ async function abrirVideo(pasta) {
     } catch (err) { alert(err.message); }
   };
   $("#abrir-pasta").onclick = () => api("/api/abrir-pasta", { pasta }).catch(e => alert(e.message));
+  document.querySelectorAll("#detalhe-video [data-copiar-texto]").forEach(b =>
+    b.onclick = () => copiar(b.dataset.copiarTexto, "Copiado!"));
+  const btTrad = $("#gerar-traducoes");
+  if (btTrad) btTrad.onclick = () => iniciar("/api/traduzir", { pasta });
 }
 $("#abrir-saida").onclick = () => api("/api/abrir-pasta", {}).catch(e => alert(e.message));
 
@@ -1006,6 +1068,7 @@ const NOMES_TAREFA = {
   dublar: () => "Dublando o seu vídeo",
   atualizar: () => "Atualizando o app",
   medir: () => "Analisando os resultados",
+  traduzir: t => `Legendas e traduções: ${t.alvo}`,
   ideias: t => `Ideias para "${t.alvo}"`,
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
@@ -1077,6 +1140,7 @@ async function acompanhar() {
   if (codigo !== 0) return;
   if (tipo === "radar") carregarRadar();
   if (tipo === "medir") { tarefaFechada = true; desenharTarefa(); irPara("resultados"); }
+  if (tipo === "traduzir") { avisar("Legendas e traduções prontas!", 4000); if (videoSel) abrirVideo(videoSel); }
   if (tipo === "ideias" && resultado) {
     desenharIdeias(resultado);
     tarefaFechada = true;
@@ -1103,6 +1167,7 @@ async function atualizar() {
   desenharRoteiros();
   desenharTarefa();
   desenharCanal();
+  desenharLembrete();
   const semClaude = $("#sem-claude");
   semClaude.hidden = estado.claude === true;
   if (estado.claude === undefined) {

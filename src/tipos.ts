@@ -9,6 +9,22 @@ export type Clipe = {
   url?: string;
 };
 
+// Animação por cima do vídeo durante um trecho da fala (campo "grafico" no roteiro).
+export type Grafico = {
+  tipo: "numero" | "comparacao";
+  inicio: number; // segundos
+  duracao: number; // segundos
+  // numero: conta de "de" até "valor"
+  valor?: number;
+  de?: number;
+  prefixo?: string;
+  sufixo?: string;
+  rotulo?: string;
+  // comparacao: barras proporcionais
+  unidade?: string;
+  itens?: { nome: string; valor: number }[];
+};
+
 export type PropsVideo = {
   duracaoSegundos: number;
   narracao: string;
@@ -23,6 +39,8 @@ export type PropsVideo = {
   volumeOriginal?: number; // 0 = sem o som original; 0.15 = som original baixinho
   semZoom?: boolean; // não aplica o zoom lento (não corta as bordas)
   semLegendas?: boolean;
+  graficos?: Grafico[];
+  idioma?: string; // formato dos números (ex.: "pt-BR" usa vírgula decimal)
 };
 
 export const exemploProps: PropsVideo = {

@@ -255,6 +255,35 @@ def verificar_atualizacao():
         ATUALIZACAO.update(git=False)
 
 
+def radar_diario():
+    """Roda o radar sozinho uma vez por dia (não usa o Claude). Desligue com
+    "radarAutomatico": false em dados/canal.json."""
+    time.sleep(15)
+    while True:
+        canal = canal_cfg.carregar(obrigatorio=False)
+        hoje = RADAR / f"{datetime.now():%Y-%m-%d}.md"
+        if canal and canal.get("radarAutomatico", True) and not hoje.exists() and not TAREFA.rodando:
+            TAREFA.iniciar("radar", "radar", [sys.executable, "-I", "-u", "pipeline/radar.py"])
+        time.sleep(3600)
+
+
+def lembrete_medir():
+    """True quando já dá para medir: há vídeo publicado (marcado no painel) há 7+ dias
+    e nenhuma medição nos últimos 14 dias."""
+    datas = []
+    for d in ler_json(PUBLICADOS, {}).values():
+        try:
+            datas.append(datetime.strptime(d, "%d/%m/%Y"))
+        except (TypeError, ValueError):
+            pass
+    if not datas or (datetime.now() - min(datas)).days < 7:
+        return False
+    medicoes = list((RAIZ / "dados" / "medicoes").glob("*.md"))
+    if medicoes and (datetime.now() - datetime.fromtimestamp(max(m.stat().st_mtime for m in medicoes))).days < 14:
+        return False
+    return True
+
+
 def vigiar_atualizacoes():
     while True:
         verificar_atualizacao()
@@ -343,6 +372,12 @@ Passos:
    Números e medidas: use o valor exato da fonte; na dúvida, deixe o número de fora.
 4. Siga as regras de dados/aprendizados.md, se existir: não entregue a resposta nos primeiros 10 s,
    guarde o fato mais forte para o fim, frases curtas e faladas.
+4b. Animações (opcional, no máximo 2 por vídeo, só quando ajudam): num trecho que cita um número marcante
+   ou uma comparação de tamanho, acrescente o campo "grafico" nesse trecho:
+   número contando: {{"tipo": "numero", "valor": 80, "sufixo": " km/h", "rotulo": "velocidade do soco"}}
+   comparação: {{"tipo": "comparacao", "rotulo": "comprimento", "unidade": "m",
+                "itens": [{{"nome": "Humano", "valor": 1.7}}, {{"nome": "Baleia-azul", "valor": 30}}]}}
+   (rótulos e nomes na língua do vídeo; números exatos da fonte; o último item da comparação fica destacado).
 5. Salve em roteiros/<slug>.json. Slug curto, minúsculas, sem acento, com hífens, e que ainda não exista
    na pasta roteiros/.
 6. Não rode o gerador de vídeo nem nenhum outro comando.
@@ -577,6 +612,7 @@ class Painel(BaseHTTPRequestHandler):
                 "radar": listar_radar(), "tarefa": TAREFA.estado(), "claude": bool(achar_claude()),
                 "canal": canal_cfg.carregar(obrigatorio=False), "categorias": canal_cfg.CATEGORIAS,
                 "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
+                "lembreteMedir": lembrete_medir(),
                 "medicoes": sorted((p.stem for p in (RAIZ / "dados" / "medicoes").glob("*.md")), reverse=True),
             })
         if len(partes) == 3 and partes[:2] == ["api", "medicao"] and NOME_SEGURO.match(partes[2]):
@@ -599,8 +635,15 @@ class Painel(BaseHTTPRequestHandler):
                                    "texto": texto_roteiro(r),
                                    "fontes": r.get("publicacao", {}).get("fontes", [])})
         if len(partes) == 3 and partes[:2] == ["api", "publicacao"] and NOME_SEGURO.match(partes[2]):
-            pub = ler_publicacao(SAIDA / partes[2])
-            return self.responder(pub) if pub else self.erro("sem publicacao.txt", 404)
+            pasta = SAIDA / partes[2]
+            pub = ler_publicacao(pasta)
+            if not pub:
+                return self.erro("sem publicacao.txt", 404)
+            pub["traducoes"] = ler_json(pasta / "traducoes.json", {})
+            pub["legendas"] = sorted(p.name for p in pasta.glob("legenda.*.srt"))
+            pub["temNarracao"] = (RAIZ / "public" / "projetos" / partes[2] / "props.json").exists() and \
+                bool(ler_json(RAIZ / "public" / "projetos" / partes[2] / "props.json", {}).get("palavras"))
+            return self.responder(pub)
         if len(partes) == 3 and partes[:2] == ["api", "radar"] and NOME_SEGURO.match(partes[2]):
             arq = RADAR / f"{partes[2]}.md"
             if arq.exists():
@@ -695,6 +738,13 @@ class Painel(BaseHTTPRequestHandler):
             }
             (pasta / "dublagem.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1), encoding="utf-8")
             ok = TAREFA.iniciar("dublar", slug, py + ["pipeline/dublar.py", slug])
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/traduzir":
+            pasta = str(dados.get("pasta", ""))
+            if not NOME_SEGURO.match(pasta) or not (SAIDA / pasta / "video.mp4").exists():
+                return self.erro("vídeo não encontrado", 404)
+            ok = TAREFA.iniciar("traduzir", pasta, py + ["pipeline/traduzir.py", pasta])
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
         if caminho == "/api/atualizar":
@@ -830,6 +880,7 @@ def main():
     servidor = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
     print(f"Painel aberto em {url}  (feche esta janela para desligar)", flush=True)
     threading.Thread(target=vigiar_atualizacoes, daemon=True).start()
+    threading.Thread(target=radar_diario, daemon=True).start()
     if abrir:
         threading.Timer(0.8, webbrowser.open, args=(url,)).start()
     try:

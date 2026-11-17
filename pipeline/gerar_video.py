@@ -116,11 +116,11 @@ def voz_do_canal():
     return canal.get("voz") or ENV.get("VOZ") or canal_cfg.idioma(canal)["voz"]
 
 
-async def narrar_segmento(texto, destino: Path, velocidade):
+async def narrar_segmento(texto, destino: Path, velocidade, voz=None):
     """Gera mp3 e devolve a lista de palavras com tempo (ms)."""
     com = edge_tts.Communicate(
         texto,
-        voice=voz_do_canal(),
+        voice=voz or voz_do_canal(),
         rate=velocidade,
         boundary="WordBoundary",
     )
@@ -555,6 +555,14 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
         "capa": f"projetos/{slug}/capa.jpg" if com_thumbnail else None,
         "clipes": clipes,
         "palavras": [p for s in segs for p in s["palavras"]],
+        # trechos da fala com tempo: usados para dublar em outras línguas (pipeline/traduzir.py)
+        "segmentos": [{"inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3), "texto": s["texto"],
+                       "palavras": len(s["palavras"])} for s in segs],
+        "formato": formato,
+        # animações (campo "grafico" em um trecho do roteiro): número contando ou comparação
+        "graficos": [{**s["grafico"], "inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3)}
+                     for s in segs if isinstance(s.get("grafico"), dict) and s["grafico"].get("tipo")],
+        "idioma": canal_cfg.carregar().get("idioma", canal_cfg.IDIOMA_PADRAO),
         "capitulos": caps,
     }
     arq_props = pasta_pub / "props.json"
@@ -571,6 +579,14 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
 
     escrever_publicacao(roteiro, props, pasta_saida)
     registrar_historico(roteiro)
+    # legenda .srt + título/descrição/áudio nas outras línguas (falha aqui não estraga o vídeo)
+    try:
+        traduzir = importlib.util.spec_from_file_location("traduzir", RAIZ / "pipeline" / "traduzir.py")
+        mod_traduzir = importlib.util.module_from_spec(traduzir)
+        traduzir.loader.exec_module(mod_traduzir)
+        mod_traduzir.main(slug, com_traducao=os.environ.get("TRADUZIR", "1") != "0")
+    except Exception as e:  # noqa: BLE001
+        log(f"Aviso: não consegui gerar legendas/traduções ({e}). O vídeo está pronto mesmo assim.")
     if not manter_clipes:
         apagados = sum(a.stat().st_size for a in pasta_pub.glob("clipe_*.mp4"))
         for a in pasta_pub.glob("clipe_*.mp4"):
@@ -722,9 +738,11 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
         sys.exit("Uso: python -I pipeline/gerar_video.py roteiros/<arquivo>.json "
-                 "[--so-publicacao] [--manter-clipes] [--sem-shorts] [--sem-conferir]")
+                 "[--so-publicacao] [--manter-clipes] [--sem-shorts] [--sem-conferir] [--sem-traducao]")
     if "--sem-conferir" in sys.argv:  # pula a conferência das imagens pelo Claude
         os.environ["CONFERIR_CLIPES"] = "0"
+    if "--sem-traducao" in sys.argv:  # só a legenda .srt, sem traduzir para as outras línguas
+        os.environ["TRADUZIR"] = "0"
     if "--so-publicacao" in sys.argv:
         so_publicacao(args[0])
     else:

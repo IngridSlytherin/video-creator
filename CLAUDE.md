@@ -46,6 +46,9 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
   (longo com capítulos). Campos `animal`, `busca`, `exigir`, `evitar` em inglês (são o assunto que
   filtra os clipes do Pexels, mesmo que não seja um animal); o resto na língua do canal.
 - Confira os fatos (WebSearch) e coloque fontes em `publicacao.fontes`.
+- Animações (opcional, até 2 por vídeo): num trecho com número marcante ou comparação de tamanho, use
+  `"grafico": {"tipo": "numero", "valor": 80, "sufixo": " km/h", "rotulo": "..."}` ou
+  `"grafico": {"tipo": "comparacao", "rotulo": "...", "unidade": "m", "itens": [{"nome": "...", "valor": 1.7}, ...]}`.
 - Imagens só do Pexels: não proponha temas que dependem de jogos, filmes, marcas ou pessoas famosas.
 - Rode Python com `python -I`. A chave do Pexels fica em `.env` (nunca mostre).
 - Comando `/radar` (`.claude/skills/radar`) sugere temas a partir do radar.

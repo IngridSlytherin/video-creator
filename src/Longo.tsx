@@ -11,6 +11,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { ESTILO_LONGO, Legendas } from "./Legendas";
+import { Graficos } from "./Graficos";
 import { CORES, FONTE, PropsVideo } from "./tipos";
 
 // Zoom bem lento: o vídeo longo pede ritmo mais calmo que o Short.
@@ -102,6 +103,8 @@ export const Longo: React.FC<PropsVideo> = ({
   volumeOriginal = 0,
   semZoom = false,
   semLegendas = false,
+  graficos = [],
+  idioma = "pt-BR",
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
 
@@ -152,6 +155,8 @@ export const Longo: React.FC<PropsVideo> = ({
       >
         {marca}
       </div>
+
+      <Graficos graficos={graficos} formato="longo" idioma={idioma} />
 
       {semLegendas ? null : <Legendas palavras={palavras} estilo={ESTILO_LONGO} />}
 

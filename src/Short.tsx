@@ -10,6 +10,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { Legendas } from "./Legendas";
+import { Graficos } from "./Graficos";
 import { CORES, FONTE, PropsVideo } from "./tipos";
 
 // Clipe com leve zoom, para não ficar parado (efeito "Ken Burns").
@@ -49,6 +50,8 @@ export const Short: React.FC<PropsVideo> = ({
   volumeOriginal = 0,
   semZoom = false,
   semLegendas = false,
+  graficos = [],
+  idioma = "pt-BR",
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -99,6 +102,8 @@ export const Short: React.FC<PropsVideo> = ({
       >
         {marca}
       </div>
+
+      <Graficos graficos={graficos} formato="short" idioma={idioma} />
 
       {semLegendas ? null : <Legendas palavras={palavras} />}
 

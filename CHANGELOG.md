@@ -3,6 +3,13 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.5 — 17/11/2026
+- **Legenda .srt** de cada vídeo, pronta para enviar no YouTube Studio (ajuda na busca).
+- **Outras línguas**: título, descrição e **áudio dublado** em inglês e espanhol (no mesmo tempo
+  do vídeo), para o recurso de várias faixas de áudio do YouTube. Botões no painel para copiar e baixar.
+- **Animações**: número contando ("0 → 80 km/h") e comparação com barras ("Humano × Baleia").
+- **Radar automático** uma vez por dia ao abrir o painel e **aviso para medir** os resultados.
+
 ## 1.4 — 17/11/2026
 - **Pixabay como segunda fonte de vídeos** (opcional): com `PIXABAY_API_KEY` no `.env`, o gerador
   busca no Pexels e no Pixabay e mistura os resultados. Vale também para os vídeos relaxantes.

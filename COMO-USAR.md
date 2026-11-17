@@ -103,6 +103,34 @@ Copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote os n�
 YouTube Studio (retenção, horários do público, o que deu certo). O Claude lê esse arquivo antes
 de sugerir ideias e escrever roteiros.
 
+## Legendas e outras línguas (automático)
+No fim de cada vídeo, o gerador cria em `saida/<vídeo>/`:
+- `legenda.<língua>.srt`: legenda da narração. Envie em **YouTube Studio → Legendas → Adicionar →
+  Enviar arquivo → Com tempo**. O YouTube usa esse texto na busca e na tradução automática.
+- Para as outras línguas (inglês/espanhol, se o canal for em português): **título e descrição
+  traduzidos** (Studio → Idiomas → Adicionar idioma) e **áudio dublado** `audio.<língua>.mp3`, com a
+  narração traduzida no mesmo tempo do vídeo, a mesma música e o mesmo volume. Onde o Studio mostrar
+  **"Adicionar áudio"**, envie esse arquivo: quem assiste nos EUA ou na América Latina ouve na língua dele.
+- Tudo aparece no painel em **Vídeos prontos → Legendas e outras línguas**, com botões para copiar e baixar.
+  Para vídeos antigos, o botão **Gerar legendas e traduções** faz o mesmo.
+- A legenda gravada na imagem continua na língua do canal.
+- Para escolher as línguas, ponha em `dados/canal.json`: `"traducoes": ["en-US"]` (ou `[]` para nenhuma).
+  Para pular num vídeo: `--sem-traducao`. Pelo terminal, num vídeo pronto: `python -I pipeline/traduzir.py <vídeo>`.
+
+## Animações (número contando e comparação)
+Num trecho do roteiro, o campo `"grafico"` mostra um cartão animado enquanto esse trecho é falado:
+- Número contando: `"grafico": {"tipo": "numero", "valor": 80, "sufixo": " km/h", "rotulo": "velocidade do soco"}`
+  (opcional: `"de": 0`, `"prefixo": "R$ "`).
+- Comparação com barras: `"grafico": {"tipo": "comparacao", "rotulo": "comprimento", "unidade": "m",
+  "itens": [{"nome": "Humano", "valor": 1.7}, {"nome": "Baleia-azul", "valor": 30}]}` (até 4 itens; o último fica em amarelo).
+O Claude já usa isso sozinho nos roteiros (no máximo 2 por vídeo).
+
+## Radar automático e lembrete de medir
+- O painel roda o radar sozinho uma vez por dia (não usa o Claude), uns segundos depois de abrir.
+  Para desligar: `"radarAutomatico": false` em `dados/canal.json`.
+- Quando um vídeo marcado como "Já publiquei" fizer 7 dias e não houver medição nas últimas 2 semanas,
+  o painel mostra o aviso **"Já dá para medir os resultados"**.
+
 ## Segunda fonte de vídeos: Pixabay (opcional, grátis)
 Com a chave do Pixabay, o gerador busca clipes no Pexels **e** no Pixabay e mistura os resultados:
 mais opções quando o Pexels tem pouco material de um assunto.
