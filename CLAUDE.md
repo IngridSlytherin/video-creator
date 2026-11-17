@@ -44,7 +44,7 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
 
 - Roteiros: siga a estrutura de `exemplos/short-exemplo.json` (Short) ou `exemplos/longo-exemplo.json`
   (longo com capítulos). Campos `animal`, `busca`, `exigir`, `evitar` em inglês (são o assunto que
-  filtra os clipes do Pexels, mesmo que não seja um animal); o resto em português.
+  filtra os clipes do Pexels, mesmo que não seja um animal); o resto na língua do canal.
 - Confira os fatos (WebSearch) e coloque fontes em `publicacao.fontes`.
 - Imagens só do Pexels: não proponha temas que dependem de jogos, filmes, marcas ou pessoas famosas.
 - Rode Python com `python -I`. A chave do Pexels fica em `.env` (nunca mostre).
