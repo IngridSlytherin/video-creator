@@ -454,9 +454,12 @@ def salvar_videos_do_canal(videos):
     """Lista de todos os vídeos publicados (título, data, views), para o Claude não repetir perguntas."""
     lista = [{"titulo": v["titulo"], "publicado": v["publicado"].isoformat() if v.get("publicado") else None,
               "views": v.get("views"), "formato": v["formato"]} for v in videos]
-    lista.sort(key=lambda v: v["publicado"] or "", reverse=True)
-    (RAIZ / "dados" / "videos-do-canal.json").write_text(json.dumps(lista, ensure_ascii=False, indent=1),
-                                                         encoding="utf-8")
+    # junta com o que já existe (a lista só cresce: apagar vídeos do computador não faz perder títulos)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("titulos_canal", RAIZ / "pipeline" / "titulos_canal.py")
+    tc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tc)
+    tc.juntar(lista)
 
 
 if __name__ == "__main__":

@@ -255,12 +255,26 @@ def verificar_atualizacao():
         ATUALIZACAO.update(git=False)
 
 
+_spec_tc = importlib.util.spec_from_file_location("titulos_canal", RAIZ / "pipeline" / "titulos_canal.py")
+titulos_canal = importlib.util.module_from_spec(_spec_tc)
+_spec_tc.loader.exec_module(titulos_canal)
+SINCRONIA = {}  # última sincronização dos títulos do canal
+
+
 def radar_diario():
     """Roda o radar sozinho uma vez por dia (não usa o Claude). Desligue com
     "radarAutomatico": false em dados/canal.json."""
     time.sleep(15)
     while True:
         canal = canal_cfg.carregar(obrigatorio=False)
+        # títulos já publicados no canal (para o Claude não repetir perguntas), 1x por dia
+        hoje_txt = datetime.now().strftime("%Y-%m-%d")
+        if canal and canal.get("youtube") and SINCRONIA.get("dia") != hoje_txt:
+            try:
+                entraram, total = titulos_canal.sincronizar(canal["youtube"])
+                SINCRONIA.update(dia=hoje_txt, total=total, novos=entraram, erro=None)
+            except Exception as e:  # sem internet ou link errado: tenta de novo depois
+                SINCRONIA.update(erro=str(e)[:120])
         hoje = RADAR / f"{datetime.now():%Y-%m-%d}.md"
         if canal and canal.get("radarAutomatico", True) and not hoje.exists() and not TAREFA.rodando:
             TAREFA.iniciar("radar", "radar", [sys.executable, "-I", "-u", "pipeline/radar.py"])
@@ -622,6 +636,7 @@ class Painel(BaseHTTPRequestHandler):
                 "canal": canal_cfg.carregar(obrigatorio=False), "categorias": canal_cfg.CATEGORIAS,
                 "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
                 "lembreteMedir": lembrete_medir(),
+                "titulosGuardados": len(titulos_canal.ler()),
                 "medicoes": sorted((p.stem for p in (RAIZ / "dados" / "medicoes").glob("*.md")), reverse=True),
             })
         if len(partes) == 3 and partes[:2] == ["api", "medicao"] and NOME_SEGURO.match(partes[2]):
@@ -793,6 +808,15 @@ class Painel(BaseHTTPRequestHandler):
             atual = canal_cfg.carregar(obrigatorio=False) or {}
             lingua = dados.get("idioma") if dados.get("idioma") in canal_cfg.IDIOMAS else canal_cfg.IDIOMA_PADRAO
             cfg = canal_cfg.montar(nome, categoria, str(dados.get("descricao", ""))[:200], lingua)
+            youtube = str(dados.get("youtube", "")).strip()[:200]
+            if youtube:
+                cfg["youtube"] = youtube
+                SINCRONIA.clear()  # link novo: sincroniza os títulos na próxima volta
+                threading.Thread(target=lambda: SINCRONIA.update(
+                    zip(("novos", "total"), titulos_canal.sincronizar(youtube)), dia=datetime.now().strftime("%Y-%m-%d")),
+                    daemon=True).start()
+            elif atual.get("youtube"):
+                cfg["youtube"] = atual["youtube"]
             if atual.get("categoria") == categoria and atual.get("idioma", canal_cfg.IDIOMA_PADRAO) == lingua:
                 # mesma categoria e língua: mantém o radar, os horários e as voz/hashtags já ajustados
                 manter = ["radar", "horarios", "voz", "hashtagsFim"]

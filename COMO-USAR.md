@@ -161,6 +161,14 @@ estão no `historico.json`) com os **anteriores**, separando Shorts e vídeos lo
 de 7 dias ou 100 views ficam fora da média (os números ainda mudam). A conclusão é anotada em
 `dados/aprendizados.md`, que o Claude lê antes de sugerir ideias. Repita de 2 em 2 semanas.
 
+## Títulos já publicados (para não repetir)
+- Em **⚙ Canal**, coloque o **link do canal no YouTube**. O painel busca uma vez por dia os vídeos
+  publicados (feed oficial do canal e a página pública de Shorts/vídeos) e guarda os títulos em
+  `dados/videos-do-canal.json`. A exportação do Studio (aba Resultados) completa a lista com todos.
+- A lista **só cresce**: pode apagar a pasta `saida/` (os vídeos) e o histórico à vontade.
+  Só não apague a pasta `dados/` (é onde ficam o canal, as regras e essa lista).
+- Pelo terminal: `python -I pipeline/titulos_canal.py`.
+
 ## Atualizar o app
 - O painel confere no GitHub, ao abrir e a cada 6 horas, se saiu versão nova. Se saiu, aparece a faixa
   **"Nova versão do app disponível"** com as novidades.

@@ -3,6 +3,12 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.9 — 17/11/2026
+- **Títulos do canal guardados**: com o link do canal em ⚙ Canal, o painel busca 1x por dia os vídeos
+  publicados (feed oficial e página pública do canal) e guarda os títulos em `dados/videos-do-canal.json`.
+  A lista só cresce: pode apagar os vídeos e o histórico do computador que o app não esquece o que
+  já foi publicado (e não repete perguntas).
+
 ## 1.8 — 17/11/2026
 - **Tema escuro**: botão "🌙 Tema escuro" / "☀️ Tema claro" no topo do painel. Na primeira vez
   segue o tema do Windows; depois lembra a sua escolha.
