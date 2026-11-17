@@ -256,9 +256,11 @@ PROIBIDAS = [
     # telões/prédios e tomadas aéreas, em que o animal some ou nem é de verdade
     "display", "billboard", "screen", "building", "skyline", "city", "street",
     "aerial", "drone", "exploring",
+    # parques de diversão (ex.: o brinquedo "Octopus" do Pixabay)
+    "carousel", "fairground", "amusement", "carnival",
 ]
 # Palavras curtas que só bloqueiam quando aparecem inteiras (evita "man" barrar "mangrove").
-PROIBIDAS_EXATAS = {"man", "men", "hand", "hands", "eat", "raw", "3d", "pet", "art"}
+PROIBIDAS_EXATAS = {"man", "men", "hand", "hands", "eat", "raw", "3d", "pet", "art", "fair", "ride"}
 
 
 def relevante(video, exigir, evitar=()):
