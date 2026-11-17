@@ -16,6 +16,7 @@ Passos: narração (edge-tts) -> clipes (Pexels) -> props -> render (Remotion)
 -> thumbnail (só longo) -> publicacao.txt. Resultado em saida/<slug>/.
 """
 import asyncio
+import hashlib
 import importlib.util
 import json
 import math
@@ -72,6 +73,9 @@ ENV = carregar_env()
 _spec_canal = importlib.util.spec_from_file_location("canal", RAIZ / "pipeline" / "canal.py")
 canal_cfg = importlib.util.module_from_spec(_spec_canal)
 _spec_canal.loader.exec_module(canal_cfg)
+_spec_cli = importlib.util.spec_from_file_location("claude_cli", RAIZ / "pipeline" / "claude_cli.py")
+claude_cli = importlib.util.module_from_spec(_spec_cli)
+_spec_cli.loader.exec_module(claude_cli)
 
 
 def log(msg):
@@ -276,11 +280,14 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
             vistos, filtrados = set(), []
             for v in lista:
                 if (v["id"] not in usados and v["id"] not in vistos
+                        and v.get("url") not in BLOQUEADOS
                         and relevante(v, seg["exigir"], seg["evitar"])
                         and v.get("duration", 0) >= dur_clipe + 0.5):
                     vistos.add(v["id"])
                     filtrados.append(v)
-            random.Random(f"{slug}{idx}{orient}").shuffle(filtrados)
+            # embaralha de forma estável por clipe: se um clipe for bloqueado, os outros
+            # continuam na mesma ordem (e não precisam ser baixados de novo)
+            filtrados.sort(key=lambda v: hashlib.md5(f"{slug}{idx}{orient}{v['id']}".encode()).hexdigest())
             pool += filtrados
 
         limite = cfg["novos_por_segmento"] or qtd
@@ -290,9 +297,11 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
             if pool and novos < limite:
                 video = pool.pop(0)
                 usados.add(video["id"])
-                destino = pasta / f"clipe_{n_arquivos:03d}.mp4"
-                baixar(melhor_arquivo(video)["link"], destino)
-                n_arquivos += 1
+                # nome = número do vídeo no Pexels: ao trocar clipes ruins, os bons não são baixados de novo
+                destino = pasta / f"clipe_{video['id']}.mp4"
+                if not destino.exists():
+                    baixar(melhor_arquivo(video)["link"], destino)
+                    n_arquivos += 1
                 novos += 1
                 meus.append({"arquivo": f"projetos/{slug}/{destino.name}",
                              "duracaoTotal": float(video.get("duration", 0)),
@@ -310,9 +319,126 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
             trecho = base["usado"] % max(0.1, base["duracaoTotal"] - dur_clipe)
             base["usado"] = trecho + dur_clipe
             clipes.append({"arquivo": base["arquivo"], "inicio": inicio, "duracao": dur_clipe,
-                           "inicioNoClipe": trecho, "autor": base["autor"], "url": base["url"]})
+                           "inicioNoClipe": trecho, "autor": base["autor"], "url": base["url"],
+                           "assunto": ", ".join(seg["exigir"])})
         log(f"  trecho {idx + 1}/{len(segs)}: {qtd} cortes, {novos} clipes novos")
     log(f"{n_arquivos} clipes baixados para {len(clipes)} cortes")
+    return clipes
+
+
+# ---------- 2b. Conferência das imagens pelo Claude ----------
+ARQ_BLOQUEADOS = RAIZ / "dados" / "clipes-bloqueados.json"
+BLOQUEADOS = {}  # url do Pexels -> motivo (vale para todos os vídeos seguintes)
+if ARQ_BLOQUEADOS.exists():
+    BLOQUEADOS.update(json.loads(ARQ_BLOQUEADOS.read_text(encoding="utf-8")))
+FONTE_NUMEROS = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts" / "arialbd.ttf"
+POR_FOLHA = 12  # 4 x 3 quadros por imagem
+
+
+def _quadro(arquivo, segundo, destino, numero):
+    """Um quadro do clipe, 320x180, com o número no canto (para o Claude citar)."""
+    filtro = "scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2"
+    if FONTE_NUMEROS.exists():
+        fonte = str(FONTE_NUMEROS).replace("\\", "/").replace(":", "\\:")
+        filtro += (f",drawtext=fontfile='{fonte}':text='{numero}':x=8:y=6:fontsize=30:fontcolor=yellow"
+                   ":box=1:boxcolor=black@0.7:boxborderw=4")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{segundo:.2f}", "-i", str(arquivo),
+                    "-frames:v", "1", "-vf", filtro, "-q:v", "4", str(destino)], check=True)
+
+
+def conferir_clipes(clipes, pasta: Path, aprovados=()):
+    """Mostra ao Claude um quadro de cada clipe e devolve {url: motivo} dos que não servem
+    (telão, brinquedo, desenho, comida, bicho errado...). Pula os já aprovados.
+    Sem Claude, devolve {} e segue."""
+    if os.environ.get("CONFERIR_CLIPES", "1") == "0" or not claude_cli.achar_claude():
+        return {}
+    unicos = {}
+    for c in clipes:  # um quadro por arquivo, no primeiro trecho usado
+        if c.get("url") not in aprovados:
+            unicos.setdefault(c["arquivo"], c)
+    if not unicos:
+        return {}
+    log(f"Conferindo as imagens ({len(unicos)} clipes) com o Claude...")
+    trabalho = pasta / "conferencia"
+    trabalho.mkdir(exist_ok=True)
+    por_assunto = {}
+    for c in unicos.values():
+        por_assunto.setdefault(c.get("assunto", ""), []).append(c)
+
+    numerados, folhas, n = {}, [], 0
+    for assunto, lista in por_assunto.items():
+        for i in range(0, len(lista), POR_FOLHA):
+            grupo, quadros = lista[i:i + POR_FOLHA], []
+            for c in grupo:
+                n += 1
+                numerados[n] = c
+                q = trabalho / f"q{n:03d}.jpg"
+                _quadro(RAIZ / "public" / c["arquivo"], c.get("inicioNoClipe", 0) + 0.5, q, n)
+                quadros.append(q)
+            lista_txt = trabalho / f"folha{len(folhas)}.txt"
+            lista_txt.write_text("".join(f"file '{q.name}'\n" for q in quadros), encoding="utf-8")
+            folha = trabalho / f"folha{len(folhas)}.jpg"
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+                            "-i", lista_txt.name, "-vf", "tile=4x3", "-frames:v", "1", "-q:v", "4", folha.name],
+                           check=True, cwd=trabalho)
+            folhas.append((folha, assunto, list(range(n - len(grupo) + 1, n + 1))))
+
+    descricao = "\n".join(f"- {f.resolve()}  → clipes {ns[0]} a {ns[-1]}; o vídeo precisa mostrar: {a}"
+                          for f, a, ns in folhas)
+    prompt = f"""Você confere imagens para um vídeo do YouTube. Leia (Read) cada imagem abaixo: são folhas com
+quadros de clipes do Pexels, cada quadro com um número amarelo no canto.
+{descricao}
+
+Um clipe NÃO serve se: não mostra o assunto de verdade (vivo/real, em destaque), mostra outro bicho
+ou coisa, é telão/prédio/estátua/brinquedo/desenho/pelúcia/comida, tem pessoas em destaque, ou está
+escuro/borrado a ponto de não dar para ver nada. Na dúvida, o clipe serve.
+
+Responda SOMENTE com JSON: {{"ruins": [{{"numero": 3, "motivo": "telão num prédio"}}]}}
+(lista vazia se todos servem)."""
+    resposta = claude_cli.perguntar(prompt, ("Read",), timeout=600)
+    shutil.rmtree(trabalho, ignore_errors=True)
+    if resposta is None:
+        log("  Não consegui falar com o Claude; seguindo sem conferir.")
+        return {}
+    try:
+        ruins = claude_cli.extrair_json(resposta).get("ruins", [])
+    except ValueError:
+        log("  Resposta do Claude fora do formato; seguindo sem conferir.")
+        return {}
+    saida = {}
+    for r in ruins:
+        c = numerados.get(int(r.get("numero", 0)))
+        if c and c.get("url"):
+            saida[c["url"]] = str(r.get("motivo", ""))[:120]
+            log(f"  clipe {r.get('numero')} não serve: {r.get('motivo', '')} ({c['url'].rstrip('/').split('/')[-1]})")
+    if not saida:
+        log("  Todas as imagens conferem.")
+    return saida
+
+
+def baixar_clipes_conferidos(segs, formato, pasta: Path, slug):
+    """Baixa, confere com o Claude e troca os clipes ruins (até 3 conferências; cada uma só olha
+    os clipes que ainda não foram aprovados)."""
+    clipes = baixar_clipes(segs, formato, pasta, slug)
+    aprovados = set()
+    for rodada in range(3):
+        ruins = conferir_clipes(clipes, pasta, aprovados)
+        aprovados |= {c["url"] for c in clipes if c.get("url") and c["url"] not in ruins}
+        if not ruins or rodada == 2:
+            break
+        BLOQUEADOS.update(ruins)
+        ARQ_BLOQUEADOS.parent.mkdir(parents=True, exist_ok=True)
+        ARQ_BLOQUEADOS.write_text(json.dumps(BLOQUEADOS, ensure_ascii=False, indent=1), encoding="utf-8")
+        log(f"Trocando {len(ruins)} clipe(s) (rodada {rodada + 1})...")
+        try:
+            clipes = baixar_clipes(segs, formato, pasta, slug)
+        except RuntimeError as e:
+            log(f"  Sem substitutos suficientes ({e}); mantendo os clipes da rodada anterior.")
+            break
+    usados = {Path(c["arquivo"]).name for c in clipes}
+    for arq in pasta.glob("clipe_*.mp4"):  # remove os trocados
+        if arq.name not in usados:
+            arq.unlink()
     return clipes
 
 
@@ -357,7 +483,7 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
         if not minimo <= duracao <= maximo:
             log(f"ATENÇÃO: narração com {duracao:.0f} s, fora da faixa '{faixa}' "
                 f"({minimo}-{maximo} s). Ajuste o tamanho do roteiro.")
-    clipes = baixar_clipes(segs, formato, pasta_pub, slug)
+    clipes = baixar_clipes_conferidos(segs, formato, pasta_pub, slug)
     caps = info_capitulos(roteiro, capitulos, segs)
 
     # Thumbnail só no vídeo longo: no Short o YouTube não deixa escolher a capa.
@@ -546,7 +672,9 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
         sys.exit("Uso: python -I pipeline/gerar_video.py roteiros/<arquivo>.json "
-                 "[--so-publicacao] [--manter-clipes] [--sem-shorts]")
+                 "[--so-publicacao] [--manter-clipes] [--sem-shorts] [--sem-conferir]")
+    if "--sem-conferir" in sys.argv:  # pula a conferência das imagens pelo Claude
+        os.environ["CONFERIR_CLIPES"] = "0"
     if "--so-publicacao" in sys.argv:
         so_publicacao(args[0])
     else:

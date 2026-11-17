@@ -12,6 +12,8 @@ tags, thumbnail and the best time to post.
 - **Shorts** (vertical, 30 s to 2 min) and **long videos** (horizontal) that are automatically cut into Shorts
 - **Trending topic radar**: Wikipedia, Google News, Google Trends and YouTube
 - **Ideas and scripts from the panel**: Claude suggests angles, fact-checks and writes the script
+- **Footage check**: before editing, Claude looks at a frame of every clip and swaps the bad ones (billboards, toys, wrong animal)
+- **Results**: upload your YouTube Studio export and see whether the app's videos keep viewers watching longer than your old ones
 - **Dub your own videos**: paste a script and your video gets voice-over and captions
 - **Relaxing sound videos** (rain, wind, birds) from 10 minutes to hours, with synthesized audio
 - Videos in **English, Spanish or Portuguese**: voice, captions, script, description and the radar's country all follow the language

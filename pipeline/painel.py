@@ -270,25 +270,11 @@ _spec_canal.loader.exec_module(canal_cfg)
 IDEIAS = RAIZ / "dados" / "ultimas-ideias.json"
 
 
-def ler_env():
-    env = {}
-    arq = RAIZ / ".env"
-    if arq.exists():
-        for linha in arq.read_text(encoding="utf-8").splitlines():
-            if "=" in linha and not linha.strip().startswith("#"):
-                k, v = linha.split("=", 1)
-                env[k.strip()] = v.strip()
-    return env
-
-
-def achar_claude():
-    """Comando 'claude': do .env (CLAUDE_EXE), do sistema, ou o que vem com o app do Claude."""
-    exe = ler_env().get("CLAUDE_EXE") or shutil.which("claude")
-    if exe:
-        return exe
-    base = Path(os.environ.get("LOCALAPPDATA", "")) / "Claude-Data"
-    achados = sorted(base.glob("*/claude-code/*/*/claude.exe"), key=lambda p: p.stat().st_mtime, reverse=True)
-    return str(achados[0]) if achados else None
+_spec_cli = importlib.util.spec_from_file_location("claude_cli", RAIZ / "pipeline" / "claude_cli.py")
+claude_cli = importlib.util.module_from_spec(_spec_cli)
+_spec_cli.loader.exec_module(claude_cli)
+ler_env = claude_cli.ler_env
+achar_claude = claude_cli.achar_claude
 
 
 def comando_claude(ferramentas):
@@ -591,7 +577,13 @@ class Painel(BaseHTTPRequestHandler):
                 "radar": listar_radar(), "tarefa": TAREFA.estado(), "claude": bool(achar_claude()),
                 "canal": canal_cfg.carregar(obrigatorio=False), "categorias": canal_cfg.CATEGORIAS,
                 "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
+                "medicoes": sorted((p.stem for p in (RAIZ / "dados" / "medicoes").glob("*.md")), reverse=True),
             })
+        if len(partes) == 3 and partes[:2] == ["api", "medicao"] and NOME_SEGURO.match(partes[2]):
+            arq = RAIZ / "dados" / "medicoes" / f"{partes[2]}.md"
+            if arq.exists():
+                return self.responder({"md": arq.read_text(encoding="utf-8")})
+            return self.erro("relatório não encontrado", 404)
         if caminho == "/api/atualizacao":
             return self.responder({**ATUALIZACAO, "inicioServidor": INICIO_SERVIDOR})
         if caminho == "/api/tarefa":
@@ -621,6 +613,23 @@ class Painel(BaseHTTPRequestHandler):
             if arq.is_file():
                 return self.enviar_arquivo(arq)
         self.erro("não encontrado", 404)
+
+    def receber_medicao(self, query):
+        """Recebe a exportação do YouTube Studio (.zip ou .csv) e roda a análise."""
+        if TAREFA.rodando:
+            return self.erro("já tem uma tarefa rodando; espere terminar", 409)
+        ext = Path(query.get("nome", ["x.zip"])[0]).suffix.lower()
+        if ext not in (".zip", ".csv"):
+            return self.erro("envie o arquivo .zip (ou .csv) exportado do YouTube Studio")
+        tamanho = int(self.headers.get("Content-Length") or 0)
+        if not 0 < tamanho <= 50 * 1024 * 1024:
+            return self.erro("arquivo vazio ou grande demais (máximo 50 MB)")
+        pasta = RAIZ / "dados" / "medicoes"
+        pasta.mkdir(parents=True, exist_ok=True)
+        destino = pasta / f"exportacao-{datetime.now():%Y%m%d-%H%M%S}{ext}"
+        destino.write_bytes(self.rfile.read(tamanho))
+        ok = TAREFA.iniciar("medir", "resultados", [sys.executable, "-I", "-u", "pipeline/medir.py", str(destino)])
+        return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
     def receber_video(self, query):
         """Recebe o vídeo enviado pela página (corpo = o próprio arquivo) e devolve o slug."""
@@ -662,6 +671,8 @@ class Painel(BaseHTTPRequestHandler):
 
         if caminho == "/api/enviar-video":
             return self.receber_video(parse_qs(url.query))
+        if caminho == "/api/medicao":
+            return self.receber_medicao(parse_qs(url.query))
 
         dados = self.corpo_json()
 

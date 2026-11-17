@@ -11,6 +11,8 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 - **Shorts** verticais (30 s a 2 min) e **vídeos longos** horizontais, que viram vários Shorts automaticamente
 - **Radar de temas em alta**: Wikipedia, Google Notícias, Google Trends e YouTube
 - **Ideias e roteiros pelo painel**: o Claude sugere ângulos, confere os fatos e escreve o roteiro
+- **Conferência das imagens**: antes de montar, o Claude olha um quadro de cada clipe e troca os ruins (telão, brinquedo, bicho errado)
+- **Resultados**: envie a exportação do YouTube Studio e veja se os vídeos do app seguram mais o público do que os antigos
 - **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
 - **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 10 minutos a horas, com som sintetizado
 - Vídeos em **português, inglês ou espanhol**: voz, legenda, roteiro, descrição e radar do país mudam juntos

@@ -103,6 +103,25 @@ Copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote os n�
 YouTube Studio (retenção, horários do público, o que deu certo). O Claude lê esse arquivo antes
 de sugerir ideias e escrever roteiros.
 
+## Conferência das imagens (automática)
+- Depois de baixar os clipes, o gerador monta folhas com um quadro de cada clipe e pede ao Claude Code
+  para apontar os que não servem: telão/prédio, brinquedo, desenho, comida, outro bicho, pessoas em
+  destaque, ou só o fundo sem o assunto. Esses são trocados (até 3 conferências; cada uma só olha os novos).
+- Os clipes reprovados vão para `dados/clipes-bloqueados.json` e não voltam em vídeos futuros.
+- Sem o Claude Code instalado, o vídeo é gerado normalmente, sem conferência.
+- Para pular (mais rápido): `python -I pipeline/gerar_video.py roteiros/x.json --sem-conferir`.
+
+## Resultados: os vídeos do app estão funcionando?
+Aba **Resultados** do painel (ou `python -I pipeline/medir.py arquivo.zip`):
+1. YouTube Studio → Estatísticas → **Modo avançado** → aba **Conteúdo** → período (ex.: últimos 365 dias).
+2. Seta de download → **Valores separados por vírgula (.csv)**: o YouTube baixa um `.zip`.
+3. Envie o `.zip` na aba Resultados.
+
+O relatório compara % média assistida, tempo médio e views dos vídeos **feitos pelo app** (os que
+estão no `historico.json`) com os **anteriores**, separando Shorts e vídeos longos. Vídeos com menos
+de 7 dias ou 100 views ficam fora da média (os números ainda mudam). A conclusão é anotada em
+`dados/aprendizados.md`, que o Claude lê antes de sugerir ideias. Repita de 2 em 2 semanas.
+
 ## Atualizar o app
 - O painel confere no GitHub, ao abrir e a cada 6 horas, se saiu versão nova. Se saiu, aparece a faixa
   **"Nova versão do app disponível"** com as novidades.

@@ -230,6 +230,13 @@
   .aviso-dur { color: #9A6B00; }
   @media (max-width: 900px) { .dublar { grid-template-columns: 1fr; } }
 
+  .passos { margin: 6px 0 0; padding-left: 22px; font-size: 14.5px; }
+  .arquivo { font: inherit; font-size: 14.5px; padding: 6px; border: 1px dashed var(--linha); border-radius: 6px; background: var(--papel); }
+  .passos li { margin: 4px 0; }
+  .md h3 { font-size: 17px; margin: 18px 0 6px; }
+  .md table { margin: 6px 0 4px; }
+  .md td, .md th { font-size: 14px; }
+
   /* aviso de versão nova */
   #atualizacao { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
   #atualizacao[hidden] { display: none; }
@@ -289,6 +296,7 @@
       <button data-aba="videos" class="ativo">Vídeos prontos</button>
       <button data-aba="roteiros">Roteiros</button>
       <button data-aba="radar">Radar</button>
+      <button data-aba="resultados">Resultados</button>
     </nav>
   </div>
 </header>
@@ -411,6 +419,30 @@
       Um Short leva uns 3 minutos; um vídeo longo com Shorts, uns 15.</p>
   </section>
 
+  <section class="aba" id="aba-resultados">
+    <div class="cartao pedido">
+      <h2>Os vídeos do app estão segurando mais o público?</h2>
+      <p class="sub">Compara a retenção dos vídeos feitos pelo app com os vídeos antigos do canal, usando os
+        números do YouTube Studio. Faça isso de 2 em 2 semanas: vídeos com menos de 7 dias ainda não contam.</p>
+      <ol class="passos">
+        <li>Abra o <a href="https://studio.youtube.com" target="_blank" rel="noopener">YouTube Studio</a> →
+          <strong>Estatísticas</strong> → <strong>Modo avançado</strong> (canto superior direito).</li>
+        <li>Na aba <strong>Conteúdo</strong>, escolha o período (ex.: <em>Últimos 365 dias</em>).</li>
+        <li>Clique na <strong>seta de download</strong> → <strong>Valores separados por vírgula (.csv)</strong>.
+          O YouTube baixa um arquivo <code>.zip</code>.</li>
+        <li>Envie esse <code>.zip</code> aqui:</li>
+      </ol>
+      <div class="acoes" style="margin:10px 0 0">
+        <input type="file" id="medicao-arquivo" class="arquivo" accept=".zip,.csv">
+        <button class="destaque" id="medicao-botao">Analisar</button>
+      </div>
+    </div>
+    <div class="radar-topo">
+      <label>Relatório de <select id="datas-medicao"></select></label>
+    </div>
+    <div class="md cartao" id="medicao-md"><p class="vazio">Nenhuma análise ainda.</p></div>
+  </section>
+
   <section class="aba" id="aba-radar">
     <div class="radar-topo">
       <button id="rodar-radar">Rodar radar agora</button>
@@ -484,6 +516,7 @@ function irPara(aba) {
   document.querySelectorAll("nav button").forEach(x => x.classList.toggle("ativo", x.dataset.aba === aba));
   document.querySelectorAll(".aba").forEach(a => a.classList.toggle("ativa", a.id === "aba-" + aba));
   if (aba === "radar") carregarRadar();
+  if (aba === "resultados") carregarMedicao();
   window.scrollTo({ top: 0 });
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => irPara(b.dataset.aba));
@@ -556,6 +589,33 @@ async function mostrarPrevia(slug) {
   $("#ver-roteiros").onclick = () => irPara("roteiros");
   $("#previa").scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+// ---------- resultados (retenção dos vídeos do app x antigos)
+async function carregarMedicao(data) {
+  const lista = estado.medicoes || [];
+  const sel = $("#datas-medicao");
+  sel.innerHTML = lista.map(d => `<option value="${d}">${d.split("-").reverse().join("/")}</option>`).join("");
+  data = data || lista[0];
+  if (!data) return;
+  sel.value = data;
+  try { $("#medicao-md").innerHTML = md((await api("/api/medicao/" + data)).md); }
+  catch (e) { $("#medicao-md").innerHTML = `<p class="vazio">${esc(e.message)}</p>`; }
+}
+$("#datas-medicao").onchange = e => carregarMedicao(e.target.value);
+
+$("#medicao-botao").onclick = async () => {
+  const arquivo = $("#medicao-arquivo").files[0];
+  if (!arquivo) { avisar("Escolha o arquivo .zip exportado do YouTube Studio."); return; }
+  try {
+    const r = await fetch(`/api/medicao?nome=${encodeURIComponent(arquivo.name)}`, { method: "POST", body: arquivo });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erro || "falha no envio");
+    tarefaFechada = false;
+    await atualizar();
+  } catch (e) {
+    alert(e.message.includes("Failed to fetch") ? 'O painel está desligado. Abra de novo o "Abrir painel.bat".' : e.message);
+  }
+};
 
 // ---------- versão nova do app
 let inicioServidor = null;
@@ -873,7 +933,8 @@ const md = texto => {
       html += "</ul>";
       continue;
     }
-    if (l.startsWith("## ")) html += `<h2>${inline(l.slice(3))}</h2>`;
+    if (l.startsWith("### ")) html += `<h3>${inline(l.slice(4))}</h3>`;
+    else if (l.startsWith("## ")) html += `<h2>${inline(l.slice(3))}</h2>`;
     else if (l.startsWith("# ")) html += `<h1>${inline(l.slice(2))}</h1>`;
     else if (l.trim() && l !== "---" && !l.startsWith("Para virar vídeo")) html += `<p>${inline(l)}</p>`;
     i++;
@@ -944,6 +1005,7 @@ const NOMES_TAREFA = {
   gerar: t => `Vídeo: ${t.alvo}`,
   dublar: () => "Dublando o seu vídeo",
   atualizar: () => "Atualizando o app",
+  medir: () => "Analisando os resultados",
   ideias: t => `Ideias para "${t.alvo}"`,
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
@@ -1014,6 +1076,7 @@ async function acompanhar() {
   await atualizar();
   if (codigo !== 0) return;
   if (tipo === "radar") carregarRadar();
+  if (tipo === "medir") { tarefaFechada = true; desenharTarefa(); irPara("resultados"); }
   if (tipo === "ideias" && resultado) {
     desenharIdeias(resultado);
     tarefaFechada = true;
@@ -1058,7 +1121,7 @@ atualizar().then(async () => {
   // atalhos: http://localhost:8765/#radar abre direto na aba; #configurar abre a configuração
   const destino = location.hash.slice(1);
   if (destino === "configurar") abrirConfig(false);
-  else if (["novo", "dublar", "videos", "roteiros", "radar"].includes(destino)) irPara(destino);
+  else if (["novo", "dublar", "videos", "roteiros", "radar", "resultados"].includes(destino)) irPara(destino);
 });
 </script>
 </body>
