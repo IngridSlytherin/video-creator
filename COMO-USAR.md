@@ -103,6 +103,16 @@ Copie `dados/aprendizados.exemplo.md` para `dados/aprendizados.md` e anote os n�
 YouTube Studio (retenção, horários do público, o que deu certo). O Claude lê esse arquivo antes
 de sugerir ideias e escrever roteiros.
 
+## Segunda fonte de vídeos: Pixabay (opcional, grátis)
+Com a chave do Pixabay, o gerador busca clipes no Pexels **e** no Pixabay e mistura os resultados:
+mais opções quando o Pexels tem pouco material de um assunto.
+1. Crie uma conta em [pixabay.com](https://pixabay.com) e abra [pixabay.com/api/docs](https://pixabay.com/api/docs/):
+   a chave aparece na seção "Parameters", no campo `key`.
+2. Cole no `.env`: `PIXABAY_API_KEY=sua_chave`.
+
+Licença do Pixabay: uso comercial liberado, sem precisar citar; não pode revender os vídeos como
+banco de imagens. As buscas ficam guardadas por 24 h em `dados/cache-pixabay/` (regra da API).
+
 ## Conferência das imagens (automática)
 - Depois de baixar os clipes, o gerador monta folhas com um quadro de cada clipe e pede ao Claude Code
   para apontar os que não servem: telão/prédio, brinquedo, desenho, comida, outro bicho, pessoas em

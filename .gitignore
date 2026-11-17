@@ -16,6 +16,7 @@ dados/ultimas-ideias.json
 dados/clipes-bloqueados.json
 dados/radar/
 dados/medicoes/
+dados/cache-pixabay/
 dados/temas/*
 !dados/temas/animais.json
 historico.json

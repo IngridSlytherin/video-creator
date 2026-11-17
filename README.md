@@ -90,6 +90,9 @@ python -m pip install -r requirements.txt
 copy .env.exemplo .env
 ```
 
+Optional: a free [Pixabay API key](https://pixabay.com/api/docs/) in `PIXABAY_API_KEY=` adds Pixabay
+as a second footage source (more options when Pexels has little material on a topic).
+
 #### 4. Background music (optional)
 
 Put **instrumental** `.mp3` files in `public/musica/`. YouTube Studio > Audio Library is a good

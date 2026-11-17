@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.4 — 17/11/2026
+- **Pixabay como segunda fonte de vídeos** (opcional): com `PIXABAY_API_KEY` no `.env`, o gerador
+  busca no Pexels e no Pixabay e mistura os resultados. Vale também para os vídeos relaxantes.
+
 ## 1.3 — 17/11/2026
 - **Conferência das imagens**: antes de montar, o Claude olha um quadro de cada clipe e troca os que
   não servem (telão, brinquedo, bicho errado, pessoas em destaque, só fundo sem o assunto).

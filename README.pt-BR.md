@@ -75,6 +75,9 @@ python -m pip install -r requirements.txt
 copy .env.exemplo .env
 ```
 
+Opcional: uma [chave grátis do Pixabay](https://pixabay.com/api/docs/) em `PIXABAY_API_KEY=` acrescenta
+o Pixabay como segunda fonte de vídeos (mais opções quando o Pexels tem pouco material de um assunto).
+
 ### 4. Música de fundo (opcional)
 
 Coloque arquivos `.mp3` de música **instrumental** em `public/musica/`. Uma boa fonte é o

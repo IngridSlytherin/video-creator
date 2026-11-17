@@ -88,7 +88,7 @@ def escolher_clipes(parte, evitar_geral, usados):
     for busca in parte["buscas"]:
         if len(achados) >= CLIPES_POR_PARTE * 2:
             break
-        for v in gv.buscar_pexels(busca, "landscape", paginas=1):
+        for v in gv.buscar_pexels(busca, "landscape", paginas=1) + gv.buscar_pixabay(busca, "landscape"):
             if (v["id"] not in usados and v.get("duration", 0) >= TRECHO + TRANSICAO + 1
                     and gv.relevante(v, parte["exigir"], evitar)):
                 usados.add(v["id"])
@@ -186,6 +186,9 @@ def escrever_publicacao(roteiro, partes, total, creditos, pasta):
         capitulos.append(f"{gv.tempo(t)} {p['titulo']}")
         t += p["minutos"] * 60
     canal = gv.canal_cfg.carregar()
+    aviso = gv.canal_cfg.texto(canal, "relaxAviso")
+    if any("pixabay.com" in c for c in creditos):
+        aviso = aviso.replace("Pexels", "Pexels/Pixabay")
     texto = f"""TÍTULO
 {pub['titulo']}
 
@@ -198,7 +201,7 @@ def escrever_publicacao(roteiro, partes, total, creditos, pasta):
 {gv.canal_cfg.texto(canal, "relaxPergunta")}
 {canal['chamada']}
 
-{gv.canal_cfg.texto(canal, "relaxAviso")}
+{aviso}
 
 {com}
 =============================================================================
@@ -221,7 +224,7 @@ de preferência de domingo a quinta (noites antes de dia de trabalho/escola).
 
 DURAÇÃO: {gv.tempo(total)}
 
-CRÉDITOS DAS IMAGENS (Pexels, uso gratuito; não é obrigatório citar)
+CRÉDITOS DAS IMAGENS (Pexels/Pixabay, uso gratuito; não é obrigatório citar)
 {chr(10).join(sorted(creditos))}
 """
     (pasta / "publicacao.txt").write_text(texto, encoding="utf-8")

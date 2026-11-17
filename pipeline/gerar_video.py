@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import unicodedata
 from pathlib import Path
 
@@ -202,6 +203,45 @@ def buscar_pexels(consulta, orientacao, paginas=2):
     return videos
 
 
+PASTA_CACHE_PIXABAY = RAIZ / "dados" / "cache-pixabay"
+
+
+def buscar_pixabay(consulta, orientacao):
+    """Segunda fonte de vídeos (precisa de PIXABAY_API_KEY no .env; sem ela, devolve []).
+    Devolve no mesmo formato do Pexels. As buscas ficam guardadas 24 h, como a API pede."""
+    chave = ENV.get("PIXABAY_API_KEY")
+    if not chave:
+        return []
+    PASTA_CACHE_PIXABAY.mkdir(parents=True, exist_ok=True)
+    arq = PASTA_CACHE_PIXABAY / (hashlib.md5(consulta.lower().encode()).hexdigest() + ".json")
+    if arq.exists() and time.time() - arq.stat().st_mtime < 24 * 3600:
+        hits = json.loads(arq.read_text(encoding="utf-8"))
+    else:
+        try:
+            r = requests.get("https://pixabay.com/api/videos/", timeout=30, params={
+                "key": chave, "q": consulta[:100], "lang": "en", "video_type": "film",
+                "safesearch": "true", "per_page": 100})
+            r.raise_for_status()
+            hits = r.json().get("hits", [])
+        except (requests.RequestException, ValueError) as e:
+            log(f"  aviso: Pixabay não respondeu para '{consulta}' ({e.__class__.__name__})")
+            return []
+        arq.write_text(json.dumps(hits), encoding="utf-8")
+    videos = []
+    for h in hits:
+        arquivos = [{"file_type": "video/mp4", "width": v["width"], "height": v["height"], "link": v["url"]}
+                    for v in (h.get("videos") or {}).values() if v.get("url") and v.get("width")]
+        if not arquivos:
+            continue
+        maior = max(arquivos, key=lambda a: a["width"])
+        if (maior["height"] > maior["width"]) != (orientacao == "portrait"):
+            continue
+        videos.append({"id": f"pb{h['id']}", "url": h.get("pageURL", ""), "_texto": h.get("tags", ""),
+                       "duration": h.get("duration", 0), "user": {"name": h.get("user", "")},
+                       "video_files": arquivos, "_vertical": orientacao == "portrait", "_fonte": "pixabay"})
+    return videos
+
+
 # Clipes que citam o animal mas não mostram o animal vivo e real.
 PROIBIDAS = [
     "food", "dish", "grill", "cook", "fried", "fry", "plate", "restaurant", "kitchen",
@@ -224,7 +264,9 @@ PROIBIDAS_EXATAS = {"man", "men", "hand", "hands", "eat", "raw", "3d", "pet", "a
 def relevante(video, exigir, evitar=()):
     """A busca do Pexels é solta: só aceita o clipe se o endereço da página
     (que descreve o vídeo, ex.: /video/octopus-swimming-123/) citar o termo."""
-    palavras = [p for p in re.split(r"[^a-z0-9]+", video.get("url", "").lower()) if p]
+    # Pexels descreve o vídeo no endereço; o Pixabay, nas tags (_texto)
+    texto = f"{video.get('url', '')} {video.get('_texto', '')}".lower()
+    palavras = [p for p in re.split(r"[^a-z0-9]+", texto) if p]
     if any(p in PROIBIDAS_EXATAS or p in evitar for p in palavras):
         return False
     if any(p.startswith(proib) for p in palavras for proib in PROIBIDAS):
@@ -277,6 +319,10 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
                 if chave not in cache:
                     cache[chave] = buscar_pexels(consulta, orient)
                 lista += cache[chave]
+                chave_pb = ("pixabay", consulta, orient)
+                if chave_pb not in cache:
+                    cache[chave_pb] = buscar_pixabay(consulta, orient)
+                lista += cache[chave_pb]
             vistos, filtrados = set(), []
             for v in lista:
                 if (v["id"] not in usados and v["id"] not in vistos
@@ -600,7 +646,9 @@ def escrever_publicacao(roteiro, props, pasta):
     fontes = "\n".join(f"- {f}" for f in pub.get("fontes", []))
     creditos = "\n".join(sorted({f"- {c['autor']} ({c['url']})" for c in props["clipes"] if c.get("autor")}))
     aviso = roteiro.get("avisoIA") or canal["avisoIA"]  # vídeo próprio: sem "Imagens: Pexels"
-    secao_creditos = ("CRÉDITOS DAS IMAGENS (Pexels, uso gratuito; não é obrigatório citar)\n" + creditos + "\n"
+    if any("pixabay.com" in (c.get("url") or "") for c in props["clipes"]) and "Pixabay" not in aviso:
+        aviso = aviso.replace("Pexels", "Pexels/Pixabay")
+    secao_creditos = ("CRÉDITOS DAS IMAGENS (Pexels/Pixabay, uso gratuito; não é obrigatório citar)\n" + creditos + "\n"
                       if creditos else "")
     bloco_fontes = f"{canal_cfg.texto(canal, 'fontes')}\n{fontes}\n\n" if fontes else ""
     duracao = props["duracaoSegundos"] - 0.6
