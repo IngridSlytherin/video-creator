@@ -1,0 +1,125 @@
+{
+  "slug": "chuva-vento-passaros-12min",
+  "tituloTela": "CHUVA PARA DORMIR",
+  "capaParte": 0,
+  "partes": [
+    {
+      "titulo": "Chuva fraca",
+      "som": "chuva_fraca",
+      "minutos": 4,
+      "volume": -27,
+      "buscas": [
+        "light rain leaves",
+        "rain drops on leaves",
+        "drizzle nature",
+        "raindrops puddle",
+        "rain on plants",
+        "rain forest"
+      ],
+      "exigir": [
+        "rain",
+        "raindrop",
+        "raindrops",
+        "drizzle",
+        "drops",
+        "droplets"
+      ]
+    },
+    {
+      "titulo": "Chuva",
+      "som": "chuva_media",
+      "minutos": 4,
+      "volume": -22,
+      "buscas": [
+        "rain forest",
+        "rain falling nature",
+        "rain on window",
+        "rain lake",
+        "rainy day trees",
+        "rain on leaves"
+      ],
+      "exigir": [
+        "rain",
+        "rainy",
+        "raindrop",
+        "raindrops"
+      ]
+    },
+    {
+      "titulo": "Vento e pássaros",
+      "som": "vento_passaros",
+      "minutos": 4,
+      "volume": -24,
+      "buscas": [
+        "wind grass",
+        "trees wind",
+        "meadow wind",
+        "forest morning",
+        "bird on branch",
+        "wheat field wind"
+      ],
+      "exigir": [
+        "wind",
+        "windy",
+        "grass",
+        "meadow",
+        "tree",
+        "trees",
+        "forest",
+        "bird",
+        "birds",
+        "field",
+        "wheat"
+      ],
+      "evitar": [
+        "rain",
+        "rainy",
+        "snow"
+      ]
+    }
+  ],
+  "evitar": [
+    "car",
+    "cars",
+    "traffic",
+    "taxi",
+    "umbrella",
+    "road",
+    "highway",
+    "storm",
+    "thunder",
+    "lightning",
+    "flood",
+    "bus",
+    "train",
+    "fire",
+    "court",
+    "tennis",
+    "parking",
+    "asphalt",
+    "sidewalk",
+    "pavement",
+    "basketball",
+    "stadium"
+  ],
+  "publicacao": {
+    "titulo": "Chuva fraca, chuva e vento com pássaros 🌧️ 12 min para dormir e relaxar",
+    "descricao": "Feche os olhos e deixe a natureza fazer o resto: começa com uma chuva fraquinha, a chuva aumenta devagar e, no final, o vento passa entre as árvores com o canto dos pássaros. Ideal para dormir, relaxar, estudar ou acalmar a mente.",
+    "hashtags": [
+      "chuvaparadormir",
+      "somdechuva",
+      "barulhodechuva",
+      "sonsdanatureza",
+      "somparadormir",
+      "relaxar",
+      "dormir",
+      "chuva",
+      "passaros",
+      "vento",
+      "natureza",
+      "relaxamento",
+      "estudar",
+      "meditacao"
+    ]
+  }
+}

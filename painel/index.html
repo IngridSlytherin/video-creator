@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de vídeos — painel</title>
+<style>
+  :root {
+    --papel: #F4EBD9;
+    --papel-2: #EBDFC7;
+    --cartao: #FFFCF5;
+    --tinta: #2B2A26;
+    --tinta-2: #6E6656;
+    --verde: #2F5D50;
+    --verde-2: #234539;
+    --verde-claro: #E3ECE6;
+    --amarelo: #FFD23F;
+    --linha: #DCCDB0;
+    --erro: #A63D2F;
+    --sombra: 0 1px 2px rgba(60, 45, 20, .08), 0 4px 14px rgba(60, 45, 20, .06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--papel); color: var(--tinta);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: normal; margin: 0; }
+  a { color: inherit; }
+  button {
+    font: inherit; font-size: 15px; cursor: pointer; border: 1px solid var(--verde); background: var(--verde);
+    color: #fff; padding: 8px 16px; border-radius: 6px; transition: background .12s;
+  }
+  button:hover { background: var(--verde-2); }
+  button.leve { background: var(--cartao); color: var(--verde); border-color: var(--linha); }
+  button.leve:hover { background: var(--verde-claro); border-color: var(--verde); }
+  button.destaque { background: var(--amarelo); border-color: #E2B71F; color: var(--tinta); font-weight: 600; }
+  button.destaque:hover { background: #F5C625; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .pequeno { font-size: 13.5px; padding: 4px 11px; }
+
+  /* topo */
+  header { background: var(--verde); color: var(--papel); }
+  .topo-dentro {
+    max-width: 1240px; margin: 0 auto; padding: 18px 24px 0;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  }
+  .marca h1 { font-size: 28px; line-height: 1.1; }
+  .marca p { margin: 2px 0 14px; font-size: 14px; opacity: .75; font-style: italic; font-family: Georgia, serif; }
+  nav { display: flex; gap: 2px; }
+  nav button {
+    background: transparent; color: var(--papel); border: none; border-radius: 6px 6px 0 0;
+    padding: 10px 18px 12px; opacity: .8; font-size: 15.5px;
+  }
+  nav button:hover { background: rgba(255,255,255,.08); opacity: 1; }
+  nav button.ativo { background: var(--papel); color: var(--tinta); opacity: 1; font-weight: 600; }
+
+  main { max-width: 1240px; margin: 0 auto; padding: 26px 24px 80px; }
+  .aba { display: none; }
+  .aba.ativa { display: block; }
+  .vazio { color: var(--tinta-2); font-style: italic; }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; box-shadow: var(--sombra); }
+  .titulo-sec { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .titulo-sec h2 { font-size: 21px; }
+
+  /* tarefa com progresso */
+  #tarefa { display: none; max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
+  #tarefa .cartao { padding: 16px 20px; border-left: 5px solid var(--amarelo); }
+  #tarefa.erro .cartao { border-left-color: var(--erro); }
+  #tarefa.ok .cartao { border-left-color: var(--verde); }
+  .tarefa-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .tarefa-cab strong { font-size: 17px; }
+  .tarefa-cab span { color: var(--tinta-2); font-size: 14px; }
+  .barra { height: 12px; background: var(--papel-2); border-radius: 6px; overflow: hidden; margin: 10px 0 6px; }
+  .barra div { height: 100%; width: 0; background: var(--verde); border-radius: 6px; transition: width .6s ease; }
+  #tarefa.rodando .barra div {
+    background: repeating-linear-gradient(-45deg, var(--verde) 0 14px, #3B7062 14px 28px);
+    background-size: 40px 40px; animation: anda 1.2s linear infinite;
+  }
+  @keyframes anda { to { background-position: 40px 0; } }
+  .etapas { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+  .etapas span { padding: 2px 10px; border-radius: 99px; background: var(--papel-2); color: var(--tinta-2); }
+  .etapas span.feita { background: var(--verde-claro); color: var(--verde); }
+  .etapas span.agora { background: var(--amarelo); color: var(--tinta); font-weight: 600; }
+  details { margin-top: 10px; font-size: 13.5px; color: var(--tinta-2); }
+  details summary { cursor: pointer; }
+  details pre {
+    margin: 6px 0 0; max-height: 200px; overflow: auto; font: 12px/1.45 Consolas, monospace;
+    white-space: pre-wrap; background: var(--papel); padding: 8px 10px; border-radius: 6px;
+  }
+
+  /* vídeos */
+  .videos { display: grid; grid-template-columns: 360px 1fr; gap: 26px; align-items: start; }
+  .lista { display: flex; flex-direction: column; gap: 8px; }
+  .item {
+    display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center;
+    padding: 8px; cursor: pointer; border-radius: 10px; border: 1px solid transparent;
+  }
+  .item:hover { background: var(--cartao); border-color: var(--linha); }
+  .item.sel { background: var(--cartao); border-color: var(--verde); box-shadow: var(--sombra); }
+  .mini {
+    width: 64px; height: 64px; border-radius: 6px; overflow: hidden; background: #1d1d1b; position: relative;
+  }
+  .mini img, .mini video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .item .t { font-weight: 600; font-size: 14.5px; line-height: 1.3; }
+  .item .m { color: var(--tinta-2); font-size: 13px; margin-top: 3px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .selo {
+    display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600;
+    padding: 1px 7px; border-radius: 4px; background: var(--papel-2); color: var(--tinta-2);
+  }
+  .selo.longo { background: var(--verde-claro); color: var(--verde); }
+  .selo.pub { background: var(--verde); color: #fff; }
+
+  #detalhe-video .cartao { padding: 22px; }
+  .detalhe { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: start; }
+  .detalhe.longo { grid-template-columns: 1fr; }
+  .detalhe video { background: #000; display: block; border-radius: 8px; }
+  .detalhe video.short { height: 600px; aspect-ratio: 9/16; }
+  .detalhe video.longo { width: 100%; aspect-ratio: 16/9; }
+  .detalhe h2 { font-size: 23px; margin-bottom: 12px; line-height: 1.25; }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .interruptor {
+    display: inline-flex; gap: 8px; align-items: center; cursor: pointer; padding: 7px 14px;
+    border: 1px solid var(--linha); border-radius: 6px; background: var(--cartao); font-size: 15px;
+  }
+  .interruptor input { width: 17px; height: 17px; accent-color: var(--verde); }
+  .interruptor.marcado { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); font-weight: 600; }
+  .campo { margin-bottom: 16px; }
+  .campo .rot {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
+    font-size: 12.5px; text-transform: uppercase; letter-spacing: .7px; color: var(--tinta-2); font-weight: 600;
+  }
+  .campo .txt {
+    background: var(--papel); border-radius: 6px; padding: 10px 12px; white-space: pre-wrap;
+    max-height: 210px; overflow: auto; font-size: 14.5px;
+  }
+  .thumb img { width: 100%; max-width: 440px; border-radius: 6px; display: block; }
+  .horarios { font-size: 14px; color: var(--tinta-2); white-space: pre-wrap; background: var(--papel); border-radius: 6px; padding: 10px 12px; }
+  .aviso { font-size: 14px; color: var(--tinta-2); border-top: 1px dashed var(--linha); padding-top: 12px; margin-top: 6px; }
+
+  /* roteiros */
+  .roteiros { display: flex; flex-direction: column; gap: 10px; }
+  .roteiro { padding: 14px 18px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+  .roteiro .t { font-weight: 600; font-size: 16px; }
+  .roteiro .m { font-size: 13.5px; color: var(--tinta-2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .roteiro .bts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .ok { color: var(--verde); font-weight: 600; }
+  .dica { margin-top: 20px; color: var(--tinta-2); font-size: 14.5px; }
+  code { background: var(--papel-2); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; }
+
+  /* radar */
+  .radar-topo { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  select { font: inherit; padding: 7px 10px; border: 1px solid var(--linha); border-radius: 6px; background: var(--cartao); }
+  .temas { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .tema { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .tema .cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .tema h3 { font-size: 21px; }
+  .tema .pos { font-family: Georgia, serif; color: var(--tinta-2); font-size: 15px; }
+  .tema .forca { height: 6px; background: var(--papel-2); border-radius: 3px; overflow: hidden; }
+  .tema .forca div { height: 100%; background: var(--amarelo); }
+  .tema ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--tinta-2); flex: 1; }
+  .tema.feito { opacity: .7; }
+  .md { padding: 20px 26px; }
+  .md h1 { display: none; }
+  .md h2 { font-size: 20px; margin: 22px 0 8px; color: var(--verde); }
+  .md h2:first-of-type { margin-top: 0; }
+  .md li { margin: 4px 0; font-size: 14.5px; }
+  .md em { color: var(--tinta-2); }
+  .md p { font-size: 14.5px; color: var(--tinta-2); }
+
+  /* novo vídeo */
+  .pedido { padding: 22px 24px; margin-bottom: 22px; }
+  .pedido h2 { font-size: 23px; }
+  .pedido .sub { color: var(--tinta-2); font-size: 14.5px; margin: 4px 0 12px; }
+  textarea {
+    width: 100%; font: inherit; font-size: 17px; padding: 10px 12px; border: 1px solid var(--linha);
+    border-radius: 8px; background: #fff; resize: vertical; color: var(--tinta);
+  }
+  textarea:focus { outline: 2px solid var(--amarelo); border-color: #E2B71F; }
+  .linha-pedido { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+  .formatos { display: flex; gap: 6px; flex-wrap: wrap; }
+  .formatos label {
+    display: flex; gap: 6px; align-items: center; cursor: pointer; font-size: 14.5px;
+    padding: 6px 12px; border: 1px solid var(--linha); border-radius: 99px; background: var(--cartao);
+  }
+  .formatos label:has(input:checked) { border-color: var(--verde); background: var(--verde-claro); color: var(--verde); font-weight: 600; }
+  .formatos input { accent-color: var(--verde); }
+  .sinais { font-size: 13.5px; color: var(--tinta-2); margin: 10px 0 0; }
+  .sinais:empty { display: none; }
+  .sem-claude { color: var(--erro); font-size: 14.5px; }
+  .angulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .angulo { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .angulo h3 { font-size: 19px; line-height: 1.3; }
+  .angulo .gancho { font-family: Georgia, serif; font-style: italic; font-size: 15.5px; border-left: 3px solid var(--amarelo); padding-left: 10px; }
+  .angulo p { margin: 0; font-size: 14.5px; }
+  .angulo .porque { color: var(--tinta-2); font-size: 13.5px; flex: 1; }
+  .obs { margin-bottom: 26px; }
+  .obs label { font-size: 14px; color: var(--tinta-2); display: block; margin-bottom: 4px; }
+  .obs textarea { font-size: 15px; }
+  .previa { padding: 22px 24px; border-left: 5px solid var(--verde); }
+  .previa h2 { font-size: 22px; margin-bottom: 4px; }
+  .previa .narracao {
+    background: var(--papel); border-radius: 8px; padding: 14px 16px; margin: 12px 0; white-space: pre-wrap;
+    font-family: Georgia, serif; font-size: 16px; line-height: 1.65; max-height: 420px; overflow: auto;
+  }
+  .previa .fontes { font-size: 13px; color: var(--tinta-2); }
+
+  /* dublar */
+  .dublar { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 22px; align-items: start; }
+  .dublar .cartao { padding: 20px 22px; }
+  .dublar h2 { font-size: 20px; margin-bottom: 8px; }
+  .dublar .sub { color: var(--tinta-2); font-size: 14px; margin: 0 0 8px; }
+  .soltar {
+    display: flex; align-items: center; justify-content: center; text-align: center; min-height: 180px;
+    border: 2px dashed var(--linha); border-radius: 10px; cursor: pointer; padding: 16px;
+    color: var(--tinta-2); background: var(--papel); transition: all .12s;
+  }
+  .soltar:hover, .soltar.sobre { border-color: var(--verde); background: var(--verde-claro); color: var(--verde); }
+  .soltar.escolhido { min-height: 0; padding: 10px; }
+  #dub-previa { width: 100%; max-height: 520px; background: #000; border-radius: 8px; margin-top: 10px; }
+  .dub-campos { display: grid; gap: 10px; margin-top: 8px; }
+  .dub-campos label { font-size: 14px; color: var(--tinta-2); display: grid; gap: 4px; }
+  .dub-campos textarea { font-size: 15px; }
+  input[type="text"] {
+    font: inherit; font-size: 15.5px; padding: 8px 12px; border: 1px solid var(--linha); border-radius: 8px;
+    background: #fff; color: var(--tinta); width: 100%;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--amarelo); border-color: #E2B71F; }
+  .opcoes { display: grid; gap: 12px; }
+  .opcoes .rotulo { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--tinta-2); font-weight: 600; margin-bottom: 5px; }
+  .aviso-dur { color: #9A6B00; }
+  @media (max-width: 900px) { .dublar { grid-template-columns: 1fr; } }
+
+  /* configuração do canal */
+  .link-canal {
+    background: none; border: none; padding: 0; color: var(--papel); font: inherit; font-style: normal;
+    text-decoration: underline; cursor: pointer; opacity: .9;
+  }
+  .link-canal:hover { background: none; opacity: 1; }
+  .fundo-config {
+    position: fixed; inset: 0; background: rgba(35, 30, 20, .55); display: flex;
+    align-items: center; justify-content: center; padding: 16px; z-index: 20;
+  }
+  .fundo-config[hidden] { display: none; }
+  .caixa-config { width: min(520px, 100%); padding: 24px 26px; display: grid; gap: 12px; }
+  .caixa-config h2 { font-size: 24px; }
+  .caixa-config .sub { margin: 0; color: var(--tinta-2); font-size: 14.5px; }
+  .caixa-config label { display: grid; gap: 4px; font-size: 14px; color: var(--tinta-2); }
+  .caixa-config label[hidden] { display: none; }
+  .caixa-config select { font-size: 15.5px; padding: 8px 10px; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); opacity: 0;
+    background: var(--tinta); color: var(--papel); padding: 10px 18px; border-radius: 8px;
+    transition: all .2s; pointer-events: none; max-width: 90vw; font-size: 15px;
+  }
+  #toast.ver { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 900px) {
+    .topo-dentro, main, #tarefa { padding-left: 16px; padding-right: 16px; }
+    .videos, .detalhe { grid-template-columns: 1fr; }
+    .detalhe video.short { height: auto; width: 100%; max-width: 360px; }
+    .roteiro { grid-template-columns: 1fr; }
+    .roteiro .bts { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topo-dentro">
+    <div class="marca">
+      <h1 id="nome-canal">Seu canal</h1>
+      <p><span id="cat-canal">painel de vídeos</span> · <button class="link-canal" id="abrir-config">⚙ Canal</button></p>
+    </div>
+    <nav>
+      <button data-aba="novo">Novo vídeo</button>
+      <button data-aba="dublar">Dublar meu vídeo</button>
+      <button data-aba="videos" class="ativo">Vídeos prontos</button>
+      <button data-aba="roteiros">Roteiros</button>
+      <button data-aba="radar">Radar</button>
+    </nav>
+  </div>
+</header>
+
+<section id="tarefa">
+  <div class="cartao">
+    <div class="tarefa-cab"><strong id="tarefa-titulo"></strong><span id="tarefa-sub"></span></div>
+    <div class="barra"><div id="tarefa-barra"></div></div>
+    <div class="tarefa-cab"><span id="tarefa-etapa"></span><span id="tarefa-pct"></span></div>
+    <div class="etapas" id="tarefa-etapas"></div>
+    <details><summary>ver detalhes técnicos</summary><pre id="tarefa-log"></pre></details>
+    <div style="text-align:right;margin-top:8px"><button class="leve pequeno" id="tarefa-fechar">Fechar</button></div>
+  </div>
+</section>
+
+<main>
+  <section class="aba" id="aba-novo">
+    <div class="pedido cartao">
+      <h2>Sobre o que é o próximo vídeo?</h2>
+      <p class="sub">Escreva um tema ou uma ideia do seu canal. O Claude sugere 3 ângulos;
+        você escolhe um e ele escreve o roteiro.</p>
+      <textarea id="pedido-texto" rows="2" maxlength="600" placeholder="Ex.: um assunto, uma pergunta curiosa ou uma lista ('7 ... que ...')"></textarea>
+      <div class="linha-pedido">
+        <div class="formatos" role="radiogroup">
+          <label><input type="radio" name="formato" value="" checked> Deixar o Claude escolher</label>
+          <label><input type="radio" name="formato" value="short"> Short</label>
+          <label><input type="radio" name="formato" value="longo"> Vídeo longo + Shorts</label>
+        </div>
+        <button class="destaque" id="pedir-ideias">Pedir ideias</button>
+      </div>
+      <p class="sinais" id="pedido-sinais"></p>
+      <p class="sem-claude" id="sem-claude" hidden>Não achei o Claude Code neste computador. Peça o tema direto no Claude Code com <code>/radar</code>.</p>
+    </div>
+    <div id="ideias"></div>
+    <div id="previa"></div>
+  </section>
+
+  <section class="aba" id="aba-dublar">
+    <div class="dublar">
+      <div class="cartao dub-video">
+        <h2>1. Seu vídeo</h2>
+        <label class="soltar" id="soltar">
+          <input type="file" id="dub-arquivo" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv,.avi" hidden>
+          <span id="soltar-texto"><strong>Clique para escolher</strong> ou arraste o vídeo aqui<br>
+            <small>MP4, MOV (celular), WEBM… até 4 GB</small></span>
+        </label>
+        <video id="dub-previa" controls muted hidden></video>
+        <p class="sinais" id="dub-info"></p>
+      </div>
+      <div class="cartao dub-form">
+        <h2>2. O que a voz vai falar</h2>
+        <p class="sub">Cada linha vira um trecho, com uma pausa curtinha entre eles. A voz é a mesma do canal.</p>
+        <textarea id="dub-texto" rows="8" placeholder="Você sabia que o flamingo dorme em uma perna só?&#10;Ninguém tem certeza do motivo..."></textarea>
+        <p class="sinais" id="dub-conta"></p>
+        <div class="dub-campos">
+          <label>Título no YouTube <small>(opcional)</small>
+            <input type="text" id="dub-titulo" maxlength="100" placeholder="Ex.: Por que o FLAMINGO dorme numa perna só?"></label>
+          <label>Descrição <small>(opcional)</small>
+            <textarea id="dub-descricao" rows="2" maxlength="4000"></textarea></label>
+        </div>
+        <h2 style="margin-top:14px">3. Opções</h2>
+        <div class="opcoes">
+          <div><span class="rotulo">Som original do vídeo</span>
+            <div class="formatos">
+              <label><input type="radio" name="som" value="sem"> Tirar</label>
+              <label><input type="radio" name="som" value="baixo" checked> Baixinho</label>
+              <label><input type="radio" name="som" value="normal"> Normal</label>
+            </div></div>
+          <div><span class="rotulo">Termina quando</span>
+            <div class="formatos">
+              <label><input type="radio" name="ate" value="video" checked> O vídeo acabar</label>
+              <label><input type="radio" name="ate" value="narracao"> A narração acabar</label>
+            </div></div>
+          <div class="formatos">
+            <label><input type="checkbox" id="dub-legendas" checked> Legenda na tela</label>
+            <label><input type="checkbox" id="dub-musica"> Música de fundo</label>
+          </div>
+        </div>
+        <div class="barra" id="envio-barra" hidden><div></div></div>
+        <div class="acoes" style="margin:14px 0 0">
+          <button class="destaque" id="dub-botao">Dublar vídeo</button>
+          <span class="sinais" id="dub-status"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="aba ativa" id="aba-videos">
+    <div class="videos">
+      <div>
+        <div class="titulo-sec">
+          <h2>Vídeos</h2>
+          <button class="leve pequeno" id="abrir-saida">Abrir pasta</button>
+        </div>
+        <div class="lista" id="lista-videos"></div>
+      </div>
+      <div id="detalhe-video"><p class="vazio">Escolha um vídeo na lista.</p></div>
+    </div>
+  </section>
+
+  <section class="aba" id="aba-roteiros">
+    <div class="titulo-sec"><h2>Roteiros</h2></div>
+    <div class="roteiros" id="lista-roteiros"></div>
+    <p class="dica">Para criar um roteiro novo, use a aba <strong>Novo vídeo</strong> (ou o botão
+      <strong>Quero esse tema</strong> no Radar). O roteiro aparece aqui e você gera o vídeo com um clique.
+      Um Short leva uns 3 minutos; um vídeo longo com Shorts, uns 15.</p>
+  </section>
+
+  <section class="aba" id="aba-radar">
+    <div class="radar-topo">
+      <button id="rodar-radar">Rodar radar agora</button>
+      <label>Relatório de <select id="datas-radar"></select></label>
+    </div>
+    <div id="radar-temas"></div>
+    <div class="md cartao" id="radar-md"><p class="vazio">Nenhum relatório ainda.</p></div>
+  </section>
+</main>
+
+<div id="config" class="fundo-config" hidden>
+  <div class="cartao caixa-config" role="dialog" aria-labelledby="config-titulo">
+    <h2 id="config-titulo">Configure o seu canal</h2>
+    <p class="sub">Assim o radar, as ideias e os roteiros seguem o assunto do <strong>seu</strong> canal,
+      e o nome dele aparece nos vídeos.</p>
+    <label>Nome do canal no YouTube
+      <input type="text" id="cfg-nome" maxlength="80" placeholder="Ex.: Mundo Curioso"></label>
+    <label>Categoria do canal
+      <select id="cfg-categoria"></select></label>
+    <label id="cfg-outra-rotulo" hidden>Qual categoria?
+      <input type="text" id="cfg-outra" maxlength="80" placeholder="Ex.: Astronomia, Carros antigos, Receitas veganas"></label>
+    <label>Em uma frase, sobre o que é o canal? <small>(opcional)</small>
+      <input type="text" id="cfg-descricao" maxlength="200" placeholder="Ex.: curiosidades rápidas sobre o espaço para quem não é cientista"></label>
+    <p class="sinais" id="cfg-aviso"></p>
+    <div class="acoes" style="margin:6px 0 0;justify-content:flex-end">
+      <button class="leve" id="cfg-cancelar">Cancelar</button>
+      <button class="destaque" id="cfg-salvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let estado = { videos: [], roteiros: [], radar: [], tarefa: {} };
+let videoSel = null, acompanhando = false, tarefaFechada = false;
+
+async function api(caminho, corpo) {
+  let r;
+  try {
+    r = await fetch(caminho, corpo === undefined ? {} : {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo),
+    });
+  } catch {
+    throw new Error('O painel está desligado. Abra de novo com dois cliques em "Abrir painel.bat" (na pasta video-creator) e deixe a janela preta aberta.');
+  }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.erro || r.statusText);
+  return d;
+}
+
+let toastTimer;
+function avisar(msg, ms = 2200) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("ver");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("ver"), ms);
+}
+
+function copiar(texto, msg = "Copiado!", ms) {
+  navigator.clipboard.writeText(texto).then(() => avisar(msg, ms),() => avisar("Não consegui copiar. Selecione o texto e use Ctrl+C."));
+}
+
+// ---------- abas
+function irPara(aba) {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("ativo", x.dataset.aba === aba));
+  document.querySelectorAll(".aba").forEach(a => a.classList.toggle("ativa", a.id === "aba-" + aba));
+  if (aba === "radar") carregarRadar();
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => irPara(b.dataset.aba));
+
+// ---------- novo vídeo (pede ao Claude)
+let sinaisRadar = "", ideiasAtuais = null;
+const DURACAO_TXT = { curto: "30–45 s", padrao: "50–65 s", longo: "75–120 s", video: "4–12 min" };
+
+function pedirIdeias() {
+  const pedido = $("#pedido-texto").value.trim();
+  if (!pedido) { $("#pedido-texto").focus(); avisar("Escreva sobre o que é o vídeo."); return; }
+  const formato = document.querySelector('input[name="formato"]:checked').value;
+  $("#previa").innerHTML = "";
+  iniciar("/api/ideias", { pedido, formato, sinais: sinaisRadar });
+}
+$("#pedir-ideias").onclick = pedirIdeias;
+$("#pedido-texto").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); pedirIdeias(); }
+});
+$("#pedido-texto").addEventListener("input", () => { sinaisRadar = ""; $("#pedido-sinais").textContent = ""; });
+
+function desenharIdeias(dados) {
+  ideiasAtuais = dados && dados.angulos ? dados : null;
+  const el = $("#ideias");
+  if (!ideiasAtuais) { el.innerHTML = ""; return; }
+  const ocupado = estado.tarefa.rodando;
+  el.innerHTML = `
+    <div class="titulo-sec"><h2>Ideias para "${esc(dados.pedido)}"</h2><span class="sinais">${esc(dados.data || "")}</span></div>
+    <div class="angulos">${dados.angulos.map((a, i) => `
+      <div class="angulo cartao">
+        <div><span class="selo ${a.formato === "longo" ? "longo" : ""}">${a.formato === "longo" ? "vídeo longo" : "short"}</span>
+          <span class="sinais">${esc(DURACAO_TXT[a.duracao] || a.duracao || "")}</span></div>
+        <h3>${esc(a.titulo)}</h3>
+        <p class="gancho">“${esc(a.gancho)}”</p>
+        <p>${esc(a.resumo)}</p>
+        <p class="porque">${esc(a.porque)}</p>
+        <button data-angulo="${i}" ${ocupado ? "disabled" : ""}>Escrever este roteiro</button>
+      </div>`).join("")}
+    </div>
+    <div class="obs">
+      <label for="obs-texto">Quer mudar algo antes? (opcional; ex.: "termine com a orca", "mais curto")</label>
+      <textarea id="obs-texto" rows="2" maxlength="600"></textarea>
+    </div>`;
+  el.querySelectorAll("[data-angulo]").forEach(b => b.onclick = () => {
+    const angulo = ideiasAtuais.angulos[+b.dataset.angulo];
+    iniciar("/api/escrever", { angulo, obs: $("#obs-texto").value });
+  });
+}
+
+async function mostrarPrevia(slug) {
+  let r;
+  try { r = await api("/api/roteiro/" + encodeURIComponent(slug)); }
+  catch (e) { avisar(e.message); return; }
+  const longo = r.formato === "longo";
+  const ocupado = estado.tarefa.rodando;
+  $("#previa").innerHTML = `
+    <div class="previa cartao">
+      <span class="selo ${longo ? "longo" : ""}">${longo ? "vídeo longo" : "short"}</span>
+      <h2>${esc(r.titulo.replace(/\s*#shorts\s*$/i, ""))}</h2>
+      <p class="sinais">Roteiro salvo como <code>${esc(r.slug)}</code>. Leia a narração antes de gerar:</p>
+      <div class="narracao">${esc(r.texto).replace(/^## (.*)$/gm, "<strong>$1</strong>")}</div>
+      ${r.fontes && r.fontes.length ? `<p class="fontes"><strong>Fontes:</strong> ${r.fontes.map(esc).join(" · ")}</p>` : ""}
+      <div class="acoes" style="margin:14px 0 0">
+        <button class="destaque" id="gerar-previa" ${ocupado ? "disabled" : ""}>Gerar vídeo agora</button>
+        <button class="leve" id="ver-roteiros">Ver na aba Roteiros</button>
+      </div>
+      <p class="sinais">Quer mudar o texto? Peça aqui no Claude Code: "muda o roteiro ${esc(r.slug)} para ...".</p>
+    </div>`;
+  $("#gerar-previa").onclick = () => iniciar("/api/gerar", { slug: r.slug });
+  $("#ver-roteiros").onclick = () => irPara("roteiros");
+  $("#previa").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---------- configuração do canal
+function desenharCanal() {
+  const c = estado.canal;
+  $("#nome-canal").textContent = c ? c.nome : "Seu canal";
+  $("#cat-canal").textContent = c ? c.categoria : "canal ainda não configurado";
+  document.title = (c ? c.nome : "Gerador de vídeos") + " — painel";
+  if (!c && estado.categorias) abrirConfig(true);
+}
+
+function abrirConfig(obrigatorio = false) {
+  const c = estado.canal || {};
+  const sel = $("#cfg-categoria");
+  const lista = estado.categorias || [];
+  sel.innerHTML = lista.map(x => `<option>${esc(x)}</option>`).join("") + '<option value="__outra">Outra…</option>';
+  const conhecida = lista.includes(c.categoria);
+  sel.value = c.categoria ? (conhecida ? c.categoria : "__outra") : lista[0];
+  $("#cfg-outra").value = c.categoria && !conhecida ? c.categoria : "";
+  $("#cfg-outra-rotulo").hidden = sel.value !== "__outra";
+  $("#cfg-nome").value = c.nome || "";
+  $("#cfg-descricao").value = c.descricao || "";
+  $("#cfg-cancelar").hidden = obrigatorio;
+  $("#cfg-aviso").textContent = estado.claude
+    ? "Se a categoria não for Animais e natureza, o Claude monta a lista de temas do radar (uns 2 minutos)."
+    : "";
+  $("#config").hidden = false;
+  $("#cfg-nome").focus();
+}
+$("#abrir-config").onclick = () => abrirConfig(false);
+$("#cfg-cancelar").onclick = () => { $("#config").hidden = true; };
+$("#cfg-categoria").onchange = e => { $("#cfg-outra-rotulo").hidden = e.target.value !== "__outra"; };
+$("#cfg-salvar").onclick = async () => {
+  const nome = $("#cfg-nome").value.trim();
+  const sel = $("#cfg-categoria").value;
+  const categoria = sel === "__outra" ? $("#cfg-outra").value.trim() : sel;
+  if (!nome) { $("#cfg-nome").focus(); avisar("Escreva o nome do canal."); return; }
+  if (!categoria) { $("#cfg-outra").focus(); avisar("Escreva a categoria."); return; }
+  try {
+    const r = await api("/api/configurar", { nome, categoria, descricao: $("#cfg-descricao").value.trim() });
+    $("#config").hidden = true;
+    tarefaFechada = false;
+    avisar(r.criandoTemas ? "Canal salvo! Agora o Claude está montando os temas do radar." : "Canal salvo!", 4000);
+    await atualizar();
+  } catch (e) { alert(e.message); }
+};
+
+// ---------- dublar meu vídeo
+let dubArquivo = null, dubDuracao = 0;
+const PALAVRAS_POR_SEGUNDO = 2.6; // voz do canal, aproximado
+
+function escolherVideo(arquivo) {
+  if (!arquivo) return;
+  if (!/^video\//.test(arquivo.type) && !/\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(arquivo.name)) {
+    avisar("Esse arquivo não parece ser um vídeo."); return;
+  }
+  dubArquivo = arquivo;
+  const prev = $("#dub-previa");
+  prev.src = URL.createObjectURL(arquivo);
+  prev.hidden = false;
+  prev.onloadedmetadata = () => { dubDuracao = prev.duration || 0; atualizarConta(); };
+  prev.onerror = () => { dubDuracao = 0; $("#dub-info").textContent = "Não dá para pré-visualizar este formato aqui, mas ele será convertido ao dublar."; };
+  $("#soltar").classList.add("escolhido");
+  $("#soltar-texto").innerHTML = `<strong>${esc(arquivo.name)}</strong> · ${(arquivo.size / 1e6).toFixed(0)} MB<br><small>clique para trocar</small>`;
+}
+$("#dub-arquivo").onchange = e => escolherVideo(e.target.files[0]);
+const zona = $("#soltar");
+["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("sobre"); }));
+["dragleave", "drop"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove("sobre"); }));
+zona.addEventListener("drop", e => escolherVideo(e.dataTransfer.files[0]));
+
+function atualizarConta() {
+  const palavras = $("#dub-texto").value.trim().split(/\s+/).filter(Boolean).length;
+  const seg = Math.round(palavras / PALAVRAS_POR_SEGUNDO);
+  let txt = palavras ? `${palavras} palavras · narração de uns ${seg} s` : "";
+  if (dubDuracao) {
+    $("#dub-info").textContent = `Vídeo de ${Math.round(dubDuracao)} s`;
+    if (palavras && seg > dubDuracao + 1) txt += ` — maior que o vídeo (${Math.round(dubDuracao)} s): o vídeo vai repetir. Encurte o texto se preferir.`;
+  }
+  $("#dub-conta").textContent = txt;
+  $("#dub-conta").classList.toggle("aviso-dur", !!(dubDuracao && seg > dubDuracao + 1));
+}
+$("#dub-texto").addEventListener("input", atualizarConta);
+
+function enviarArquivo(arquivo, titulo) {
+  return new Promise((ok, falha) => {
+    const ext = (arquivo.name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0].toLowerCase();
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/api/enviar-video?ext=${encodeURIComponent(ext)}&titulo=${encodeURIComponent(titulo)}`);
+    const barra = $("#envio-barra");
+    barra.hidden = false;
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      const pct = Math.round(100 * e.loaded / e.total);
+      barra.firstElementChild.style.width = pct + "%";
+      $("#dub-status").textContent = `Enviando o vídeo… ${pct}%`;
+    };
+    xhr.onload = () => {
+      barra.hidden = true;
+      let d = {};
+      try { d = JSON.parse(xhr.responseText); } catch {}
+      xhr.status === 200 ? ok(d.slug) : falha(new Error(d.erro || "falha no envio"));
+    };
+    xhr.onerror = () => { barra.hidden = true; falha(new Error('O painel está desligado. Abra de novo o "Abrir painel.bat".')); };
+    xhr.send(arquivo);
+  });
+}
+
+$("#dub-botao").onclick = async () => {
+  const texto = $("#dub-texto").value.trim();
+  if (!dubArquivo) { avisar("Escolha o vídeo primeiro."); return; }
+  if (!texto) { $("#dub-texto").focus(); avisar("Escreva o que a voz vai falar."); return; }
+  const botao = $("#dub-botao");
+  botao.disabled = true;
+  try {
+    const titulo = $("#dub-titulo").value.trim();
+    const slug = await enviarArquivo(dubArquivo, titulo);
+    $("#dub-status").textContent = "";
+    await iniciar("/api/dublar", {
+      slug, texto, titulo,
+      descricao: $("#dub-descricao").value.trim(),
+      somOriginal: document.querySelector('input[name="som"]:checked').value,
+      ate: document.querySelector('input[name="ate"]:checked').value,
+      legendas: $("#dub-legendas").checked,
+      musica: $("#dub-musica").checked,
+    });
+  } catch (e) {
+    $("#dub-status").textContent = "";
+    alert(e.message);
+  }
+  botao.disabled = estado.tarefa.rodando;
+};
+
+// ---------- vídeos
+const arq =(pasta, n) => `/arquivo/${encodeURIComponent(pasta)}/${n}`;
+
+function desenharVideos() {
+  const el = $("#lista-videos");
+  if (!estado.videos.length) { el.innerHTML = '<p class="vazio">Nenhum vídeo pronto ainda. Gere um na aba Roteiros.</p>'; return; }
+  el.innerHTML = estado.videos.map(v => `
+    <div class="item ${v.pasta === videoSel ? "sel" : ""}" data-pasta="${esc(v.pasta)}">
+      <div class="mini">${v.thumbnail
+        ? `<img src="${arq(v.pasta, "thumbnail.png")}" alt="" loading="lazy">`
+        : `<video src="${arq(v.pasta, "video.mp4")}#t=3" preload="metadata" muted playsinline></video>`}</div>
+      <div>
+        <div class="t">${esc(v.titulo.replace(/\s*#shorts\s*$/i, ""))}</div>
+        <div class="m">
+          <span class="selo ${v.formato}">${v.formato === "longo" ? "longo" : "short"}</span>
+          ${v.dublagem ? '<span class="selo">dublagem</span>' : ""}
+          ${v.publicado ? '<span class="selo pub">publicado</span>' : ""}
+          <span>${esc(v.duracao)}</span>
+        </div>
+      </div>
+    </div>`).join("");
+  el.querySelectorAll(".item").forEach(i => i.onclick = () => abrirVideo(i.dataset.pasta));
+}
+
+function campo(rotulo, texto, msg) {
+  if (!texto) return "";
+  return `<div class="campo"><div class="rot">${esc(rotulo)}<button class="leve pequeno" data-copiar data-msg="${esc(msg || rotulo + " copiado!")}">Copiar</button></div>
+    <div class="txt">${esc(texto)}</div></div>`;
+}
+
+async function abrirVideo(pasta) {
+  videoSel = pasta;
+  desenharVideos();
+  const v = estado.videos.find(x => x.pasta === pasta);
+  if (!v) return;
+  let pub;
+  try { pub = await api("/api/publicacao/" + encodeURIComponent(pasta)); }
+  catch { pub = { titulo: v.titulo, descricao: "", hashtags: "", tags: "", completo: "" }; }
+  const longo = v.formato === "longo";
+  const m = (pub.completo || "").match(/SUGESTÃO DE DIA E HORÁRIO[^\n]*\n([\s\S]*?)\n\s*\n/);
+  $("#detalhe-video").innerHTML = `
+    <div class="cartao">
+      <div class="detalhe ${longo ? "longo" : ""}">
+        <video class="${longo ? "longo" : "short"}" src="${arq(pasta, "video.mp4")}" controls preload="metadata"></video>
+        <div>
+          <h2>${esc(pub.titulo || v.titulo)}</h2>
+          <div class="acoes">
+            <label class="interruptor ${v.publicado ? "marcado" : ""}"><input type="checkbox" id="chk-pub" ${v.publicado ? "checked" : ""}>
+              ${v.publicado ? "Publicado em " + esc(v.publicado) : "Já publiquei"}</label>
+            <a href="${arq(pasta, "video.mp4")}" download="${esc(pasta)}.mp4"><button class="leve">Baixar vídeo</button></a>
+            <button class="leve" id="abrir-pasta">Abrir pasta</button>
+          </div>
+          ${campo("Título", pub.titulo)}
+          ${campo("Descrição", pub.descricao, "Descrição copiada!")}
+          ${campo("Tags — cole no campo Tags do YouTube Studio", pub.tags, "Tags copiadas!")}
+          ${campo("Hashtags com #", pub.hashtags, "Hashtags copiadas!")}
+          ${v.thumbnail ? `<div class="campo thumb"><div class="rot">Thumbnail
+              <a href="${arq(pasta, "thumbnail.png")}" download="${esc(pasta)}-thumbnail.png"><button class="leve pequeno">Baixar</button></a></div>
+              <img src="${arq(pasta, "thumbnail.png")}" alt="thumbnail"></div>` : ""}
+          ${m ? `<div class="campo"><div class="rot">Melhor dia e horário</div><div class="horarios">${esc(m[1])}</div></div>` : ""}
+          <p class="aviso">Ao publicar, marque <strong>"Conteúdo alterado ou sintético" → Sim</strong> (a narração é voz sintética).</p>
+        </div>
+      </div>
+    </div>`;
+  document.querySelectorAll("#detalhe-video [data-copiar]").forEach(b =>
+    b.onclick = () => copiar(b.closest(".campo").querySelector(".txt").textContent, b.dataset.msg));
+  $("#chk-pub").onchange = async e => {
+    try {
+      await api("/api/publicado", { pasta, publicado: e.target.checked });
+      avisar(e.target.checked ? "Marcado como publicado" : "Marcação removida");
+      await atualizar();
+      abrirVideo(pasta);
+    } catch (err) { alert(err.message); }
+  };
+  $("#abrir-pasta").onclick = () => api("/api/abrir-pasta", { pasta }).catch(e => alert(e.message));
+}
+$("#abrir-saida").onclick = () => api("/api/abrir-pasta", {}).catch(e => alert(e.message));
+
+// ---------- roteiros
+function desenharRoteiros() {
+  const t = estado.tarefa, ocupado = t.rodando;
+  const el = $("#lista-roteiros");
+  if (!estado.roteiros.length) { el.innerHTML = '<p class="vazio">Nenhum roteiro ainda.</p>'; return; }
+  el.innerHTML = estado.roteiros.map(r => {
+    const gerando = ocupado && t.tipo === "gerar" && t.alvo === r.slug;
+    return `
+    <div class="roteiro cartao">
+      <div>
+        <div class="t">${esc(r.titulo.replace(/\s*#shorts\s*$/i, ""))}</div>
+        <div class="m">
+          <span class="selo ${r.formato}">${r.formato === "longo" ? "longo" : "short"}</span>
+          <span>${esc(r.duracao)}</span>
+          ${r.derivado ? "<span>· tirado do vídeo longo</span>" : ""}
+          <span>·</span>
+          ${gerando ? `<span class="ok">gerando… ${t.pctGeral || 0}%</span>` : r.pronto ? '<span class="ok">✓ vídeo pronto</span>' : "<span>ainda não gerado</span>"}
+        </div>
+      </div>
+      <div class="bts">
+        ${r.temShorts ? `<label style="font-size:14px;display:flex;gap:5px;align-items:center"><input type="checkbox" data-shorts="${esc(r.slug)}" checked> com Shorts</label>` : ""}
+        ${r.pronto ? `<button class="leve" data-textos="${esc(r.slug)}" ${ocupado ? "disabled" : ""} title="Refaz só o publicacao.txt, sem renderizar">Só textos</button>` : ""}
+        <button class="${r.pronto ? "leve" : ""}" data-gerar="${esc(r.slug)}" ${ocupado ? "disabled" : ""}>${r.pronto ? "Gerar de novo" : "Gerar vídeo"}</button>
+      </div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-gerar]").forEach(b => b.onclick = () => {
+    const slug = b.dataset.gerar;
+    const r = estado.roteiros.find(x => x.slug === slug);
+    if (r.pronto && !confirm("Esse vídeo já existe. Gerar de novo substitui o vídeo atual. Continuar?")) return;
+    const chk = el.querySelector(`[data-shorts="${slug}"]`);
+    iniciar("/api/gerar", { slug, semShorts: chk ? !chk.checked : false });
+  });
+  el.querySelectorAll("[data-textos]").forEach(b => b.onclick = () => iniciar("/api/gerar", { slug: b.dataset.textos, soPublicacao: true }));
+}
+
+// ---------- radar
+const md = texto => {
+  const linhas = esc(texto).split("\n");
+  const inline = s => s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|\W)_(.+?)_(?=\W|$)/g, "$1<em>$2</em>").replace(/`(.+?)`/g, "<code>$1</code>");
+  let html = "", i = 0;
+  while (i < linhas.length) {
+    const l = linhas[i];
+    if (l.startsWith("|")) {
+      const tab = [];
+      while (i < linhas.length && linhas[i].startsWith("|")) tab.push(linhas[i++]);
+      const cel = r => r.slice(1, -1).split("|").map(c => inline(c.trim()));
+      html += "<table><thead><tr>" + cel(tab[0]).map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>" +
+        tab.slice(2).map(r => "<tr>" + cel(r).map(c => `<td>${c}</td>`).join("") + "</tr>").join("") + "</tbody></table>";
+      continue;
+    }
+    if (l.startsWith("- ")) {
+      html += "<ul>";
+      while (i < linhas.length && linhas[i].startsWith("- ")) html += `<li>${inline(linhas[i++].slice(2))}</li>`;
+      html += "</ul>";
+      continue;
+    }
+    if (l.startsWith("## ")) html += `<h2>${inline(l.slice(3))}</h2>`;
+    else if (l.startsWith("# ")) html += `<h1>${inline(l.slice(2))}</h1>`;
+    else if (l.trim() && l !== "---" && !l.startsWith("Para virar vídeo")) html += `<p>${inline(l)}</p>`;
+    i++;
+  }
+  return html;
+};
+
+const maiuscula = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function desenharTemas(ranking, data) {
+  const el = $("#radar-temas");
+  if (!ranking || !ranking.length) { el.innerHTML = ""; return; }
+  const max = Math.max(...ranking.map(r => r.pontos), 1);
+  el.innerHTML = `<div class="titulo-sec"><h2>Temas em alta</h2></div><div class="temas">` +
+    ranking.map((r, i) => `
+      <div class="tema cartao ${r.ja_feito ? "feito" : ""}">
+        <div class="cab"><h3>${esc(maiuscula(r.animal))}</h3><span class="pos">#${i + 1}</span></div>
+        <div class="forca" title="força do sinal"><div style="width:${Math.round(100 * r.pontos / max)}%"></div></div>
+        <ul>${(r.motivos.length ? r.motivos : ["interesse constante"]).map(m => `<li>${esc(m)}</li>`).join("")}</ul>
+        <button class="${r.ja_feito ? "leve" : "destaque"}" data-tema="${i}">Quero esse tema</button>
+      </div>`).join("") + "</div>";
+  el.querySelectorAll("[data-tema]").forEach(b => b.onclick = () => {
+    const r = ranking[+b.dataset.tema];
+    const sinais = r.motivos.filter(m => !m.startsWith("⚠️")).join("; ") || "interesse constante";
+    if (!estado.claude) {
+      const pedido = `/radar Quero um vídeo sobre: ${r.animal} (${r.en}). Sinais do radar de ${data}: ${sinais}.`;
+      copiar(pedido, "Pedido copiado! Cole no Claude Code (Ctrl+V) e envie.", 4000);
+      return;
+    }
+    irPara("novo");
+    $("#pedido-texto").value = `${r.animal} (${r.en})`;
+    sinaisRadar = `${sinais} (radar de ${data})`;
+    $("#pedido-sinais").textContent = "Sinais do radar: " + sinaisRadar;
+    pedirIdeias();
+  });
+}
+
+async function carregarRadar(data) {
+  const sel = $("#datas-radar");
+  sel.innerHTML = estado.radar.map(d => `<option value="${d}">${d.split("-").reverse().join("/")}</option>`).join("");
+  data = data || estado.radar[0];
+  if (!data) return;
+  sel.value = data;
+  try {
+    const r = await api("/api/radar/" + data);
+    const semTabela = r.md.replace(/## (Animais|Temas) em alta[\s\S]*?(?=\n## )/, "");
+    desenharTemas(r.ranking, data.split("-").reverse().join("/"));
+    $("#radar-md").innerHTML = md(semTabela);
+  } catch (e) {
+    $("#radar-md").innerHTML = `<p class="vazio">${esc(e.message)}</p>`;
+  }
+}
+$("#datas-radar").onchange = e => carregarRadar(e.target.value);
+$("#rodar-radar").onclick = () => iniciar("/api/radar", {});
+
+// ---------- tarefa
+const ETAPAS = {
+  gerar: ["Gravando a narração", "Baixando clipes do Pexels", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
+  radar: ["Consultando Wikipedia", "Consultando Google Notícias", "Consultando Google Trends", "Consultando YouTube", "Relatório pronto"],
+  dublar: ["Preparando o seu vídeo", "Gravando a narração", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
+  ideias: ["Lendo o que funciona no canal", "Pronto"],
+  temas: ["Lendo o que funciona no canal", "Criando a lista de temas", "Pronto"],
+  roteiro: ["Lendo o que funciona no canal", "Conferindo os fatos", "Escrevendo o roteiro", "Pronto"],
+};
+const NOMES_TAREFA = {
+  radar: () => "Radar de temas",
+  gerar: t => `Vídeo: ${t.alvo}`,
+  dublar: () => "Dublando o seu vídeo",
+  ideias: t => `Ideias para "${t.alvo}"`,
+  temas: t => `Preparando o radar para "${t.alvo}"`,
+  roteiro: t => `Roteiro: ${t.alvo}`,
+};
+const DICA_TEMPO = { ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
+
+async function iniciar(caminho, corpo) {
+  try { await api(caminho, corpo); }
+  catch (e) { alert(e.message); return; }
+  tarefaFechada = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  await atualizar();
+}
+
+function desenharTarefa() {
+  const t = estado.tarefa, box = $("#tarefa");
+  if (!t.tipo || tarefaFechada) { box.style.display = "none"; return; }
+  box.style.display = "block";
+  const terminou = !t.rodando;
+  box.classList.toggle("rodando", t.rodando);
+  box.classList.toggle("erro", terminou && t.codigo !== 0);
+  box.classList.toggle("ok", terminou && t.codigo === 0);
+
+  const nome = (NOMES_TAREFA[t.tipo] || (() => t.tipo))(t);
+  $("#tarefa-titulo").textContent = t.rodando ? nome : t.codigo === 0 ? `${nome} — pronto!` : `${nome} — deu erro`;
+  $("#tarefa-sub").textContent = t.rodando
+    ? `começou às ${t.inicio} · ${Math.floor(t.minutos)} min${DICA_TEMPO[t.tipo] ? " · " + DICA_TEMPO[t.tipo] : ""}`
+    : t.codigo === 0 ? "pode fechar este aviso" : "abra os detalhes técnicos abaixo e me mande o final";
+  $("#tarefa-barra").style.width = (t.pctGeral || 0) + "%";
+  $("#tarefa-pct").textContent = (t.pctGeral || 0) + "%";
+  let etapaTxt = t.etapa || "";
+  if (t.tipo === "gerar" && t.totalVideos > 1) etapaTxt = `Vídeo ${t.video} de ${t.totalVideos} (${t.nomeVideo}) · ${etapaTxt}`;
+  $("#tarefa-etapa").textContent = t.rodando ? etapaTxt : "";
+
+  const lista = ETAPAS[t.tipo] || [];
+  const atual = lista.indexOf(t.etapa);
+  $("#tarefa-etapas").innerHTML = t.tipo === "gerar" && !t.rodando && t.codigo === 0 ? "" :
+    lista.map((e, i) => `<span class="${terminou && t.codigo === 0 || i < atual ? "feita" : i === atual ? "agora" : ""}">${e.replace("Consultando ", "")}</span>`).join("");
+  const log = $("#tarefa-log");
+  const noFim = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+  log.textContent = (t.linhas || []).join("\n");
+  if (noFim) log.scrollTop = log.scrollHeight;
+  $("#tarefa-fechar").style.display = t.rodando ? "none" : "";
+  $("#rodar-radar").disabled = t.rodando;
+  $("#pedir-ideias").disabled = t.rodando || estado.claude !== true;
+  $("#dub-botao").disabled = t.rodando;
+  document.querySelectorAll("[data-angulo], #gerar-previa").forEach(b => b.disabled = t.rodando);
+}
+$("#tarefa-fechar").onclick = () => { tarefaFechada = true; desenharTarefa(); };
+
+async function acompanhar() {
+  if (acompanhando) return;
+  acompanhando = true;
+  try {
+    while (true) {
+      await new Promise(r => setTimeout(r, 1500));
+      estado.tarefa = await api("/api/tarefa");
+      desenharTarefa();
+      if (estado.tarefa.tipo === "gerar") desenharRoteiros();
+      if (!estado.tarefa.rodando) break;
+    }
+  } catch (e) {
+    avisar(e.message, 6000);
+  }
+  acompanhando = false;
+  const { tipo, codigo, resultado } = estado.tarefa;
+  await atualizar();
+  if (codigo !== 0) return;
+  if (tipo === "radar") carregarRadar();
+  if (tipo === "ideias" && resultado) {
+    desenharIdeias(resultado);
+    tarefaFechada = true;
+    desenharTarefa();
+    $("#ideias").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (tipo === "roteiro" && resultado) {
+    tarefaFechada = true;
+    desenharTarefa();
+    mostrarPrevia(resultado.slug);
+  }
+  if (tipo === "gerar") avisar("Vídeo pronto! Veja na aba Vídeos prontos.", 5000);
+  if (tipo === "dublar") {
+    avisar("Dublagem pronta!", 5000);
+    irPara("videos");
+    abrirVideo(estado.tarefa.alvo);
+  }
+}
+
+async function atualizar() {
+  try { estado = await api("/api/estado"); }
+  catch (e) { avisar(e.message, 8000); return; }
+  desenharVideos();
+  desenharRoteiros();
+  desenharTarefa();
+  desenharCanal();
+  const semClaude = $("#sem-claude");
+  semClaude.hidden = estado.claude === true;
+  if (estado.claude === undefined) {
+    semClaude.innerHTML = 'O painel foi atualizado, mas a janela preta ainda roda a versão antiga. ' +
+      '<strong>Feche a janela preta e abra de novo o "Abrir painel.bat"</strong>.';
+  }
+  if (!videoSel && estado.videos.length) abrirVideo(estado.videos[0].pasta);
+  if (estado.tarefa.rodando) acompanhar();
+}
+
+atualizar().then(async () => {
+  try { desenharIdeias(await api("/api/ideias")); } catch {}
+  // atalhos: http://localhost:8765/#radar abre direto na aba; #configurar abre a configuração
+  const destino = location.hash.slice(1);
+  if (destino === "configurar") abrirConfig(false);
+  else if (["novo", "dublar", "videos", "roteiros", "radar"].includes(destino)) irPara(destino);
+});
+</script>
+</body>
+</html>

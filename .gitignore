@@ -1,0 +1,28 @@
+# dependências e arquivos gerados
+node_modules/
+__pycache__/
+saida/
+trabalho/
+public/projetos/
+
+# segredos (cada pessoa usa a própria chave: veja .env.exemplo)
+.env
+
+# dados pessoais de cada canal (são criados na primeira vez que você usa)
+dados/canal.json
+dados/aprendizados.md
+dados/publicados.json
+dados/ultimas-ideias.json
+dados/radar/
+dados/temas/*
+!dados/temas/animais.json
+historico.json
+roteiros/*.json
+
+# músicas: baixe as suas (ex.: Biblioteca de áudio do YouTube); não podem ser redistribuídas
+public/musica/*.mp3
+
+# configuração local do Claude Code e skills de terceiros (instale com o comando do README)
+.claude/launch.json
+.claude/settings.local.json
+.claude/skills/remotion-*/

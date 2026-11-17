@@ -1,0 +1,1453 @@
+[
+ {
+  "pt": "polvo",
+  "en": "octopus",
+  "wiki_pt": "Polvo",
+  "wiki_en": "Octopus",
+  "grupo": "marinho",
+  "busca": [
+   "polvo",
+   "polvos"
+  ]
+ },
+ {
+  "pt": "lula",
+  "en": "squid",
+  "wiki_pt": "Lula (molusco)",
+  "wiki_en": "Squid",
+  "grupo": "marinho",
+  "busca": [
+   "lulas",
+   "lula-gigante"
+  ]
+ },
+ {
+  "pt": "lula-gigante",
+  "en": "giant squid",
+  "wiki_pt": "Lula-gigante",
+  "wiki_en": "Giant squid",
+  "grupo": "marinho",
+  "busca": [
+   "lula-gigante"
+  ]
+ },
+ {
+  "pt": "água-viva",
+  "en": "jellyfish",
+  "wiki_pt": "Água-viva",
+  "wiki_en": "Jellyfish",
+  "grupo": "marinho",
+  "busca": [
+   "água-viva",
+   "águas-vivas"
+  ]
+ },
+ {
+  "pt": "tubarão",
+  "en": "shark",
+  "wiki_pt": "Tubarão",
+  "wiki_en": "Shark",
+  "grupo": "marinho",
+  "busca": [
+   "tubarão",
+   "tubarões"
+  ]
+ },
+ {
+  "pt": "tubarão-branco",
+  "en": "great white shark",
+  "wiki_pt": "Tubarão-branco",
+  "wiki_en": "Great white shark",
+  "grupo": "marinho",
+  "busca": [
+   "tubarão-branco",
+   "tubarão branco"
+  ]
+ },
+ {
+  "pt": "tubarão-baleia",
+  "en": "whale shark",
+  "wiki_pt": "Tubarão-baleia",
+  "wiki_en": "Whale shark",
+  "grupo": "marinho",
+  "busca": [
+   "tubarão-baleia"
+  ]
+ },
+ {
+  "pt": "megalodonte",
+  "en": "megalodon",
+  "wiki_pt": "Megalodonte",
+  "wiki_en": "Megalodon",
+  "grupo": "pre-historico",
+  "busca": [
+   "megalodonte",
+   "megalodon"
+  ]
+ },
+ {
+  "pt": "baleia",
+  "en": "whale",
+  "wiki_pt": "Baleia",
+  "wiki_en": "Whale",
+  "grupo": "marinho",
+  "busca": [
+   "baleia",
+   "baleias"
+  ]
+ },
+ {
+  "pt": "baleia-azul",
+  "en": "blue whale",
+  "wiki_pt": "Baleia-azul",
+  "wiki_en": "Blue whale",
+  "grupo": "marinho",
+  "busca": [
+   "baleia-azul",
+   "baleia azul"
+  ]
+ },
+ {
+  "pt": "jubarte",
+  "en": "humpback whale",
+  "wiki_pt": "Jubarte",
+  "wiki_en": "Humpback whale",
+  "grupo": "marinho",
+  "busca": [
+   "jubarte",
+   "jubartes"
+  ]
+ },
+ {
+  "pt": "cachalote",
+  "en": "sperm whale",
+  "wiki_pt": "Cachalote",
+  "wiki_en": "Sperm whale",
+  "grupo": "marinho",
+  "busca": [
+   "cachalote",
+   "cachalotes"
+  ]
+ },
+ {
+  "pt": "orca",
+  "en": "orca",
+  "wiki_pt": "Orca",
+  "wiki_en": "Orca",
+  "grupo": "marinho",
+  "busca": [
+   "orca",
+   "orcas"
+  ]
+ },
+ {
+  "pt": "golfinho",
+  "en": "dolphin",
+  "wiki_pt": "Golfinho",
+  "wiki_en": "Dolphin",
+  "grupo": "marinho",
+  "busca": [
+   "golfinho",
+   "golfinhos"
+  ]
+ },
+ {
+  "pt": "boto-cor-de-rosa",
+  "en": "amazon river dolphin",
+  "wiki_pt": "Boto-cor-de-rosa",
+  "wiki_en": "Amazon river dolphin",
+  "grupo": "rio",
+  "busca": [
+   "boto-cor-de-rosa",
+   "boto"
+  ]
+ },
+ {
+  "pt": "narval",
+  "en": "narwhal",
+  "wiki_pt": "Narval",
+  "wiki_en": "Narwhal",
+  "grupo": "marinho",
+  "busca": [
+   "narval",
+   "narvais"
+  ]
+ },
+ {
+  "pt": "peixe-boi",
+  "en": "manatee",
+  "wiki_pt": "Peixe-boi",
+  "wiki_en": "Manatee",
+  "grupo": "marinho",
+  "busca": [
+   "peixe-boi",
+   "peixes-boi"
+  ]
+ },
+ {
+  "pt": "foca",
+  "en": "seal",
+  "wiki_pt": "Foca",
+  "wiki_en": "Pinniped",
+  "grupo": "marinho",
+  "busca": [
+   "focas"
+  ]
+ },
+ {
+  "pt": "morsa",
+  "en": "walrus",
+  "wiki_pt": "Morsa",
+  "wiki_en": "Walrus",
+  "grupo": "marinho",
+  "busca": [
+   "morsa",
+   "morsas"
+  ]
+ },
+ {
+  "pt": "lontra",
+  "en": "otter",
+  "wiki_pt": "Lontra",
+  "wiki_en": "Otter",
+  "grupo": "rio",
+  "busca": [
+   "lontra",
+   "lontras"
+  ]
+ },
+ {
+  "pt": "ariranha",
+  "en": "giant otter",
+  "wiki_pt": "Ariranha",
+  "wiki_en": "Giant otter",
+  "grupo": "rio",
+  "busca": [
+   "ariranha",
+   "ariranhas"
+  ]
+ },
+ {
+  "pt": "cavalo-marinho",
+  "en": "seahorse",
+  "wiki_pt": "Cavalo-marinho",
+  "wiki_en": "Seahorse",
+  "grupo": "marinho",
+  "busca": [
+   "cavalo-marinho",
+   "cavalos-marinhos"
+  ]
+ },
+ {
+  "pt": "estrela-do-mar",
+  "en": "starfish",
+  "wiki_pt": "Estrela-do-mar",
+  "wiki_en": "Starfish",
+  "grupo": "marinho",
+  "busca": [
+   "estrela-do-mar"
+  ]
+ },
+ {
+  "pt": "caranguejo",
+  "en": "crab",
+  "wiki_pt": "Caranguejo",
+  "wiki_en": "Crab",
+  "grupo": "marinho",
+  "busca": [
+   "caranguejo",
+   "caranguejos"
+  ]
+ },
+ {
+  "pt": "camarão-louva-a-deus",
+  "en": "mantis shrimp",
+  "wiki_pt": "Stomatopoda",
+  "wiki_en": "Mantis shrimp",
+  "grupo": "marinho",
+  "busca": [
+   "camarão-louva-a-deus"
+  ]
+ },
+ {
+  "pt": "tartaruga-marinha",
+  "en": "sea turtle",
+  "wiki_pt": "Tartaruga-marinha",
+  "wiki_en": "Sea turtle",
+  "grupo": "marinho",
+  "busca": [
+   "tartaruga-marinha",
+   "tartarugas-marinhas",
+   "tartaruga marinha"
+  ]
+ },
+ {
+  "pt": "arraia-manta",
+  "en": "manta ray",
+  "wiki_pt": "Manta",
+  "wiki_en": "Manta ray",
+  "grupo": "marinho",
+  "busca": [
+   "arraia-manta",
+   "arraia",
+   "raia-manta"
+  ]
+ },
+ {
+  "pt": "peixe-palhaço",
+  "en": "clownfish",
+  "wiki_pt": "Peixe-palhaço",
+  "wiki_en": "Amphiprioninae",
+  "grupo": "marinho",
+  "busca": [
+   "peixe-palhaço"
+  ]
+ },
+ {
+  "pt": "baiacu",
+  "en": "pufferfish",
+  "wiki_pt": "Baiacu",
+  "wiki_en": "Tetraodontidae",
+  "grupo": "marinho",
+  "busca": [
+   "baiacu",
+   "baiacus"
+  ]
+ },
+ {
+  "pt": "tamboril",
+  "en": "anglerfish",
+  "wiki_pt": "Lophiiformes",
+  "wiki_en": "Anglerfish",
+  "grupo": "marinho",
+  "busca": [
+   "tamboril",
+   "peixe-pescador"
+  ]
+ },
+ {
+  "pt": "peixe-lua",
+  "en": "ocean sunfish",
+  "wiki_pt": "Peixe-lua",
+  "wiki_en": "Ocean sunfish",
+  "grupo": "marinho",
+  "busca": [
+   "peixe-lua"
+  ]
+ },
+ {
+  "pt": "piranha",
+  "en": "piranha",
+  "wiki_pt": "Piranha",
+  "wiki_en": "Piranha",
+  "grupo": "rio",
+  "busca": [
+   "piranha",
+   "piranhas"
+  ]
+ },
+ {
+  "pt": "pirarucu",
+  "en": "arapaima",
+  "wiki_pt": "Pirarucu",
+  "wiki_en": "Arapaima",
+  "grupo": "rio",
+  "busca": [
+   "pirarucu"
+  ]
+ },
+ {
+  "pt": "poraquê",
+  "en": "electric eel",
+  "wiki_pt": "Poraquê",
+  "wiki_en": "Electric eel",
+  "grupo": "rio",
+  "busca": [
+   "poraquê",
+   "enguia-elétrica",
+   "enguia elétrica"
+  ]
+ },
+ {
+  "pt": "água-viva-imortal",
+  "en": "immortal jellyfish",
+  "wiki_pt": "Turritopsis dohrnii",
+  "wiki_en": "Turritopsis dohrnii",
+  "grupo": "marinho",
+  "busca": [
+   "água-viva-imortal",
+   "água-viva imortal"
+  ]
+ },
+ {
+  "pt": "axolote",
+  "en": "axolotl",
+  "wiki_pt": "Axolote",
+  "wiki_en": "Axolotl",
+  "grupo": "anfibio",
+  "busca": [
+   "axolote",
+   "axolotes"
+  ]
+ },
+ {
+  "pt": "sapo",
+  "en": "frog",
+  "wiki_pt": "Sapo",
+  "wiki_en": "Frog",
+  "grupo": "anfibio",
+  "busca": [
+   "sapo",
+   "sapos"
+  ]
+ },
+ {
+  "pt": "salamandra",
+  "en": "salamander",
+  "wiki_pt": "Salamandra",
+  "wiki_en": "Salamander",
+  "grupo": "anfibio",
+  "busca": [
+   "salamandra",
+   "salamandras"
+  ]
+ },
+ {
+  "pt": "crocodilo",
+  "en": "crocodile",
+  "wiki_pt": "Crocodilo",
+  "wiki_en": "Crocodile",
+  "grupo": "reptil",
+  "busca": [
+   "crocodilo",
+   "crocodilos"
+  ]
+ },
+ {
+  "pt": "jacaré",
+  "en": "caiman",
+  "wiki_pt": "Jacaré",
+  "wiki_en": "Caiman",
+  "grupo": "reptil",
+  "busca": [
+   "jacaré",
+   "jacarés"
+  ]
+ },
+ {
+  "pt": "camaleão",
+  "en": "chameleon",
+  "wiki_pt": "Camaleão",
+  "wiki_en": "Chameleon",
+  "grupo": "reptil",
+  "busca": [
+   "camaleão",
+   "camaleões"
+  ]
+ },
+ {
+  "pt": "dragão-de-komodo",
+  "en": "komodo dragon",
+  "wiki_pt": "Dragão-de-komodo",
+  "wiki_en": "Komodo dragon",
+  "grupo": "reptil",
+  "busca": [
+   "dragão-de-komodo",
+   "dragão de komodo"
+  ]
+ },
+ {
+  "pt": "iguana",
+  "en": "iguana",
+  "wiki_pt": "Iguana",
+  "wiki_en": "Iguana",
+  "grupo": "reptil",
+  "busca": [
+   "iguana",
+   "iguanas"
+  ]
+ },
+ {
+  "pt": "cobra",
+  "en": "snake",
+  "wiki_pt": "Serpentes",
+  "wiki_en": "Snake",
+  "grupo": "reptil",
+  "busca": [
+   "cobras",
+   "serpente",
+   "serpentes"
+  ]
+ },
+ {
+  "pt": "sucuri",
+  "en": "anaconda",
+  "wiki_pt": "Sucuri",
+  "wiki_en": "Anaconda",
+  "grupo": "reptil",
+  "busca": [
+   "sucuri",
+   "sucuris",
+   "anaconda"
+  ]
+ },
+ {
+  "pt": "naja",
+  "en": "cobra",
+  "wiki_pt": "Naja",
+  "wiki_en": "Naja",
+  "grupo": "reptil",
+  "busca": [
+   "naja",
+   "najas"
+  ]
+ },
+ {
+  "pt": "tartaruga",
+  "en": "turtle",
+  "wiki_pt": "Testudines",
+  "wiki_en": "Turtle",
+  "grupo": "reptil",
+  "busca": [
+   "tartaruga",
+   "tartarugas",
+   "jabuti"
+  ]
+ },
+ {
+  "pt": "lagartixa",
+  "en": "gecko",
+  "wiki_pt": "Gekkonidae",
+  "wiki_en": "Gecko",
+  "grupo": "reptil",
+  "busca": [
+   "lagartixa",
+   "lagartixas",
+   "gecko"
+  ]
+ },
+ {
+  "pt": "leão",
+  "en": "lion",
+  "wiki_pt": "Leão",
+  "wiki_en": "Lion",
+  "grupo": "savana",
+  "busca": [
+   "leões",
+   "leoa",
+   "leoas"
+  ]
+ },
+ {
+  "pt": "tigre",
+  "en": "tiger",
+  "wiki_pt": "Tigre",
+  "wiki_en": "Tiger",
+  "grupo": "felino",
+  "busca": [
+   "tigre",
+   "tigres"
+  ]
+ },
+ {
+  "pt": "leopardo",
+  "en": "leopard",
+  "wiki_pt": "Leopardo",
+  "wiki_en": "Leopard",
+  "grupo": "felino",
+  "busca": [
+   "leopardo",
+   "leopardos"
+  ]
+ },
+ {
+  "pt": "onça-pintada",
+  "en": "jaguar",
+  "wiki_pt": "Onça-pintada",
+  "wiki_en": "Jaguar",
+  "grupo": "felino",
+  "busca": [
+   "onça-pintada",
+   "onça",
+   "onças"
+  ]
+ },
+ {
+  "pt": "guepardo",
+  "en": "cheetah",
+  "wiki_pt": "Guepardo",
+  "wiki_en": "Cheetah",
+  "grupo": "savana",
+  "busca": [
+   "guepardo",
+   "guepardos",
+   "chita"
+  ]
+ },
+ {
+  "pt": "lince",
+  "en": "lynx",
+  "wiki_pt": "Lince",
+  "wiki_en": "Lynx",
+  "grupo": "felino",
+  "busca": [
+   "lince"
+  ]
+ },
+ {
+  "pt": "gato",
+  "en": "cat",
+  "wiki_pt": "Gato",
+  "wiki_en": "Cat",
+  "grupo": "pet",
+  "busca": [
+   "gato",
+   "gatos"
+  ]
+ },
+ {
+  "pt": "cachorro",
+  "en": "dog",
+  "wiki_pt": "Cão",
+  "wiki_en": "Dog",
+  "grupo": "pet",
+  "busca": [
+   "cachorro",
+   "cachorros",
+   "cães"
+  ]
+ },
+ {
+  "pt": "lobo",
+  "en": "wolf",
+  "wiki_pt": "Lobo-cinzento",
+  "wiki_en": "Wolf",
+  "grupo": "mamifero",
+  "busca": [
+   "lobo",
+   "lobos"
+  ]
+ },
+ {
+  "pt": "lobo-guará",
+  "en": "maned wolf",
+  "wiki_pt": "Lobo-guará",
+  "wiki_en": "Maned wolf",
+  "grupo": "cerrado",
+  "busca": [
+   "lobo-guará",
+   "lobos-guará"
+  ]
+ },
+ {
+  "pt": "raposa",
+  "en": "fox",
+  "wiki_pt": "Raposa",
+  "wiki_en": "Fox",
+  "grupo": "mamifero",
+  "busca": [
+   "raposas"
+  ]
+ },
+ {
+  "pt": "hiena",
+  "en": "hyena",
+  "wiki_pt": "Hiena",
+  "wiki_en": "Hyena",
+  "grupo": "savana",
+  "busca": [
+   "hiena",
+   "hienas"
+  ]
+ },
+ {
+  "pt": "suricato",
+  "en": "meerkat",
+  "wiki_pt": "Suricata",
+  "wiki_en": "Meerkat",
+  "grupo": "savana",
+  "busca": [
+   "suricato",
+   "suricatos",
+   "suricata"
+  ]
+ },
+ {
+  "pt": "elefante",
+  "en": "elephant",
+  "wiki_pt": "Elefante",
+  "wiki_en": "Elephant",
+  "grupo": "savana",
+  "busca": [
+   "elefante",
+   "elefantes"
+  ]
+ },
+ {
+  "pt": "girafa",
+  "en": "giraffe",
+  "wiki_pt": "Girafa",
+  "wiki_en": "Giraffe",
+  "grupo": "savana",
+  "busca": [
+   "girafa",
+   "girafas"
+  ]
+ },
+ {
+  "pt": "zebra",
+  "en": "zebra",
+  "wiki_pt": "Zebra",
+  "wiki_en": "Zebra",
+  "grupo": "savana",
+  "busca": []
+ },
+ {
+  "pt": "hipopótamo",
+  "en": "hippopotamus",
+  "wiki_pt": "Hipopótamo",
+  "wiki_en": "Hippopotamus",
+  "grupo": "savana",
+  "busca": [
+   "hipopótamo",
+   "hipopótamos"
+  ]
+ },
+ {
+  "pt": "rinoceronte",
+  "en": "rhinoceros",
+  "wiki_pt": "Rinoceronte",
+  "wiki_en": "Rhinoceros",
+  "grupo": "savana",
+  "busca": [
+   "rinoceronte",
+   "rinocerontes"
+  ]
+ },
+ {
+  "pt": "gorila",
+  "en": "gorilla",
+  "wiki_pt": "Gorila",
+  "wiki_en": "Gorilla",
+  "grupo": "primata",
+  "busca": [
+   "gorila",
+   "gorilas"
+  ]
+ },
+ {
+  "pt": "chimpanzé",
+  "en": "chimpanzee",
+  "wiki_pt": "Chimpanzé",
+  "wiki_en": "Chimpanzee",
+  "grupo": "primata",
+  "busca": [
+   "chimpanzé",
+   "chimpanzés"
+  ]
+ },
+ {
+  "pt": "orangotango",
+  "en": "orangutan",
+  "wiki_pt": "Orangotango",
+  "wiki_en": "Orangutan",
+  "grupo": "primata",
+  "busca": [
+   "orangotango",
+   "orangotangos"
+  ]
+ },
+ {
+  "pt": "lêmure",
+  "en": "lemur",
+  "wiki_pt": "Lêmure",
+  "wiki_en": "Lemur",
+  "grupo": "primata",
+  "busca": [
+   "lêmure",
+   "lêmures"
+  ]
+ },
+ {
+  "pt": "mico-leão-dourado",
+  "en": "golden lion tamarin",
+  "wiki_pt": "Mico-leão-dourado",
+  "wiki_en": "Golden lion tamarin",
+  "grupo": "primata",
+  "busca": [
+   "mico-leão-dourado"
+  ]
+ },
+ {
+  "pt": "bicho-preguiça",
+  "en": "sloth",
+  "wiki_pt": "Bicho-preguiça",
+  "wiki_en": "Sloth",
+  "grupo": "mamifero",
+  "busca": [
+   "bicho-preguiça",
+   "bichos-preguiça"
+  ]
+ },
+ {
+  "pt": "tamanduá",
+  "en": "anteater",
+  "wiki_pt": "Tamanduá",
+  "wiki_en": "Anteater",
+  "grupo": "mamifero",
+  "busca": [
+   "tamanduá",
+   "tamanduás",
+   "tamanduá-bandeira"
+  ]
+ },
+ {
+  "pt": "tatu",
+  "en": "armadillo",
+  "wiki_pt": "Tatu",
+  "wiki_en": "Armadillo",
+  "grupo": "mamifero",
+  "busca": [
+   "tatu",
+   "tatus"
+  ]
+ },
+ {
+  "pt": "capivara",
+  "en": "capybara",
+  "wiki_pt": "Capivara",
+  "wiki_en": "Capybara",
+  "grupo": "mamifero",
+  "busca": [
+   "capivara",
+   "capivaras"
+  ]
+ },
+ {
+  "pt": "anta",
+  "en": "tapir",
+  "wiki_pt": "Anta",
+  "wiki_en": "Tapir",
+  "grupo": "mamifero",
+  "busca": [
+   "antas"
+  ]
+ },
+ {
+  "pt": "quati",
+  "en": "coati",
+  "wiki_pt": "Quati",
+  "wiki_en": "Coati",
+  "grupo": "mamifero",
+  "busca": [
+   "quati",
+   "quatis"
+  ]
+ },
+ {
+  "pt": "gambá",
+  "en": "opossum",
+  "wiki_pt": "Gambá",
+  "wiki_en": "Opossum",
+  "grupo": "mamifero",
+  "busca": [
+   "gambá",
+   "gambás"
+  ]
+ },
+ {
+  "pt": "urso-polar",
+  "en": "polar bear",
+  "wiki_pt": "Urso-polar",
+  "wiki_en": "Polar bear",
+  "grupo": "mamifero",
+  "busca": [
+   "urso-polar",
+   "urso polar",
+   "ursos-polares"
+  ]
+ },
+ {
+  "pt": "urso",
+  "en": "bear",
+  "wiki_pt": "Urso",
+  "wiki_en": "Bear",
+  "grupo": "mamifero",
+  "busca": [
+   "urso",
+   "ursos"
+  ]
+ },
+ {
+  "pt": "panda",
+  "en": "giant panda",
+  "wiki_pt": "Panda-gigante",
+  "wiki_en": "Giant panda",
+  "grupo": "mamifero",
+  "busca": [
+   "panda",
+   "pandas",
+   "panda-gigante"
+  ]
+ },
+ {
+  "pt": "panda-vermelho",
+  "en": "red panda",
+  "wiki_pt": "Panda-vermelho",
+  "wiki_en": "Red panda",
+  "grupo": "mamifero",
+  "busca": [
+   "panda-vermelho"
+  ]
+ },
+ {
+  "pt": "coala",
+  "en": "koala",
+  "wiki_pt": "Coala",
+  "wiki_en": "Koala",
+  "grupo": "mamifero",
+  "busca": [
+   "coala",
+   "coalas"
+  ]
+ },
+ {
+  "pt": "canguru",
+  "en": "kangaroo",
+  "wiki_pt": "Canguru",
+  "wiki_en": "Kangaroo",
+  "grupo": "mamifero",
+  "busca": [
+   "canguru",
+   "cangurus"
+  ]
+ },
+ {
+  "pt": "ornitorrinco",
+  "en": "platypus",
+  "wiki_pt": "Ornitorrinco",
+  "wiki_en": "Platypus",
+  "grupo": "mamifero",
+  "busca": [
+   "ornitorrinco",
+   "ornitorrincos"
+  ]
+ },
+ {
+  "pt": "equidna",
+  "en": "echidna",
+  "wiki_pt": "Equidna",
+  "wiki_en": "Echidna",
+  "grupo": "mamifero",
+  "busca": [
+   "equidna"
+  ]
+ },
+ {
+  "pt": "vombate",
+  "en": "wombat",
+  "wiki_pt": "Vombate",
+  "wiki_en": "Wombat",
+  "grupo": "mamifero",
+  "busca": [
+   "vombate",
+   "vombates"
+  ]
+ },
+ {
+  "pt": "diabo-da-tasmânia",
+  "en": "tasmanian devil",
+  "wiki_pt": "Diabo-da-tasmânia",
+  "wiki_en": "Tasmanian devil",
+  "grupo": "mamifero",
+  "busca": [
+   "diabo-da-tasmânia"
+  ]
+ },
+ {
+  "pt": "morcego",
+  "en": "bat",
+  "wiki_pt": "Morcego",
+  "wiki_en": "Bat",
+  "grupo": "mamifero",
+  "busca": [
+   "morcego",
+   "morcegos"
+  ]
+ },
+ {
+  "pt": "porco-espinho",
+  "en": "porcupine",
+  "wiki_pt": "Porco-espinho",
+  "wiki_en": "Porcupine",
+  "grupo": "mamifero",
+  "busca": [
+   "porco-espinho"
+  ]
+ },
+ {
+  "pt": "ouriço",
+  "en": "hedgehog",
+  "wiki_pt": "Ouriço-cacheiro",
+  "wiki_en": "Hedgehog",
+  "grupo": "mamifero",
+  "busca": [
+   "ouriço",
+   "ouriço-cacheiro"
+  ]
+ },
+ {
+  "pt": "esquilo",
+  "en": "squirrel",
+  "wiki_pt": "Esquilo",
+  "wiki_en": "Squirrel",
+  "grupo": "mamifero",
+  "busca": [
+   "esquilo",
+   "esquilos"
+  ]
+ },
+ {
+  "pt": "castor",
+  "en": "beaver",
+  "wiki_pt": "Castor",
+  "wiki_en": "Beaver",
+  "grupo": "mamifero",
+  "busca": [
+   "castor",
+   "castores"
+  ]
+ },
+ {
+  "pt": "rato-toupeira-pelado",
+  "en": "naked mole-rat",
+  "wiki_pt": "Rato-toupeira-pelado",
+  "wiki_en": "Naked mole-rat",
+  "grupo": "mamifero",
+  "busca": [
+   "rato-toupeira-pelado"
+  ]
+ },
+ {
+  "pt": "camelo",
+  "en": "camel",
+  "wiki_pt": "Camelo",
+  "wiki_en": "Camel",
+  "grupo": "mamifero",
+  "busca": [
+   "camelo",
+   "camelos"
+  ]
+ },
+ {
+  "pt": "cavalo",
+  "en": "horse",
+  "wiki_pt": "Cavalo",
+  "wiki_en": "Horse",
+  "grupo": "fazenda",
+  "busca": [
+   "cavalo",
+   "cavalos"
+  ]
+ },
+ {
+  "pt": "vaca",
+  "en": "cow",
+  "wiki_pt": "Vaca",
+  "wiki_en": "Cattle",
+  "grupo": "fazenda",
+  "busca": [
+   "vaca",
+   "vacas"
+  ]
+ },
+ {
+  "pt": "porco",
+  "en": "pig",
+  "wiki_pt": "Porco",
+  "wiki_en": "Pig",
+  "grupo": "fazenda",
+  "busca": [
+   "porco",
+   "porcos"
+  ]
+ },
+ {
+  "pt": "galinha",
+  "en": "chicken",
+  "wiki_pt": "Galinha",
+  "wiki_en": "Chicken",
+  "grupo": "fazenda",
+  "busca": [
+   "galinha",
+   "galinhas"
+  ]
+ },
+ {
+  "pt": "pato",
+  "en": "duck",
+  "wiki_pt": "Pato",
+  "wiki_en": "Duck",
+  "grupo": "ave",
+  "busca": []
+ },
+ {
+  "pt": "coruja",
+  "en": "owl",
+  "wiki_pt": "Coruja",
+  "wiki_en": "Owl",
+  "grupo": "ave",
+  "busca": [
+   "coruja",
+   "corujas"
+  ]
+ },
+ {
+  "pt": "águia",
+  "en": "eagle",
+  "wiki_pt": "Águia",
+  "wiki_en": "Eagle",
+  "grupo": "ave",
+  "busca": [
+   "águia",
+   "águias"
+  ]
+ },
+ {
+  "pt": "falcão-peregrino",
+  "en": "peregrine falcon",
+  "wiki_pt": "Falcão-peregrino",
+  "wiki_en": "Peregrine falcon",
+  "grupo": "ave",
+  "busca": [
+   "falcão-peregrino",
+   "falcão"
+  ]
+ },
+ {
+  "pt": "urubu",
+  "en": "vulture",
+  "wiki_pt": "Urubu",
+  "wiki_en": "New World vulture",
+  "grupo": "ave",
+  "busca": [
+   "abutre",
+   "abutres"
+  ]
+ },
+ {
+  "pt": "papagaio",
+  "en": "parrot",
+  "wiki_pt": "Papagaio",
+  "wiki_en": "Parrot",
+  "grupo": "ave",
+  "busca": [
+   "papagaio",
+   "papagaios"
+  ]
+ },
+ {
+  "pt": "arara",
+  "en": "macaw",
+  "wiki_pt": "Arara",
+  "wiki_en": "Macaw",
+  "grupo": "ave",
+  "busca": [
+   "arara",
+   "araras"
+  ]
+ },
+ {
+  "pt": "tucano",
+  "en": "toucan",
+  "wiki_pt": "Tucano",
+  "wiki_en": "Toucan",
+  "grupo": "ave",
+  "busca": [
+   "tucano",
+   "tucanos"
+  ]
+ },
+ {
+  "pt": "beija-flor",
+  "en": "hummingbird",
+  "wiki_pt": "Beija-flor",
+  "wiki_en": "Hummingbird",
+  "grupo": "ave",
+  "busca": [
+   "beija-flor",
+   "beija-flores"
+  ]
+ },
+ {
+  "pt": "pinguim",
+  "en": "penguin",
+  "wiki_pt": "Pinguim",
+  "wiki_en": "Penguin",
+  "grupo": "ave",
+  "busca": [
+   "pinguim",
+   "pinguins"
+  ]
+ },
+ {
+  "pt": "flamingo",
+  "en": "flamingo",
+  "wiki_pt": "Flamingo",
+  "wiki_en": "Flamingo",
+  "grupo": "ave",
+  "busca": [
+   "flamingo",
+   "flamingos"
+  ]
+ },
+ {
+  "pt": "avestruz",
+  "en": "ostrich",
+  "wiki_pt": "Avestruz",
+  "wiki_en": "Ostrich",
+  "grupo": "ave",
+  "busca": [
+   "avestruz",
+   "avestruzes"
+  ]
+ },
+ {
+  "pt": "pavão",
+  "en": "peafowl",
+  "wiki_pt": "Pavão",
+  "wiki_en": "Peafowl",
+  "grupo": "ave",
+  "busca": [
+   "pavão",
+   "pavões"
+  ]
+ },
+ {
+  "pt": "corvo",
+  "en": "crow",
+  "wiki_pt": "Corvo",
+  "wiki_en": "Crow",
+  "grupo": "ave",
+  "busca": [
+   "corvo",
+   "corvos"
+  ]
+ },
+ {
+  "pt": "pica-pau",
+  "en": "woodpecker",
+  "wiki_pt": "Pica-pau",
+  "wiki_en": "Woodpecker",
+  "grupo": "ave",
+  "busca": [
+   "pica-pau",
+   "pica-paus"
+  ]
+ },
+ {
+  "pt": "albatroz",
+  "en": "albatross",
+  "wiki_pt": "Albatroz",
+  "wiki_en": "Albatross",
+  "grupo": "ave",
+  "busca": [
+   "albatroz",
+   "albatrozes"
+  ]
+ },
+ {
+  "pt": "cisne",
+  "en": "swan",
+  "wiki_pt": "Cisne",
+  "wiki_en": "Swan",
+  "grupo": "ave",
+  "busca": [
+   "cisne",
+   "cisnes"
+  ]
+ },
+ {
+  "pt": "abelha",
+  "en": "bee",
+  "wiki_pt": "Abelha",
+  "wiki_en": "Bee",
+  "grupo": "inseto",
+  "busca": [
+   "abelha",
+   "abelhas"
+  ]
+ },
+ {
+  "pt": "formiga",
+  "en": "ant",
+  "wiki_pt": "Formiga",
+  "wiki_en": "Ant",
+  "grupo": "inseto",
+  "busca": [
+   "formiga",
+   "formigas"
+  ]
+ },
+ {
+  "pt": "cupim",
+  "en": "termite",
+  "wiki_pt": "Cupim",
+  "wiki_en": "Termite",
+  "grupo": "inseto",
+  "busca": [
+   "cupim",
+   "cupins"
+  ]
+ },
+ {
+  "pt": "borboleta",
+  "en": "butterfly",
+  "wiki_pt": "Borboleta",
+  "wiki_en": "Butterfly",
+  "grupo": "inseto",
+  "busca": [
+   "borboleta",
+   "borboletas",
+   "lagarta"
+  ]
+ },
+ {
+  "pt": "louva-a-deus",
+  "en": "mantis",
+  "wiki_pt": "Louva-a-deus",
+  "wiki_en": "Mantis",
+  "grupo": "inseto",
+  "busca": [
+   "louva-a-deus"
+  ]
+ },
+ {
+  "pt": "joaninha",
+  "en": "ladybug",
+  "wiki_pt": "Joaninha",
+  "wiki_en": "Coccinellidae",
+  "grupo": "inseto",
+  "busca": [
+   "joaninha",
+   "joaninhas"
+  ]
+ },
+ {
+  "pt": "vaga-lume",
+  "en": "firefly",
+  "wiki_pt": "Pirilampo",
+  "wiki_en": "Firefly",
+  "grupo": "inseto",
+  "busca": [
+   "vaga-lume",
+   "vaga-lumes",
+   "pirilampo"
+  ]
+ },
+ {
+  "pt": "barata",
+  "en": "cockroach",
+  "wiki_pt": "Barata",
+  "wiki_en": "Cockroach",
+  "grupo": "inseto",
+  "busca": []
+ },
+ {
+  "pt": "mosquito",
+  "en": "mosquito",
+  "wiki_pt": "Mosquito",
+  "wiki_en": "Mosquito",
+  "grupo": "inseto",
+  "busca": []
+ },
+ {
+  "pt": "libélula",
+  "en": "dragonfly",
+  "wiki_pt": "Libélula",
+  "wiki_en": "Dragonfly",
+  "grupo": "inseto",
+  "busca": [
+   "libélula",
+   "libélulas"
+  ]
+ },
+ {
+  "pt": "besouro",
+  "en": "beetle",
+  "wiki_pt": "Besouro",
+  "wiki_en": "Beetle",
+  "grupo": "inseto",
+  "busca": [
+   "besouro",
+   "besouros"
+  ]
+ },
+ {
+  "pt": "aranha",
+  "en": "spider",
+  "wiki_pt": "Aranha",
+  "wiki_en": "Spider",
+  "grupo": "aracnideo",
+  "busca": [
+   "aranhas",
+   "aranha venenosa"
+  ]
+ },
+ {
+  "pt": "escorpião",
+  "en": "scorpion",
+  "wiki_pt": "Escorpião",
+  "wiki_en": "Scorpion",
+  "grupo": "aracnideo",
+  "busca": [
+   "escorpião",
+   "escorpiões"
+  ]
+ },
+ {
+  "pt": "tardígrado",
+  "en": "tardigrade",
+  "wiki_pt": "Tardígrado",
+  "wiki_en": "Tardigrade",
+  "grupo": "micro",
+  "busca": [
+   "tardígrado",
+   "tardígrados"
+  ]
+ },
+ {
+  "pt": "caracol",
+  "en": "snail",
+  "wiki_pt": "Caracol",
+  "wiki_en": "Snail",
+  "grupo": "molusco",
+  "busca": [
+   "caracol",
+   "caracóis",
+   "lesma"
+  ]
+ },
+ {
+  "pt": "dinossauro",
+  "en": "dinosaur",
+  "wiki_pt": "Dinossauro",
+  "wiki_en": "Dinosaur",
+  "grupo": "pre-historico",
+  "busca": [
+   "dinossauro",
+   "dinossauros"
+  ]
+ },
+ {
+  "pt": "mamute",
+  "en": "woolly mammoth",
+  "wiki_pt": "Mamute-lanoso",
+  "wiki_en": "Woolly mammoth",
+  "grupo": "pre-historico",
+  "busca": [
+   "mamute",
+   "mamutes"
+  ]
+ }
+]

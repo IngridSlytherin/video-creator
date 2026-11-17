@@ -1,0 +1,2 @@
+Coloque aqui arquivos .mp3 de música instrumental (ex.: YouTube Studio > Biblioteca de áudio).
+O gerador escolhe uma por vídeo e toca baixinho no fundo.

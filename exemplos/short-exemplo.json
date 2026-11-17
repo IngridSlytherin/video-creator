@@ -1,0 +1,78 @@
+{
+  "slug": "polvo-tres-coracoes",
+  "formato": "short",
+  "duracao": "curto",
+  "animal": "octopus",
+  "tituloTela": "3 CORAÇÕES E SANGUE AZUL",
+  "segmentos": [
+    {
+      "texto": "O polvo tem três corações. E o sangue dele é azul.",
+      "busca": [
+        "octopus"
+      ]
+    },
+    {
+      "texto": "Dois corações bombeiam o sangue pelas brânquias. O terceiro manda esse sangue para o resto do corpo.",
+      "busca": [
+        "octopus",
+        "octopus underwater"
+      ]
+    },
+    {
+      "texto": "Só que, quando o polvo nada, esse terceiro coração para de bater. Por isso ele prefere rastejar: nadar cansa demais.",
+      "busca": [
+        "octopus swimming",
+        "octopus crawling",
+        "octopus sea floor"
+      ]
+    },
+    {
+      "texto": "O azul vem da hemocianina, uma proteína com cobre. No nosso sangue, quem faz esse papel é a hemoglobina, que tem ferro e deixa o sangue vermelho.",
+      "busca": [
+        "octopus close up",
+        "blue ocean",
+        "octopus"
+      ]
+    },
+    {
+      "texto": "E tem mais: cerca de dois terços dos neurônios do polvo ficam nos braços.",
+      "busca": [
+        "octopus tentacles",
+        "octopus arms"
+      ]
+    },
+    {
+      "texto": "Segue o Curioso por Natureza para mais segredos do mundo animal.",
+      "busca": [
+        "octopus",
+        "coral reef"
+      ],
+      "exigir": [
+        "octopus",
+        "coral",
+        "reef"
+      ]
+    }
+  ],
+  "publicacao": {
+    "titulo": "O polvo tem 3 corações e sangue AZUL 🐙 #shorts",
+    "descricao": "O polvo tem três corações, sangue azul e a maior parte dos neurônios nos braços. E um dos corações para quando ele nada!",
+    "fontes": [
+      "Wells, M. J. (1992). The cephalopod heart: the evolution of a high-performance invertebrate pump. Experientia.",
+      "Hochner, B. (2012). An embodied view of octopus neurobiology. Current Biology."
+    ],
+    "hashtags": [
+      "polvo",
+      "polvos",
+      "sangueazul",
+      "trescoracoes",
+      "lula",
+      "moluscos",
+      "vidamarinha",
+      "animaismarinhos",
+      "oceano",
+      "fundodomar",
+      "biologiamarinha"
+    ]
+  }
+}

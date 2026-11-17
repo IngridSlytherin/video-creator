@@ -1,0 +1,214 @@
+{
+  "slug": "7-animais-nascem-diferentes",
+  "formato": "longo",
+  "duracao": "video",
+  "velocidadeVoz": "+0%",
+  "tituloTela": "ELES NASCEM ASSIM?!",
+  "capaCapitulo": 6,
+  "capitulos": [
+    {
+      "titulo": "Introdução",
+      "segmentos": [
+        {
+          "texto": "Tem animal que nasce tão diferente do adulto que parece ser de outra espécie. Um nasce do tamanho de uma jujuba. Outro nasce cinza e só depois fica rosa. E o número um começa a vida como macho e pode terminar como fêmea.",
+          "busca": ["kangaroo", "flamingo", "clownfish"],
+          "exigir": ["kangaroo", "flamingo", "clownfish"]
+        },
+        {
+          "texto": "Fica até o final, porque cada um é mais estranho que o anterior.",
+          "busca": ["butterfly", "panda"],
+          "exigir": ["butterfly", "panda"],
+          "evitar": ["red"]
+        }
+      ]
+    },
+    {
+      "titulo": "O sapo",
+      "animal": "frog",
+      "segmentos": [
+        { "texto": "Número sete: o sapo.", "busca": ["frog"] },
+        {
+          "texto": "Ele começa a vida como girino, que é praticamente um peixinho. Tem cauda, respira por brânquias e só consegue viver dentro d'água.",
+          "busca": ["tadpole", "frog pond", "frog water"],
+          "exigir": ["tadpole", "frog"]
+        },
+        {
+          "texto": "Aos poucos, nascem as patas de trás, depois as da frente. As brânquias dão lugar aos pulmões. E a cauda não cai: ela é reabsorvida pelo próprio corpo.",
+          "busca": ["frog", "frog close up"]
+        },
+        {
+          "texto": "Até a boca muda. O girino tem uma espécie de bico raspador para comer algas. Já o sapo adulto ganha uma boca larga e uma língua pegajosa para caçar insetos. Ou seja: o mesmo animal troca de casa, de respiração e de cardápio.",
+          "busca": ["frog", "frog leaf", "toad"],
+          "exigir": ["frog", "toad"]
+        }
+      ]
+    },
+    {
+      "titulo": "A borboleta",
+      "animal": "butterfly",
+      "short": {
+        "titulo": "A lagarta VIRA SOPA antes de virar borboleta 🦋 #shorts",
+        "tituloTela": "A LAGARTA VIRA SOPA?!",
+        "descricao": "Dentro da crisálida, boa parte do corpo da lagarta se desmancha numa sopa de células, e grupos de células guardados desde o começo montam um corpo novo. E a borboleta ainda pode lembrar do que aprendeu quando era lagarta!",
+        "hashtags": ["borboleta", "borboletas", "lagarta", "metamorfose", "crisalida", "insetos", "natureza"]
+      },
+      "segmentos": [
+        { "texto": "Número seis: a borboleta.", "busca": ["butterfly"] },
+        {
+          "texto": "Todo mundo sabe que ela começa como lagarta. Mas o que acontece dentro da crisálida é muito mais estranho do que parece.",
+          "busca": ["caterpillar", "caterpillar leaf"],
+          "exigir": ["caterpillar"]
+        },
+        {
+          "texto": "Lá dentro, boa parte do corpo da lagarta se desmancha numa espécie de sopa de células. E grupos de células que estavam guardados desde o começo usam essa sopa para montar um corpo totalmente novo: asas, antenas e pernas compridas.",
+          "busca": ["caterpillar", "butterfly", "butterfly wings"],
+          "exigir": ["caterpillar", "butterfly"]
+        },
+        {
+          "texto": "E tem um detalhe ainda mais curioso: em experimentos com mariposas, cientistas mostraram que o adulto ainda pode lembrar de coisas que aprendeu quando era lagarta.",
+          "busca": ["butterfly", "moth", "butterfly flower"],
+          "exigir": ["butterfly", "moth"]
+        }
+      ]
+    },
+    {
+      "titulo": "O cisne",
+      "animal": "swan",
+      "segmentos": [
+        { "texto": "Número cinco: o cisne.", "busca": ["swan"] },
+        {
+          "texto": "O filhote nasce coberto de uma penugem cinza, meio desajeitado, sem nada da elegância branca dos pais.",
+          "busca": ["cygnet", "cygnets", "swan family"],
+          "exigir": ["cygnet", "swan"]
+        },
+        {
+          "texto": "A famosa história do Patinho Feio, de Hans Christian Andersen, é exatamente sobre isso: o filhote que todos achavam feio e que, no fim, era um cisne.",
+          "busca": ["cygnet", "swan"],
+          "exigir": ["cygnet", "swan"]
+        },
+        {
+          "texto": "No cisne-branco, as penas só ficam totalmente brancas entre o primeiro e o segundo ano de vida.",
+          "busca": ["white swan", "swan lake"]
+        }
+      ]
+    },
+    {
+      "titulo": "O flamingo",
+      "animal": "flamingo",
+      "segmentos": [
+        { "texto": "Número quatro: o flamingo.", "busca": ["flamingo"] },
+        {
+          "texto": "Ele nasce cinza e com o bico reto. A cor rosa vem da comida: algas e pequenos camarões cheios de pigmentos chamados carotenoides. E leva de dois a três anos para o rosa aparecer de verdade.",
+          "busca": ["flamingo", "flamingos", "flamingo feeding"]
+        },
+        {
+          "texto": "O mais curioso é que, para alimentar o filhote, os pais produzem um leite vermelho no papo. E vão perdendo a cor enquanto cuidam dele.",
+          "busca": ["flamingo", "flamingos flock"]
+        }
+      ]
+    },
+    {
+      "titulo": "O panda",
+      "animal": "panda",
+      "evitar": ["red"],
+      "short": {
+        "titulo": "O filhote de panda pesa o mesmo que uma BARRA DE CHOCOLATE 🐼 #shorts",
+        "tituloTela": "PANDA NASCE ROSA?!",
+        "descricao": "Um panda adulto pode passar dos cem quilos, mas o filhote nasce rosa, quase sem pelo, cego e pesando mais ou menos o mesmo que uma barra de chocolate.",
+        "hashtags": ["panda", "pandas", "pandagigante", "filhotes", "mamiferos", "china", "natureza"]
+      },
+      "segmentos": [
+        { "texto": "Número três: o panda-gigante.", "busca": ["giant panda"] },
+        {
+          "texto": "Um panda adulto pode passar dos cem quilos. Mas o filhote nasce rosa, quase sem pelo, cego e pesando mais ou menos o mesmo que uma barra de chocolate.",
+          "busca": ["panda", "giant panda", "panda cub"]
+        },
+        {
+          "texto": "Ele nasce cerca de novecentas vezes menor que a mãe. É um dos menores filhotes de mamífero quando comparado ao tamanho da mãe.",
+          "busca": ["panda", "panda eating bamboo"]
+        },
+        {
+          "texto": "As manchas pretas só começam a aparecer depois de uma ou duas semanas, e os olhos abrem por volta de seis a oito semanas. Até lá, a mãe carrega o filhote quase o tempo todo.",
+          "busca": ["panda", "panda cub", "giant panda"]
+        }
+      ]
+    },
+    {
+      "titulo": "O canguru",
+      "animal": "kangaroo",
+      "short": {
+        "titulo": "O canguru nasce do tamanho de uma JUJUBA 🦘 #shorts",
+        "tituloTela": "NASCE DO TAMANHO DE UMA JUJUBA",
+        "descricao": "Um canguru-vermelho adulto pode ter quase dois metros em pé, mas o filhote nasce com uns dois centímetros, cego, sem pelos e pesando menos de um grama. E faz sozinho a viagem até a bolsa da mãe!",
+        "hashtags": ["canguru", "cangurus", "australia", "marsupiais", "filhotes", "mamiferos", "natureza"]
+      },
+      "segmentos": [
+        { "texto": "Número dois: o canguru.", "busca": ["kangaroo"] },
+        {
+          "texto": "Um canguru-vermelho adulto pode ter quase dois metros em pé. Mas o filhote nasce com uns dois centímetros, do tamanho de uma jujuba, e pesando menos de um grama.",
+          "busca": ["kangaroo", "red kangaroo"]
+        },
+        {
+          "texto": "Ele nasce cego, sem pelos e com as patas de trás ainda sem formar. Mesmo assim, faz sozinho a viagem até a bolsa da mãe, se arrastando pelo pelo dela com as patas da frente.",
+          "busca": ["kangaroo joey", "kangaroo"],
+          "exigir": ["kangaroo", "joey"]
+        },
+        {
+          "texto": "Lá dentro, ele se prende a uma teta e passa meses crescendo. Só depois de uns cinco ou seis meses começa a colocar a cabeça para fora da bolsa.",
+          "busca": ["kangaroo joey", "kangaroo pouch", "kangaroo"],
+          "exigir": ["kangaroo", "joey"]
+        }
+      ]
+    },
+    {
+      "titulo": "O peixe-palhaço",
+      "animal": "clownfish",
+      "short": {
+        "titulo": "Todo peixe-palhaço nasce MACHO (e pode virar fêmea) 🐠 #shorts",
+        "tituloTela": "O PAI DO NEMO VIRARIA MÃE?!",
+        "descricao": "O peixe-palhaço começa a vida como uma larva quase transparente no mar aberto. E todo peixe-palhaço vira macho primeiro: se a fêmea do grupo morre, o maior macho vira fêmea!",
+        "hashtags": ["peixepalhaco", "nemo", "peixes", "vidamarinha", "animaismarinhos", "oceano", "recifedecoral"]
+      },
+      "segmentos": [
+        { "texto": "E o número um: o peixe-palhaço.", "busca": ["clownfish"] },
+        {
+          "texto": "Quando sai do ovo, ele é uma larva minúscula e quase transparente, que passa os primeiros dias à deriva no mar aberto, longe dos recifes.",
+          "busca": ["clownfish", "clownfish anemone"]
+        },
+        {
+          "texto": "Depois, ele procura uma anêmona para morar, ganha as listras laranja e brancas e passa a viver em grupo.",
+          "busca": ["clownfish anemone", "clownfish"]
+        },
+        {
+          "texto": "Agora vem a parte mais estranha: todo peixe-palhaço vira macho primeiro. Em cada anêmona, quem manda é a fêmea, a maior do grupo. Se ela morre, o maior macho vira fêmea, e o próximo da fila assume o lugar dele.",
+          "busca": ["clownfish", "clownfish coral reef"]
+        },
+        {
+          "texto": "Ou seja: na vida real, o pai do Nemo teria virado mãe.",
+          "busca": ["clownfish"]
+        }
+      ]
+    },
+    {
+      "titulo": "Final",
+      "segmentos": [
+        {
+          "texto": "Qual desses te surpreendeu mais? Escreve aqui nos comentários. E se você curtiu, se inscreve no Curioso por Natureza, porque o mundo animal é muito mais estranho do que parece.",
+          "busca": ["butterfly", "flamingo", "swan"],
+          "exigir": ["butterfly", "flamingo", "swan"]
+        }
+      ]
+    }
+  ],
+  "publicacao": {
+    "titulo": "7 animais que NASCEM completamente diferentes do que viram",
+    "descricao": "Tem animal que nasce tão diferente do adulto que parece ser de outra espécie! Do girino que vira sapo ao peixe-palhaço que pode mudar de sexo, conheça 7 animais com as transformações mais estranhas da natureza.",
+    "hashtags": ["animaisincriveis", "metamorfose", "filhotes", "sapo", "borboleta", "cisne", "flamingo", "panda", "canguru", "peixepalhaco", "natureza", "vidaselvagem"],
+    "fontes": [
+      "Smithsonian's National Zoo: Giant panda; American flamingo",
+      "San Diego Zoo Wildlife Alliance: Kangaroo; Flamingo",
+      "Blackiston, D. J. et al. (2008). Retention of memory through metamorphosis. PLoS ONE.",
+      "Fricke, H. & Fricke, S. (1977). Monogamy and sex change by aggressive dominance in coral reef fish. Nature."
+    ]
+  }
+}
