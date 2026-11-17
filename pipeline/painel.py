@@ -15,6 +15,7 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 import unicodedata
 import webbrowser
 from datetime import datetime
@@ -46,6 +47,8 @@ RE_RENDER = re.compile(r"Rendered (\d+)/(\d+)")
 RE_ENCODE = re.compile(r"Encoded (\d+)/(\d+)")
 RE_BUNDLE = re.compile(r"Bundling (\d+)%")
 RE_TRECHO = re.compile(r"trecho (\d+)/(\d+)")
+RE_ETAPA = re.compile(r"\[etapa (\d+)/(\d+)\] (.+)")
+CODIGO_REINICIAR = 3  # "Abrir painel.bat" reabre o painel quando ele sai com este código
 ETAPAS_RADAR = [("Wikipedia", "Wikipedia"), ("Google Notícias", "Google Notícias"),
                 ("Google Trends", "Google Trends"), ("YouTube", "YouTube")]
 
@@ -111,6 +114,11 @@ class Tarefa:
 
     def _analisar(self, linha):
         """Atualiza etapa e porcentagem. Devolve True se a linha deve ir para o registro."""
+        m = RE_ETAPA.match(linha)  # formato genérico: "[etapa 2/3] Instalando..."
+        if m:
+            self.etapa = m.group(3)
+            self.pct = (int(m.group(1)) - 1) / int(m.group(2)) if m.group(3) != "Pronto" else 1.0
+            return True
         if self.tipo == "radar":
             for i, (chave, nome) in enumerate(ETAPAS_RADAR):
                 if linha.startswith(chave):
@@ -191,6 +199,9 @@ class Tarefa:
                 self.linhas.append(self.resposta[:600])
                 self.codigo = 1
         self.rodando = False
+        if self.tipo == "atualizar" and self.codigo == 0:
+            # Sai com o código 3: o "Abrir painel.bat" entende como "reabrir" e sobe a versão nova.
+            threading.Timer(2.5, os._exit, args=(CODIGO_REINICIAR,)).start()
 
     def estado(self):
         with self.lock:
@@ -212,6 +223,42 @@ class Tarefa:
 
 
 TAREFA = Tarefa()
+
+
+# ---------------------------------------------------------------- versão nova no GitHub
+INICIO_SERVIDOR = datetime.now().isoformat(timespec="seconds")
+ATUALIZACAO = {"git": False, "novidades": [], "remoto": None, "alterados": False, "verificado": None}
+VERIFICAR_A_CADA = 6 * 3600  # segundos
+
+
+def _git(*args, timeout=30):
+    r = subprocess.run(["git", *args], cwd=RAIZ, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", timeout=timeout,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def verificar_atualizacao():
+    """Confere no GitHub se há commits novos (git fetch). Sem git ou sem internet, não mostra nada."""
+    try:
+        if not (RAIZ / ".git").exists() or not shutil.which("git") or not _git("rev-parse", "@{u}"):
+            ATUALIZACAO.update(git=False)
+            return
+        _git("fetch", "--quiet", timeout=60)
+        log = _git("log", "HEAD..@{u}", "--format=%h|%cd|%s", "--date=format:%d/%m") or ""
+        novidades = [dict(zip(("id", "data", "texto"), l.split("|", 2))) for l in log.splitlines() if l]
+        ATUALIZACAO.update(
+            git=True, novidades=novidades, remoto=_git("rev-parse", "@{u}"),
+            alterados=bool(_git("status", "--porcelain", "--untracked-files=no")),
+            verificado=datetime.now().strftime("%d/%m %H:%M"))
+    except (OSError, subprocess.SubprocessError):
+        ATUALIZACAO.update(git=False)
+
+
+def vigiar_atualizacoes():
+    while True:
+        verificar_atualizacao()
+        time.sleep(VERIFICAR_A_CADA)
 
 
 _spec_canal = importlib.util.spec_from_file_location("canal", RAIZ / "pipeline" / "canal.py")
@@ -545,6 +592,8 @@ class Painel(BaseHTTPRequestHandler):
                 "canal": canal_cfg.carregar(obrigatorio=False), "categorias": canal_cfg.CATEGORIAS,
                 "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
             })
+        if caminho == "/api/atualizacao":
+            return self.responder({**ATUALIZACAO, "inicioServidor": INICIO_SERVIDOR})
         if caminho == "/api/tarefa":
             return self.responder(TAREFA.estado())
         if caminho == "/api/ideias":
@@ -636,6 +685,15 @@ class Painel(BaseHTTPRequestHandler):
             (pasta / "dublagem.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1), encoding="utf-8")
             ok = TAREFA.iniciar("dublar", slug, py + ["pipeline/dublar.py", slug])
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/atualizar":
+            if not ATUALIZACAO["git"]:
+                return self.erro("este app não foi baixado com git; baixe de novo pelo GitHub")
+            if ATUALIZACAO["alterados"]:
+                return self.erro("você mudou arquivos do app; peça ao Claude Code para atualizar "
+                                 "mantendo suas mudanças (git pull)")
+            ok = TAREFA.iniciar("atualizar", "app", py + ["pipeline/atualizar.py"])
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando; espere terminar", 409)
 
         if caminho == "/api/radar":
             ok = TAREFA.iniciar("radar", "radar", py + ["pipeline/radar.py"])
@@ -760,6 +818,7 @@ def main():
             return
     servidor = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
     print(f"Painel aberto em {url}  (feche esta janela para desligar)", flush=True)
+    threading.Thread(target=vigiar_atualizacoes, daemon=True).start()
     if abrir:
         threading.Timer(0.8, webbrowser.open, args=(url,)).start()
     try:

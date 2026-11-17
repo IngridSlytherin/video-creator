@@ -230,6 +230,18 @@
   .aviso-dur { color: #9A6B00; }
   @media (max-width: 900px) { .dublar { grid-template-columns: 1fr; } }
 
+  /* aviso de versão nova */
+  #atualizacao { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
+  #atualizacao[hidden] { display: none; }
+  .aviso-versao {
+    padding: 14px 20px; border-left: 5px solid var(--verde); display: flex; justify-content: space-between;
+    align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .aviso-versao strong { font-size: 16.5px; }
+  .aviso-versao ul { margin: 6px 0 0; padding-left: 20px; font-size: 14px; color: var(--tinta-2); }
+  .aviso-versao .sinais:empty { display: none; }
+  @media (max-width: 900px) { #atualizacao { padding: 0 16px; } }
+
   /* configuração do canal */
   .link-canal {
     background: none; border: none; padding: 0; color: var(--papel); font: inherit; font-style: normal;
@@ -280,6 +292,20 @@
     </nav>
   </div>
 </header>
+
+<section id="atualizacao" hidden>
+  <div class="cartao aviso-versao">
+    <div>
+      <strong>✨ Nova versão do app disponível</strong>
+      <ul id="novidades"></ul>
+      <p class="sinais" id="atualizacao-obs"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <button class="leve" id="atualizacao-depois">Depois</button>
+      <button class="destaque" id="atualizacao-botao">Atualizar agora</button>
+    </div>
+  </div>
+</section>
 
 <section id="tarefa">
   <div class="cartao">
@@ -529,6 +555,50 @@ async function mostrarPrevia(slug) {
   $("#gerar-previa").onclick = () => iniciar("/api/gerar", { slug: r.slug });
   $("#ver-roteiros").onclick = () => irPara("roteiros");
   $("#previa").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---------- versão nova do app
+let inicioServidor = null;
+
+function lerDispensada() { try { return localStorage.getItem("versaoDispensada"); } catch { return null; } }
+function salvarDispensada(v) { try { localStorage.setItem("versaoDispensada", v); } catch {} }
+
+async function verificarVersao() {
+  let a;
+  try { a = await api("/api/atualizacao"); } catch { return; }
+  inicioServidor = inicioServidor || a.inicioServidor;
+  const box = $("#atualizacao");
+  if (!a.git || !a.novidades.length || lerDispensada() === a.remoto) { box.hidden = true; return; }
+  $("#novidades").innerHTML = a.novidades.slice(0, 8)
+    .map(n => `<li>${esc(n.texto)} <span style="opacity:.7">(${esc(n.data)})</span></li>`).join("")
+    + (a.novidades.length > 8 ? `<li>…e mais ${a.novidades.length - 8}</li>` : "");
+  $("#atualizacao-obs").textContent = a.alterados
+    ? "Você mudou arquivos do app: para não perder suas mudanças, peça ao Claude Code para atualizar (git pull)."
+    : "Seu canal, sua chave do Pexels, roteiros e vídeos continuam como estão.";
+  $("#atualizacao-botao").disabled = a.alterados || estado.tarefa.rodando;
+  $("#atualizacao-depois").onclick = () => { salvarDispensada(a.remoto); box.hidden = true; };
+  box.hidden = false;
+}
+
+$("#atualizacao-botao").onclick = async () => {
+  if (!confirm("Atualizar o app agora? O painel reinicia sozinho no final (leva menos de 1 minuto).")) return;
+  $("#atualizacao").hidden = true;
+  await iniciar("/api/atualizar", {});
+};
+
+async function esperarReinicio() {
+  // o servidor sai e o "Abrir painel.bat" reabre: espera ele voltar com a versão nova e recarrega
+  $("#tarefa-titulo").textContent = "App atualizado — reabrindo o painel…";
+  $("#tarefa-sub").textContent = "a página recarrega sozinha";
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const a = await (await fetch("/api/atualizacao")).json();
+      if (a.inicioServidor && a.inicioServidor !== inicioServidor) { location.reload(); return; }
+    } catch {}
+  }
+  $("#tarefa-titulo").textContent = "App atualizado!";
+  $("#tarefa-sub").textContent = 'Feche a janela preta e abra de novo o "Abrir painel.bat".';
 }
 
 // ---------- configuração do canal
@@ -864,6 +934,7 @@ const ETAPAS = {
   gerar: ["Gravando a narração", "Baixando clipes do Pexels", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
   radar: ["Consultando Wikipedia", "Consultando Google Notícias", "Consultando Google Trends", "Consultando YouTube", "Relatório pronto"],
   dublar: ["Preparando o seu vídeo", "Gravando a narração", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
+  atualizar: ["Baixando a versão nova", "Instalando o que mudou", "Pronto"],
   ideias: ["Lendo o que funciona no canal", "Pronto"],
   temas: ["Lendo o que funciona no canal", "Criando a lista de temas", "Pronto"],
   roteiro: ["Lendo o que funciona no canal", "Conferindo os fatos", "Escrevendo o roteiro", "Pronto"],
@@ -872,6 +943,7 @@ const NOMES_TAREFA = {
   radar: () => "Radar de temas",
   gerar: t => `Vídeo: ${t.alvo}`,
   dublar: () => "Dublando o seu vídeo",
+  atualizar: () => "Atualizando o app",
   ideias: t => `Ideias para "${t.alvo}"`,
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
@@ -938,6 +1010,7 @@ async function acompanhar() {
   }
   acompanhando = false;
   const { tipo, codigo, resultado } = estado.tarefa;
+  if (tipo === "atualizar" && codigo === 0) { esperarReinicio(); return; }
   await atualizar();
   if (codigo !== 0) return;
   if (tipo === "radar") carregarRadar();
@@ -979,6 +1052,9 @@ async function atualizar() {
 
 atualizar().then(async () => {
   try { desenharIdeias(await api("/api/ideias")); } catch {}
+  verificarVersao();
+  setTimeout(verificarVersao, 20000);  // a 1ª conferência no GitHub pode levar alguns segundos
+  setInterval(verificarVersao, 30 * 60 * 1000);
   // atalhos: http://localhost:8765/#radar abre direto na aba; #configurar abre a configuração
   const destino = location.hash.slice(1);
   if (destino === "configurar") abrirConfig(false);
