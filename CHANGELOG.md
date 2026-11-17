@@ -3,6 +3,11 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.6 — 17/11/2026
+- **Visual novo do painel**, mais claro e amigável: fundo verde-menta, cartões brancos, fonte
+  arredondada (Nunito), abas em pílula com ícones e rótulos sem letras maiúsculas.
+- Resultados: lê a exportação padrão do YouTube Studio (calcula a retenção pelo tempo de exibição).
+
 ## 1.5 — 17/11/2026
 - **Legenda .srt** de cada vídeo, pronta para enviar no YouTube Studio (ajuda na busca).
 - **Outras línguas**: título, descrição e **áudio dublado** em inglês e espanhol (no mesmo tempo
