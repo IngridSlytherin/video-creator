@@ -43,9 +43,13 @@ def ler_tabela(caminho: Path):
     if caminho.suffix.lower() == ".zip":
         with zipfile.ZipFile(caminho) as z:
             nomes = [n for n in z.namelist() if n.lower().endswith(".csv")]
-            # a tabela por vídeo ("Dados da tabela.csv" / "Table data.csv") é a que tem mais linhas
-            textos = [z.read(n).decode("utf-8-sig", errors="replace") for n in nomes]
-        texto = max(textos, key=lambda t: t.count("\n")) if textos else ""
+            # a tabela por vídeo é "Dados da tabela.csv" ("Table data.csv" em inglês); os outros são
+            # o gráfico por dia e os totais
+            def prioridade(n):
+                b = norm(Path(n).stem)
+                return 0 if ("tabela" in b or "table" in b) else 1 if not ("grafico" in b or "chart" in b or "total" in b) else 2
+            nomes.sort(key=prioridade)
+            texto = z.read(nomes[0]).decode("utf-8-sig", errors="replace") if nomes else ""
     else:
         texto = caminho.read_text(encoding="utf-8-sig", errors="replace")
     return list(csv.DictReader(io.StringIO(texto)))
@@ -61,12 +65,37 @@ def achar_coluna(colunas, *opcoes, excluir=()):
     return None
 
 
-def numero(texto):
+def separador_decimal(linhas):
+    """Descobre se o arquivo usa ponto ou vírgula como decimal (o Studio muda conforme o idioma).
+    Valores como '4.842' (horas) são ambíguos; '0.0096' ou '11.5678' não."""
+    pontos = virgulas = 0
+    for l in linhas:
+        for v in l.values():
+            t = str(v or "").strip()
+            if re.fullmatch(r"\d+\.\d+", t) and not re.fullmatch(r"\d{1,3}(\.\d{3})+", t):
+                pontos += 1
+            elif re.fullmatch(r"\d+,\d+", t) and not re.fullmatch(r"\d{1,3}(,\d{3})+", t):
+                virgulas += 1
+    if pontos > virgulas:
+        return "."
+    if virgulas > pontos:
+        return ","
+    return None
+
+
+def numero(texto, decimal=None):
     if texto is None:
         return None
     t = str(texto).strip().replace("%", "")
     if not t or t in ("-", "—"):
         return None
+    if decimal and ":" not in t:  # formato do arquivo já conhecido
+        t = t.replace(" ", "").replace(" ", "")
+        t = t.replace("," if decimal == "." else ".", "").replace(",", ".")
+        try:
+            return float(t)
+        except ValueError:
+            return None
     if ":" in t:  # duração "0:00:31" ou "0:31"
         partes = [float(p) for p in t.split(":")]
         seg = 0.0
@@ -116,10 +145,16 @@ def interpretar(linhas):
         "media": achar_coluna(cols, "duracao media", "average view duration"),
         "pct": achar_coluna(cols, "porcentagem media", "average percentage viewed"),
         "ctr": achar_coluna(cols, "taxa de cliques", "impressions click through", "click through"),
+        "horas": achar_coluna(cols, "tempo de exibicao", "watch time"),
     }
-    if not c["titulo"] or not (c["pct"] or c["media"]):
+    # A exportação padrão do Studio não traz a retenção, mas traz tempo de exibição e views:
+    # tempo médio assistido = horas x 3600 / views; % assistida = tempo médio / duração.
+    da_pra_calcular = c["horas"] and c["views"] and c["duracao"]
+    if not c["titulo"] or not (c["pct"] or c["media"] or da_pra_calcular):
         raise ValueError("não achei as colunas de título e retenção. Exporte a aba 'Conteúdo' do modo "
                          "avançado do YouTube Studio. Colunas encontradas: " + ", ".join(cols))
+    dec = separador_decimal(linhas)
+    num = lambda chave: numero(l.get(c[chave]), dec) if c[chave] else None  # noqa: E731
     videos = []
     for l in linhas:
         titulo = (l.get(c["titulo"]) or "").strip()
@@ -128,12 +163,16 @@ def interpretar(linhas):
         v = {
             "titulo": titulo,
             "publicado": data(l.get(c["publicado"])) if c["publicado"] else None,
-            "duracao": numero(l.get(c["duracao"])) if c["duracao"] else None,
-            "views": numero(l.get(c["views"])) if c["views"] else None,
-            "media": numero(l.get(c["media"])) if c["media"] else None,
-            "pct": numero(l.get(c["pct"])) if c["pct"] else None,
-            "ctr": numero(l.get(c["ctr"])) if c["ctr"] else None,
+            "duracao": num("duracao"),
+            "views": num("views"),
+            "media": num("media"),
+            "pct": num("pct"),
+            "ctr": num("ctr"),
         }
+        if v["media"] is None and c["horas"]:
+            horas = num("horas")
+            if horas is not None and v["views"]:
+                v["media"] = horas * 3600 / v["views"]
         if v["pct"] is None and v["media"] and v["duracao"]:
             v["pct"] = 100 * v["media"] / v["duracao"]
         videos.append(v)
