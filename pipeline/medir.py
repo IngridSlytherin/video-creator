@@ -1,7 +1,7 @@
 """Mede se os vídeos feitos pelo app seguram mais o público do que os antigos.
 
 Como usar:
-  1. YouTube Studio > Estatísticas > "Modo avançado" (canto superior direito) > aba "Conteúdo".
+  1. YouTube Studio > Insights (ou "Estatísticas") > "Modo avançado" (canto superior direito) > aba "Conteúdo".
      Escolha o período (ex.: "Últimos 365 dias") e clique na seta de download > "Valores separados
      por vírgula (.csv)". O YouTube baixa um .zip.
   2. No painel, aba Resultados, envie esse .zip (ou o "Dados da tabela.csv" de dentro dele).

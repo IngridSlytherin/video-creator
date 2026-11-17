@@ -151,7 +151,7 @@ banco de imagens. As buscas ficam guardadas por 24 h em `dados/cache-pixabay/` (
 
 ## Resultados: os vídeos do app estão funcionando?
 Aba **Resultados** do painel (ou `python -I pipeline/medir.py arquivo.zip`):
-1. YouTube Studio → Estatísticas → **Modo avançado** → aba **Conteúdo** → período (ex.: últimos 365 dias).
+1. YouTube Studio → **Insights** (ou "Estatísticas", no menu da esquerda) → **Modo avançado** → aba **Conteúdo** → período (ex.: últimos 365 dias).
 2. Seta de download → **Valores separados por vírgula (.csv)**: o YouTube baixa um `.zip`.
 3. Envie o `.zip` na aba Resultados.
 
