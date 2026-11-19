@@ -16,6 +16,7 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 - **Animações automáticas (Manim)**: onde o texto tem tamanhos, números, datas ou porcentagens, a IA pode trocar os clipes por uma cena animada (barras, medidor, linha do tempo); também há número contando por cima dos clipes
 - **Conferência das imagens**: antes de montar, o Claude olha um quadro de cada clipe e troca os ruins (telão, brinquedo, bicho errado)
 - **Resultados**: envie a exportação do YouTube Studio e veja se os vídeos do app seguram mais o público do que os antigos
+- **Cortes dos seus vídeos longos**: envie um vídeo longo seu; o app transcreve a fala no seu computador (Whisper) e o Claude escolhe os 3 a 5 melhores momentos, que viram Shorts verticais com título e legenda
 - **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
 - **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 10 minutos a horas, com som sintetizado
 - Vídeos em **português, inglês ou espanhol**: voz, legenda, roteiro, descrição e radar do país mudam juntos
@@ -23,7 +24,17 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 
 ![Painel: vídeos prontos](docs/prints/videos.png)
 
-## Novidades da versão 1.14
+## Novidades
+
+**1.15 — Aba ✂️ Cortes:** envie um vídeo longo seu e receba Shorts prontos. O app transcreve a fala no
+seu computador (Whisper, grátis) e o Claude escolhe de 3 a 5 trechos que funcionam sozinhos, com título,
+frase na tela, descrição e hashtags. Confira cada um (▶ ver trecho), ajuste início e fim e crie os
+Shorts: o vídeo deitado fica no meio, sobre uma cópia desfocada dele mesmo, com o título em cima e a
+legenda animada embaixo.
+
+![Aba Cortes](docs/prints/cortes.png)
+
+**1.14**
 
 - **📋 Já tenho o roteiro**: na aba Novo vídeo, cole um texto pronto, escolha **Short** (em pé) ou
   **vídeo longo** (deitado) e a **voz** (Francisca, Antônio ou Thalita, com ▶ ouvir) e clique em

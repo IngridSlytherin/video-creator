@@ -234,6 +234,23 @@
   .sinais:empty { display: none; }
   .sem-claude { color: var(--erro); font-size: 14.5px; }
   .modos { margin-bottom: 14px; }
+  .cortes { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 22px; align-items: start; }
+  .cortes > .cartao { padding: 20px 22px; }
+  .cortes h2 { font-size: 20px; margin-bottom: 8px; }
+  .cortes .sub { color: var(--tinta-2); font-size: 14px; margin: 0 0 10px; }
+  #corte-previa { width: 100%; max-height: 360px; background: #000; border-radius: 12px; margin-top: 10px; }
+  .lista-cortes { display: grid; gap: 14px; }
+  .corte { padding: 16px 18px; display: grid; gap: 8px; border-left: 5px solid var(--linha); }
+  .corte.marcado { border-left-color: var(--verde); }
+  .corte .cab { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .corte .cab strong { font-size: 16px; }
+  .corte .tempos { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--tinta-2); }
+  .corte .tempos input { width: 82px; text-align: center; }
+  .corte .fala { font-size: 14px; color: var(--tinta-2); max-height: 4.6em; overflow: hidden; }
+  .corte .fala.aberta { max-height: none; }
+  .corte .porque { font-size: 13.5px; color: var(--verde-texto); }
+  .corte label.campo { font-size: 13px; color: var(--tinta-2); display: grid; gap: 3px; }
+  @media (max-width: 900px) { .cortes { grid-template-columns: 1fr; } }
   .modos label { font-size: 15.5px; padding: 8px 16px; }
   .pronto-opcoes { display: grid; gap: 14px; margin-top: 14px; }
   .voz-op .ouvir { font-size: 12.5px; padding: 2px 9px; margin-left: 2px; }
@@ -350,6 +367,7 @@
     </div>
     <nav>
       <button data-aba="novo"><span class="ico" aria-hidden="true">✨</span>Novo vídeo</button>
+      <button data-aba="cortes"><span class="ico" aria-hidden="true">✂️</span>Cortes</button>
       <button data-aba="dublar"><span class="ico" aria-hidden="true">🎙️</span>Dublar meu vídeo</button>
       <button data-aba="videos" class="ativo"><span class="ico" aria-hidden="true">🎬</span>Vídeos prontos</button>
       <button data-aba="roteiros"><span class="ico" aria-hidden="true">📝</span>Roteiros</button>
@@ -449,6 +467,31 @@
     </div>
     <div id="ideias"></div>
     <div id="previa"></div>
+    </div>
+  </section>
+
+  <section class="aba" id="aba-cortes">
+    <div class="cortes">
+      <div class="cartao">
+        <h2>1. Seu vídeo longo</h2>
+        <p class="sub">Envie um vídeo seu (com fala). O app transcreve o que é dito e o Claude escolhe de 3 a 5
+          trechos que funcionam sozinhos como Shorts. Use só vídeos seus ou que você tem direito de usar.</p>
+        <label class="soltar" id="corte-soltar">
+          <input type="file" id="corte-arquivo" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv,.avi" hidden>
+          <span id="corte-soltar-texto"><strong>Clique para escolher</strong> ou arraste o vídeo aqui<br>
+            <small>MP4, MOV, WEBM… até 4 GB</small></span>
+        </label>
+        <div class="acoes" style="margin-top:12px">
+          <button class="destaque" id="corte-analisar" disabled>Encontrar os melhores momentos</button>
+        </div>
+        <div class="barra" id="corte-barra" hidden><div></div></div>
+        <p class="sinais" id="corte-status">Leva uns minutos: a transcrição dura mais ou menos 1/3 do tempo do vídeo.</p>
+        <video id="corte-previa" controls hidden></video>
+      </div>
+      <div class="cartao">
+        <h2>2. Os melhores momentos</h2>
+        <div id="cortes-lista"><p class="vazio">Envie um vídeo para ver aqui os trechos escolhidos.</p></div>
+      </div>
     </div>
   </section>
 
@@ -627,6 +670,7 @@ function irPara(aba) {
   document.querySelectorAll(".aba").forEach(a => a.classList.toggle("ativa", a.id === "aba-" + aba));
   if (aba === "radar") carregarRadar();
   if (aba === "resultados") carregarMedicao();
+  if (aba === "cortes" && !cortesAtuais) carregarCortes();
   window.scrollTo({ top: 0 });
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => irPara(b.dataset.aba));
@@ -1000,6 +1044,125 @@ $("#dub-botao").onclick = async () => {
   botao.disabled = estado.tarefa.rodando;
 };
 
+// ---------- cortes (vídeo longo -> Shorts)
+let corteArquivo = null, cortesAtuais = null, corteFim = null;
+const paraSeg = t => {
+  const m = String(t).trim().match(/^(?:(\d+):)?(\d+(?:[.,]\d+)?)$/);
+  return m ? (+(m[1] || 0)) * 60 + parseFloat(m[2].replace(",", ".")) : NaN;
+};
+const paraMin = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`;
+
+function escolherCorte(arquivo) {
+  if (!arquivo) return;
+  if (!/^video\//.test(arquivo.type) && !/\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(arquivo.name)) {
+    avisar("Esse arquivo não parece ser um vídeo."); return;
+  }
+  corteArquivo = arquivo;
+  $("#corte-soltar").classList.add("escolhido");
+  $("#corte-soltar-texto").innerHTML = `<strong>${esc(arquivo.name)}</strong> · ${(arquivo.size / 1e6).toFixed(0)} MB<br><small>clique para trocar</small>`;
+  $("#corte-analisar").disabled = estado.tarefa.rodando;
+}
+$("#corte-arquivo").onchange = e => escolherCorte(e.target.files[0]);
+{
+  const z = $("#corte-soltar");
+  ["dragenter", "dragover"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.add("sobre"); }));
+  ["dragleave", "drop"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove("sobre"); }));
+  z.addEventListener("drop", e => escolherCorte(e.dataTransfer.files[0]));
+}
+
+$("#corte-analisar").onclick = () => {
+  if (!corteArquivo) { avisar("Escolha o vídeo primeiro."); return; }
+  const ext = (corteArquivo.name.match(/\.[a-z0-9]+$/i) || [".mp4"])[0].toLowerCase();
+  const nome = corteArquivo.name.replace(/\.[^.]+$/, "");
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", `/api/enviar-video?ext=${encodeURIComponent(ext)}&titulo=${encodeURIComponent(nome)}`);
+  const barra = $("#corte-barra");
+  barra.hidden = false;
+  $("#corte-analisar").disabled = true;
+  xhr.upload.onprogress = e => {
+    if (!e.lengthComputable) return;
+    const pct = Math.round(100 * e.loaded / e.total);
+    barra.firstElementChild.style.width = pct + "%";
+    $("#corte-status").textContent = `Enviando o vídeo… ${pct}%`;
+  };
+  xhr.onload = async () => {
+    barra.hidden = true;
+    let d = {};
+    try { d = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status !== 200) { $("#corte-status").textContent = ""; alert(d.erro || "falha no envio"); $("#corte-analisar").disabled = false; return; }
+    $("#corte-status").textContent = "Vídeo enviado. Acompanhe pela barra lá em cima.";
+    await iniciar("/api/cortes/analisar", { slug: d.slug });
+  };
+  xhr.onerror = () => { barra.hidden = true; alert('O painel está desligado. Abra de novo o "Abrir painel.bat".'); };
+  xhr.send(corteArquivo);
+};
+
+async function carregarCortes(slug) {
+  try { cortesAtuais = await api("/api/cortes" + (slug ? "?slug=" + encodeURIComponent(slug) : "")); }
+  catch (e) { avisar(e.message); return; }
+  desenharCortes();
+}
+
+function desenharCortes() {
+  const el = $("#cortes-lista"), d = cortesAtuais;
+  const prev = $("#corte-previa");
+  if (!d || !d.cortes) { el.innerHTML = '<p class="vazio">Envie um vídeo para ver aqui os trechos escolhidos.</p>'; prev.hidden = true; return; }
+  const src = "/video-cortes/" + encodeURIComponent(d.slug);
+  if (prev.getAttribute("src") !== src) prev.src = src;
+  prev.hidden = false;
+  const ocupado = estado.tarefa.rodando;
+  el.innerHTML = `
+    <p class="sub">Vídeo de ${Math.round(d.duracao / 60)} min · marque os trechos que quer, ajuste se precisar e clique em criar.
+      ${d.outros && d.outros.length > 1 ? `<br>Outras análises: ${d.outros.map(s => `<a href="#" data-outra="${esc(s)}">${esc(s.replace(/-\d{8}-\d{6}$/, ""))}</a>`).join(" · ")}` : ""}</p>
+    <div class="lista-cortes">${d.cortes.map((c, i) => `
+      <div class="corte cartao marcado" data-i="${i}">
+        <div class="cab"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" class="c-usar" checked>
+          <strong>Corte ${c.id}</strong></label>
+          <span class="sinais c-dur">${Math.round(c.fim - c.inicio)} s</span>
+          <button class="leve pequeno c-ver" type="button">▶ ver trecho</button></div>
+        <label class="campo">Título no YouTube <input type="text" class="c-titulo" maxlength="100" value="${esc(c.titulo)}"></label>
+        <label class="campo">Frase na tela <input type="text" class="c-tela" maxlength="60" value="${esc(c.tela)}"></label>
+        <div class="tempos">de <input type="text" class="c-ini" value="${paraMin(c.inicio)}"> até
+          <input type="text" class="c-fim" value="${paraMin(c.fim)}"> <small>(minutos:segundos)</small></div>
+        ${c.porque ? `<p class="porque">💡 ${esc(c.porque)}</p>` : ""}
+        <p class="fala" title="clique para ler tudo">“${esc(c.texto || "")}”</p>
+      </div>`).join("")}
+    </div>
+    <div class="linha-pedido">
+      <label style="font-size:14px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="cortes-legendas" checked> legenda animada</label>
+      <button class="destaque" id="cortes-criar" ${ocupado ? "disabled" : ""}>Criar Shorts selecionados</button>
+    </div>`;
+  el.querySelectorAll("[data-outra]").forEach(a => a.onclick = e => { e.preventDefault(); carregarCortes(a.dataset.outra); });
+  el.querySelectorAll(".corte").forEach(card => {
+    const ini = card.querySelector(".c-ini"), fim = card.querySelector(".c-fim");
+    const dur = () => { const s = paraSeg(fim.value) - paraSeg(ini.value); card.querySelector(".c-dur").textContent = isNaN(s) ? "?" : `${Math.round(s)} s`; };
+    ini.oninput = fim.oninput = dur;
+    card.querySelector(".c-usar").onchange = e => card.classList.toggle("marcado", e.target.checked);
+    card.querySelector(".fala").onclick = e => e.target.classList.toggle("aberta");
+    card.querySelector(".c-ver").onclick = () => {
+      const a = paraSeg(ini.value), b = paraSeg(fim.value);
+      if (isNaN(a) || isNaN(b)) { avisar("Confira os tempos (ex.: 1:05.5)."); return; }
+      corteFim = b;
+      prev.currentTime = a;
+      prev.play().catch(() => {});
+      prev.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+  });
+  $("#cortes-criar").onclick = () => {
+    const escolhidos = [...el.querySelectorAll(".corte")].filter(c => c.querySelector(".c-usar").checked).map(card => {
+      const c = d.cortes[+card.dataset.i];
+      return { id: c.id, inicio: paraSeg(card.querySelector(".c-ini").value), fim: paraSeg(card.querySelector(".c-fim").value),
+               titulo: card.querySelector(".c-titulo").value.trim(), tela: card.querySelector(".c-tela").value.trim() };
+    });
+    if (!escolhidos.length) { avisar("Marque pelo menos um trecho."); return; }
+    if (escolhidos.some(c => isNaN(c.inicio) || isNaN(c.fim) || c.fim - c.inicio < 3)) { avisar("Confira os tempos (ex.: 1:05.5)."); return; }
+    iniciar("/api/cortes/montar", { slug: d.slug, cortes: escolhidos, legendas: $("#cortes-legendas").checked });
+  };
+}
+$("#corte-previa").addEventListener("timeupdate", e => {
+  if (corteFim !== null && e.target.currentTime >= corteFim) { e.target.pause(); corteFim = null; }
+});
+
 // ---------- vídeos
 const arq =(pasta, n) => `/arquivo/${encodeURIComponent(pasta)}/${n}`;
 
@@ -1237,6 +1400,8 @@ const ETAPAS = {
   temas: ["Lendo o que funciona no canal", "Criando a lista de temas", "Pronto"],
   roteiro: ["Lendo o que funciona no canal", "Conferindo os fatos", "Escrevendo o roteiro", "Pronto"],
   pronto: ["Lendo o que funciona no canal", "Escrevendo o roteiro", "Pronto"],
+  cortes: ["Preparando o vídeo", "Transcrevendo a fala", "Escolhendo os melhores momentos", "Pronto"],
+  cortar: ["Cortando o trecho", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
 };
 const NOMES_TAREFA = {
   radar: () => "Radar de temas",
@@ -1249,8 +1414,10 @@ const NOMES_TAREFA = {
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
   pronto: () => "Preparando o seu roteiro",
+  cortes: () => "Procurando os melhores momentos",
+  cortar: () => "Criando os Shorts dos cortes",
 };
-const DICA_TEMPO = { pronto: "1 a 2 min; depois o vídeo começa sozinho", ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
+const DICA_TEMPO = { cortes: "a transcrição leva ~1/3 do tempo do vídeo", cortar: "uns 2 a 4 min por corte", pronto: "1 a 2 min; depois o vídeo começa sozinho", ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
 
 async function iniciar(caminho, corpo) {
   try { await api(caminho, corpo); }
@@ -1277,7 +1444,7 @@ function desenharTarefa() {
   $("#tarefa-barra").style.width = (t.pctGeral || 0) + "%";
   $("#tarefa-pct").textContent = (t.pctGeral || 0) + "%";
   let etapaTxt = t.etapa || "";
-  if (t.tipo === "gerar" && t.totalVideos > 1) etapaTxt = `Vídeo ${t.video} de ${t.totalVideos} (${t.nomeVideo}) · ${etapaTxt}`;
+  if (["gerar", "cortar"].includes(t.tipo) && t.totalVideos > 1) etapaTxt = `Vídeo ${t.video} de ${t.totalVideos} (${t.nomeVideo}) · ${etapaTxt}`;
   $("#tarefa-etapa").textContent = t.rodando ? etapaTxt : "";
 
   const lista = ETAPAS[t.tipo] || [];
@@ -1294,6 +1461,8 @@ function desenharTarefa() {
   $("#dub-botao").disabled = t.rodando;
   document.querySelectorAll("[data-angulo], #gerar-previa").forEach(b => b.disabled = t.rodando);
   $("#pronto-criar").disabled = t.rodando || estado.claude !== true;
+  $("#corte-analisar").disabled = t.rodando || !corteArquivo;
+  document.querySelectorAll("#cortes-criar").forEach(b => b.disabled = t.rodando);
   $("#tarefa-avisos").innerHTML = (t.avisos || []).length
     ? `<strong>⚠️ Pontos para conferir no seu texto</strong> (o vídeo usa o texto como está):<ul>${t.avisos.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`
     : "";
@@ -1334,6 +1503,8 @@ async function acompanhar() {
     mostrarPrevia(resultado.slug);
   }
   if (tipo === "gerar") avisar("Vídeo pronto! Veja na aba Vídeos prontos.", 5000);
+  if (tipo === "cortes") { tarefaFechada = true; desenharTarefa(); irPara("cortes"); carregarCortes(estado.tarefa.alvo); }
+  if (tipo === "cortar") { avisar("Shorts prontos! Veja na aba Vídeos prontos.", 5000); irPara("videos"); }
   if (tipo === "dublar") {
     avisar("Dublagem pronta!", 5000);
     irPara("videos");
@@ -1373,7 +1544,7 @@ atualizar().then(async () => {
     document.querySelector('input[name="modo"][value="pronto"]').checked = true;
     mostrarModo("pronto");
   }
-  else if (["novo", "dublar", "videos", "roteiros", "radar", "resultados"].includes(destino)) irPara(destino);
+  else if (["novo", "cortes", "dublar", "videos", "roteiros", "radar", "resultados"].includes(destino)) irPara(destino);
 });
 </script>
 </body>

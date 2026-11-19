@@ -34,6 +34,7 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
 | `pipeline/radar.py` | Temas em alta (Wikipedia, Google Notícias, Trends, YouTube) |
 | `pipeline/painel.py` + `painel/index.html` | Interface local em http://localhost:8765 |
 | `pipeline/dublar.py` | Narração + legenda sobre um vídeo enviado pela pessoa |
+| `pipeline/cortes.py` | Aba Cortes: transcreve (Whisper) um vídeo longo da pessoa, o Claude escolhe trechos, vira Shorts |
 | `pipeline/relaxante.py` + `pipeline/sons.py` | Vídeos longos de sons relaxantes (som sintetizado) |
 | `pipeline/canal.py` | Configuração do canal |
 | `src/` | Composições Remotion (Short, Longo, Thumbnail, Legendas) |

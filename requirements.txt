@@ -4,3 +4,5 @@ numpy
 scipy
 # animações dos roteiros (comparação, medidor, linha do tempo); sem ele o vídeo usa só clipes
 manim
+# aba Cortes: transcreve a fala dos seus vídeos longos no seu computador
+faster-whisper

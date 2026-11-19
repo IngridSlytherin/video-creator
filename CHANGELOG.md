@@ -3,6 +3,14 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.15 — 19/11/2026
+- **Aba ✂️ Cortes**: envie um vídeo longo seu e receba Shorts prontos. O app transcreve a fala no seu
+  computador (Whisper, grátis) e o Claude escolhe de 3 a 5 trechos que funcionam sozinhos, com título,
+  frase na tela, descrição e hashtags. Você confere cada trecho (▶ ver trecho), ajusta início e fim e
+  cria os Shorts: vídeo deitado no meio, fundo desfocado, título em cima e legenda animada embaixo.
+- Na primeira vez, o app baixa o modelo de transcrição (~500 MB). Para errar menos (e demorar mais),
+  ponha `WHISPER_MODELO=medium` no `.env`.
+
 ## 1.14 — 19/11/2026
 - **Já tenho o roteiro**: na aba Novo vídeo, cole um roteiro pronto, escolha **Short** (em pé) ou
   **vídeo longo** (deitado) e a **voz** (com botão para ouvir cada uma) e clique em **Criar vídeo**.

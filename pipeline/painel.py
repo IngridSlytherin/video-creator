@@ -131,11 +131,16 @@ class Tarefa:
             if linha.startswith("Relatório:"):
                 self.etapa, self.pct = "Relatório pronto", 1.0
             return True
+        if self.tipo == "cortes" and (m := re.search(r"transcrevendo\.\.\. (\d+)%", linha)):
+            self.pct = 1 / 3 + int(m.group(1)) / 300  # etapa 2 de 3
+            return True
         m = re.search(r"=== (\S+) \((\w+)\) ===", linha)
         if m:
             self.video += 1
             self.nome_video = m.group(1)
             self.etapa, self.pct = "Começando", 0.0
+        elif "Cortando o trecho" in linha:
+            self.etapa, self.pct = "Cortando o trecho", 0.03
         elif "Preparando o seu vídeo" in linha:
             self.etapa, self.pct = "Preparando o seu vídeo", 0.01
         elif "Gerando narração" in linha:
@@ -218,7 +223,7 @@ class Tarefa:
             if not self.tipo:
                 return {"tipo": None, "rodando": False}
             video = max(1, min(self.video, self.total_videos))
-            geral = (video - 1 + self.pct) / self.total_videos if self.tipo == "gerar" else self.pct
+            geral = (video - 1 + self.pct) / self.total_videos if self.tipo in ("gerar", "cortar") else self.pct
             if not self.rodando and self.codigo == 0:
                 geral = 1.0
             return {
@@ -678,6 +683,28 @@ def listar_roteiros():
     return lista
 
 
+CORTES = RAIZ / "trabalho" / "cortes"
+
+
+def ler_cortes(slug=None):
+    """Análise de cortes (a mais recente, ou a do slug) com o texto falado em cada trecho."""
+    if slug:
+        arq = CORTES / slug / "cortes.json"
+    else:
+        todos = sorted(CORTES.glob("*/cortes.json"), key=lambda p: p.stat().st_mtime, reverse=True) \
+            if CORTES.exists() else []
+        arq = todos[0] if todos else None
+    if not arq or not arq.exists():
+        return {}
+    dados = ler_json(arq, {})
+    frases = ler_json(arq.parent / "transcricao.json", [])
+    for c in dados.get("cortes", []):
+        c["texto"] = " ".join(f["texto"] for f in frases if f["fim"] > c["inicio"] + 0.2 and f["inicio"] < c["fim"] - 0.2)
+    dados["outros"] = [p.parent.name for p in sorted(CORTES.glob("*/cortes.json"),
+                                                     key=lambda p: p.stat().st_mtime, reverse=True)][:10]
+    return dados
+
+
 def listar_radar():
     return sorted((p.stem for p in RADAR.glob("*.md")), reverse=True) if RADAR.exists() else []
 
@@ -769,6 +796,16 @@ class Painel(BaseHTTPRequestHandler):
             return self.erro("relatório não encontrado", 404)
         if caminho == "/api/atualizacao":
             return self.responder({**ATUALIZACAO, "inicioServidor": INICIO_SERVIDOR})
+        if caminho == "/api/cortes":
+            slug = parse_qs(urlparse(self.path).query).get("slug", [None])[0]
+            if slug and not NOME_SEGURO.match(slug):
+                return self.erro("análise não encontrada", 404)
+            return self.responder(ler_cortes(slug))
+        if len(partes) == 2 and partes[0] == "video-cortes" and NOME_SEGURO.match(partes[1]):
+            arq = next((CORTES / partes[1]).glob("original.*"), None)
+            if arq:
+                return self.enviar_arquivo(arq)
+            return self.erro("vídeo não encontrado", 404)
         if caminho == "/api/voz-amostra":
             voz = parse_qs(urlparse(self.path).query).get("voz", [""])[0]
             arq = amostra_de_voz(voz)
@@ -999,6 +1036,36 @@ class Painel(BaseHTTPRequestHandler):
                                   ensure_ascii=False, indent=1),
                 obs=f"Observações do usuário: {obs}\n" if obs else "")
             ok = TAREFA.iniciar("roteiro", angulo["titulo"], cmd, entrada=prompt, ao_terminar=ao_terminar_roteiro)
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/cortes/analisar":
+            slug = str(dados.get("slug", ""))
+            if not NOME_SEGURO.match(slug) or not (
+                    any((RAIZ / "public" / "projetos" / slug).glob("original.*")) or any((CORTES / slug).glob("original.*"))):
+                return self.erro("envie o vídeo primeiro", 400)
+            if not achar_claude():
+                return self.erro("não achei o Claude Code neste computador", 500)
+            ok = TAREFA.iniciar("cortes", slug, py + ["pipeline/cortes.py", "analisar", slug])
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/cortes/montar":
+            slug = str(dados.get("slug", ""))
+            if not NOME_SEGURO.match(slug) or not (CORTES / slug / "cortes.json").exists():
+                return self.erro("análise não encontrada", 404)
+            escolhidos = []
+            for c in dados.get("cortes") or []:
+                try:
+                    ini, fim = float(c["inicio"]), float(c["fim"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if 3 <= fim - ini <= 180:
+                    escolhidos.append({"id": int(c.get("id") or len(escolhidos) + 1), "inicio": ini, "fim": fim,
+                                       "tela": str(c.get("tela", ""))[:60], "titulo": str(c.get("titulo", ""))[:100]})
+            if not escolhidos:
+                return self.erro("marque pelo menos um trecho (de 3 s a 3 min)")
+            (CORTES / slug / "montar.json").write_text(json.dumps(
+                {"cortes": escolhidos, "legendas": bool(dados.get("legendas", True))}, ensure_ascii=False), encoding="utf-8")
+            ok = TAREFA.iniciar("cortar", slug, py + ["pipeline/cortes.py", "montar", slug], total_videos=len(escolhidos))
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
         if caminho == "/api/roteiro-pronto":

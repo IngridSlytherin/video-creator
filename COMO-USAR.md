@@ -22,6 +22,12 @@ precisa ficar aberta enquanto você usa (fechar = desligar o painel).
   fica melhor como desenho animado: comparação de tamanhos com barras, medidor de velocidade, linha do
   tempo ou porcentagem. A animação é feita no tempo exato da fala e entra no lugar dos clipes daquele
   trecho; o resto continua com vídeos de verdade. Para não usar, desmarque **✨ Usar animações**.
+- **✂️ Cortes**: envie um vídeo longo seu (com fala) e clique em **Encontrar os melhores momentos**.
+  O app transcreve o que é dito (leva mais ou menos 1/3 do tempo do vídeo) e o Claude escolhe de 3 a 5
+  trechos que funcionam sozinhos como Shorts. Em cada um: **▶ ver trecho**, título, frase na tela e
+  início/fim (minutos:segundos) para ajustar. Marque os que quer e clique em **Criar Shorts
+  selecionados**: eles aparecem em **Vídeos prontos**. Na primeira vez, baixa o modelo de transcrição
+  (~500 MB). Só use vídeos seus ou que você tem direito de usar.
 - **Dublar meu vídeo**: envie um vídeo seu (arraste ou clique), cole o texto que a voz vai falar
   (cada linha = um trecho) e clique em **Dublar vídeo**. Vertical vira Short; horizontal, vídeo longo.
   Opções: som original (tirar / baixinho / normal), terminar quando o vídeo ou a narração acabar,

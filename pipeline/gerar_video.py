@@ -858,7 +858,9 @@ HASHTAGS SEM # (cole no campo "Tags" do YouTube Studio)
 {sem_cerquilha}
 
 AO PUBLICAR NO YOUTUBE STUDIO
-- Em "Conteúdo alterado ou sintético": marque SIM (a narração é voz sintética).
+{'- Em "Conteúdo alterado ou sintético": marque NÃO se o vídeo e a voz forem seus (nada gerado por IA).'
+ if roteiro.get("vozPropria") else
+ '- Em "Conteúdo alterado ou sintético": marque SIM (a narração é voz sintética).'}
 - Público: "Não, não é conteúdo para crianças" (a menos que seja o seu caso).
 {thumb}
 SUGESTÃO DE DIA E HORÁRIO

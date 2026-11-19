@@ -17,6 +17,7 @@ tags, thumbnail and the best time to post.
 - **Automatic animations (Manim)**: where the script mentions sizes, numbers, dates or percentages, the AI can swap the footage for an animated scene (bars, gauge, timeline); counting numbers over the footage too
 - **Footage check**: before editing, Claude looks at a frame of every clip and swaps the bad ones (billboards, toys, wrong animal)
 - **Results**: upload your YouTube Studio export and see whether the app's videos keep viewers watching longer than your old ones
+- **Cuts from your long videos**: upload a long video of yours; it transcribes the speech locally (Whisper) and Claude picks the best 3–5 moments, which become vertical Shorts with title and captions
 - **Dub your own videos**: paste a script and your video gets voice-over and captions
 - **Relaxing sound videos** (rain, wind, birds) from 10 minutes to hours, with synthesized audio
 - Videos in **English, Spanish or Portuguese**: voice, captions, script, description and the radar's country all follow the language
@@ -26,7 +27,17 @@ tags, thumbnail and the best time to post.
 
 ![Panel: finished videos](docs/prints/videos.png)
 
-## What's new in 1.14
+## What's new
+
+**1.15 — ✂️ Cortes (cuts) tab:** upload a long video of yours and get Shorts. The app transcribes the
+speech on your computer (Whisper, free) and Claude picks 3 to 5 moments that work on their own, with
+title, on-screen hook, description and hashtags. Check each one (▶ ver trecho), adjust start/end and
+create the Shorts: the horizontal video sits in the middle over a blurred copy of itself, with the
+title on top and animated captions below.
+
+![Cortes tab](docs/prints/cortes.png)
+
+**1.14**
 
 - **📋 Já tenho o roteiro** (I already have the script): in Novo vídeo, paste a finished text, choose
   **Short** (vertical) or **long video** (horizontal) and the **voice** (with a ▶ preview button) and
@@ -64,7 +75,7 @@ tags, thumbnail and the best time to post.
 If you have Claude Code, open it in the folder where you want the project and paste:
 
 ```text
-Install https://github.com/IngridSlytherin/video-creator for me following the "Installation (Windows)" section of its README: install whatever is missing among Node.js 18+, Python 3.11+, ffmpeg and Git with winget; clone the repo; run npm install and python -m pip install -r requirements.txt (check that python -I -c "import edge_tts, requests, numpy, scipy, manim" works, otherwise use python -s -m pip install -r requirements.txt); install the Remotion skills with npx skills add remotion-dev/skills; create .env from .env.exemplo and explain how to get a free Pexels API key (don't ask me for the key in the chat, I'll paste it into .env myself); then tell me how to open the panel and run a final test.
+Install https://github.com/IngridSlytherin/video-creator for me following the "Installation (Windows)" section of its README: install whatever is missing among Node.js 18+, Python 3.11+, ffmpeg and Git with winget; clone the repo; run npm install and python -m pip install -r requirements.txt (check that python -I -c "import edge_tts, requests, numpy, scipy, manim, faster_whisper" works, otherwise use python -s -m pip install -r requirements.txt); install the Remotion skills with npx skills add remotion-dev/skills; create .env from .env.exemplo and explain how to get a free Pexels API key (don't ask me for the key in the chat, I'll paste it into .env myself); then tell me how to open the panel and run a final test.
 ```
 
 Approve each command it asks to run. That's it.
