@@ -203,7 +203,7 @@
   .tema .forca { height: 6px; background: var(--papel-2); border-radius: 3px; overflow: hidden; }
   .tema .forca div { height: 100%; background: var(--amarelo); }
   .tema ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--tinta-2); flex: 1; }
-  .tema.feito { opacity: .7; }
+  /* já tem vídeo no canal: mesmo visual (repetir o animal com ângulo novo funciona) */
   .md { padding: 20px 26px; }
   .md h1 { display: none; }
   .md h2 { font-size: 20px; margin: 22px 0 8px; color: var(--verde-texto); }
@@ -1088,7 +1088,7 @@ function desenharTemas(ranking, data) {
         <div class="cab"><h3>${esc(maiuscula(r.animal))}</h3><span class="pos">#${i + 1}</span></div>
         <div class="forca" title="força do sinal"><div style="width:${Math.round(100 * r.pontos / max)}%"></div></div>
         <ul>${(r.motivos.length ? r.motivos : ["interesse constante"]).map(m => `<li>${esc(m)}</li>`).join("")}</ul>
-        <button class="${r.ja_feito ? "leve" : "suave"}" data-tema="${i}">Quero esse tema</button>
+        <button class="suave" data-tema="${i}">Quero esse tema</button>
       </div>`).join("") + "</div>";
   el.querySelectorAll("[data-tema]").forEach(b => b.onclick = () => {
     const r = ranking[+b.dataset.tema];
