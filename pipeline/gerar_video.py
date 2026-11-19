@@ -145,6 +145,27 @@ async def narrar_segmento(texto, destino: Path, velocidade, voz=None):
     return palavras
 
 
+def narrar(texto, destino: Path, velocidade, voz=None, tentativas=4):
+    """Narra um trecho conferindo se o áudio veio inteiro. O serviço de voz às vezes não devolve
+    nada ou devolve a frase cortada: nesses casos, tenta de novo (com uma pequena espera)."""
+    esperadas = len([t for t in texto.split() if re.search(r"\w", t)])
+    ultimo_erro = None
+    for n in range(tentativas):
+        try:
+            palavras = asyncio.run(narrar_segmento(texto, destino, velocidade, voz=voz))
+            inteiro = len(palavras) >= max(1, int(esperadas * 0.8)) and destino.stat().st_size > 1500
+            if inteiro:
+                return palavras
+            ultimo_erro = f"veio cortado ({len(palavras)} de {esperadas} palavras)"
+        except Exception as e:  # noqa: BLE001 - erros do serviço de voz (sem áudio, conexão)
+            ultimo_erro = e.__class__.__name__
+        if n < tentativas - 1:
+            log(f"  a voz falhou ({ultimo_erro}); tentando de novo...")
+            time.sleep(2 * (n + 1))
+    raise RuntimeError(f"O serviço de voz da Microsoft não respondeu direito ({ultimo_erro}) depois de "
+                       f"{tentativas} tentativas. Ele costuma voltar em alguns minutos: tente gerar de novo.")
+
+
 def duracao_audio(caminho: Path) -> float:
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -167,7 +188,7 @@ def gerar_narracao(segs, pasta: Path, velocidade):
     lista_ffmpeg, cursor = [], 0.0
     for i, seg in enumerate(segs):
         mp3 = pasta / f"voz_{i:03d}.mp3"
-        palavras = asyncio.run(narrar_segmento(seg["texto"], mp3, velocidade))
+        palavras = narrar(seg["texto"], mp3, velocidade)
         proximo_novo_cap = i + 1 < len(segs) and segs[i + 1]["primeiroDoCapitulo"]
         pausa = PAUSA_ENTRE_CAPITULOS if proximo_novo_cap else PAUSA_ENTRE_SEGMENTOS
         dur = duracao_audio(mp3) + pausa

@@ -154,11 +154,11 @@ def dublar_trilha(segs, trechos, lingua, props, formato, destino_mp3, tmp):
     for i, (seg, texto) in enumerate(zip(segs, trechos)):
         mp3 = tmp / f"{lingua}_{i:03d}.mp3"
         caber = max(0.6, seg["duracao"] - 0.12)
-        p = asyncio.run(_tts(texto, mp3, voz, base))
+        p = gv.narrar(texto, mp3, base, voz=voz)
         dur = gv.duracao_audio(mp3)
         if dur > caber:  # não coube: fala mais rápido (até +60%) para não invadir o próximo trecho
             extra = min(60, math.ceil((dur / caber - 1) * 100) + 4)
-            p = asyncio.run(_tts(texto, mp3, voz, _soma_velocidade(base, extra)))
+            p = gv.narrar(texto, mp3, _soma_velocidade(base, extra), voz=voz)
         for w in p:
             w["inicioMs"] += seg["inicio"] * 1000
             w["fimMs"] += seg["inicio"] * 1000
@@ -270,7 +270,7 @@ def main(slug, com_traducao=True, com_audio=True):
                 palavras = dublar_trilha(segs, trechos, lingua, props, formato, pasta / audio, tmp)
                 (pasta / f"legenda.{lingua}.srt").write_text(srt(palavras), encoding="utf-8")
                 item.update(audio=audio, legenda=f"legenda.{lingua}.srt")
-            except (subprocess.CalledProcessError, OSError, ValueError) as e:
+            except (subprocess.CalledProcessError, OSError, ValueError, RuntimeError) as e:
                 log(f"  Não consegui gravar o áudio em {lingua} ({e}).")
         elif com_audio and not dublagem:
             log(f"  {lingua}: a tradução veio com {len(trechos)} trechos (eram {len(segs)}); sem áudio.")

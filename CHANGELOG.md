@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.13 — 19/11/2026
+- Narração protegida: quando o serviço de voz da Microsoft falha (sem áudio) ou devolve a frase
+  cortada, o app percebe e tenta de novo (até 4 vezes) antes de desistir com um aviso claro.
+
 ## 1.12 — 19/11/2026
 - Internet muito mais rápida em redes com IPv6 com defeito: o app passa a usar só IPv4 (cada conexão
   esperava ~21 s antes; o radar caiu de 18 minutos para 18 segundos, e os downloads de clipes também aceleram).
