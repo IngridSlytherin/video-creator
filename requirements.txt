@@ -2,3 +2,5 @@ edge-tts
 requests
 numpy
 scipy
+# animações dos roteiros (comparação, medidor, linha do tempo); sem ele o vídeo usa só clipes
+manim

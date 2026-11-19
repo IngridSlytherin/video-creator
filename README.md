@@ -46,7 +46,7 @@ tags, thumbnail and the best time to post.
 If you have Claude Code, open it in the folder where you want the project and paste:
 
 ```text
-Install https://github.com/IngridSlytherin/video-creator for me following the "Installation (Windows)" section of its README: install whatever is missing among Node.js 18+, Python 3.11+, ffmpeg and Git with winget; clone the repo; run npm install and python -m pip install -r requirements.txt (check that python -I -c "import edge_tts, requests, numpy, scipy" works, otherwise use python -s -m pip install -r requirements.txt); install the Remotion skills with npx skills add remotion-dev/skills; create .env from .env.exemplo and explain how to get a free Pexels API key (don't ask me for the key in the chat, I'll paste it into .env myself); then tell me how to open the panel and run a final test.
+Install https://github.com/IngridSlytherin/video-creator for me following the "Installation (Windows)" section of its README: install whatever is missing among Node.js 18+, Python 3.11+, ffmpeg and Git with winget; clone the repo; run npm install and python -m pip install -r requirements.txt (check that python -I -c "import edge_tts, requests, numpy, scipy, manim" works, otherwise use python -s -m pip install -r requirements.txt); install the Remotion skills with npx skills add remotion-dev/skills; create .env from .env.exemplo and explain how to get a free Pexels API key (don't ask me for the key in the chat, I'll paste it into .env myself); then tell me how to open the panel and run a final test.
 ```
 
 Approve each command it asks to run. That's it.
@@ -132,6 +132,17 @@ natureza" (or your language isn't Portuguese), Claude Code builds the radar's to
    download the thumbnail and check the best time to post. Upload in YouTube Studio and tick **Já publiquei**.
 
 You can also type a topic straight into **Novo vídeo** without using the radar.
+
+**Already have a script?** In **Novo vídeo**, pick **📋 Já tenho o roteiro** (I already have the script),
+paste your text, choose the size (**Short**, vertical, or **long video**, horizontal) and the **voice**
+(click ▶ ouvir to hear each one), then click **Criar vídeo**. Your words are kept as they are: the app
+only splits them into scenes, picks the footage, writes title, description and hashtags, and renders
+the video. If a fact looks wrong, it warns you without changing your text.
+
+**Automatic animations (Manim):** when a script mentions sizes, numbers, dates or percentages, the AI
+can turn that part into an animated scene (bar comparison, gauge, timeline or percentage grid), timed to
+the narration. It only does so when it helps; the rest stays real footage. Untick **✨ Usar animações**
+to turn it off.
 
 ### Dub your own video
 

@@ -121,7 +121,7 @@ export const Longo: React.FC<PropsVideo> = ({
               sentido={i % 2 ? -1 : 1}
               inicioFrames={Math.round((c.inicioNoClipe ?? 0) * fps)}
               volume={volumeOriginal}
-              semZoom={semZoom}
+              semZoom={semZoom || Boolean(c.animacao)}
             />
           </Sequence>
         );

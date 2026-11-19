@@ -30,3 +30,9 @@ public/musica/*.mp3
 .claude/launch.json
 .claude/settings.local.json
 .claude/skills/remotion-*/
+.claude/skills/algorithmic-art/
+.claude/skills/manim-video/
+
+# projetos de teste feitos com HyperFrames (fora do pipeline)
+collie-short/
+gato-cai-de-pe/

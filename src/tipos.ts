@@ -7,6 +7,7 @@ export type Clipe = {
   inicioNoClipe?: number; // segundos: de que ponto do arquivo o trecho começa
   autor?: string;
   url?: string;
+  animacao?: boolean; // cena feita com Manim: sem zoom (o desenho já está enquadrado)
 };
 
 // Animação por cima do vídeo durante um trecho da fala (campo "grafico" no roteiro).

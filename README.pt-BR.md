@@ -120,6 +120,17 @@ Para mudar depois, clique em **⚙ Canal**.
 
 Também dá para escrever o tema direto na aba **Novo vídeo**, sem passar pelo radar.
 
+**Já tem o roteiro?** Em **Novo vídeo**, escolha **📋 Já tenho o roteiro**, cole o texto, escolha o
+tamanho (**Short**, em pé, ou **vídeo longo**, deitado) e a **voz** (clique em ▶ ouvir para escutar
+cada uma) e clique em **Criar vídeo**. As suas palavras ficam como estão: o app só separa em cenas,
+escolhe as imagens, cria título, descrição e hashtags e monta o vídeo. Se algum fato parecer errado,
+ele avisa, sem mudar o seu texto.
+
+**Animações automáticas (Manim):** quando o roteiro fala de tamanhos, números, datas ou porcentagens,
+a IA pode transformar aquele trecho numa cena animada (comparação com barras, medidor, linha do tempo
+ou quadradinhos de porcentagem), no tempo exato da narração. Ela só usa quando ajuda; o resto continua
+com vídeos de verdade. Para desligar, desmarque **✨ Usar animações**.
+
 ### Dublar o seu próprio vídeo
 
 Na aba **Dublar meu vídeo**: envie o vídeo, cole o texto (cada linha é um trecho da fala) e clique em

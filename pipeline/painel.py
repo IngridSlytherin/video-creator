@@ -62,13 +62,18 @@ class Tarefa:
         self.linhas = []
         self.rodando = False
         self.total_videos = 1
+        self.avisos = []
 
-    def iniciar(self, tipo, alvo, comando, total_videos=1, entrada=None, ao_terminar=None):
+    def iniciar(self, tipo, alvo, comando, total_videos=1, entrada=None, ao_terminar=None, continuar=False):
         """entrada: texto enviado ao programa (pedido ao Claude).
-        ao_terminar: função que recebe a resposta final do Claude e devolve o resultado."""
+        ao_terminar: função que recebe a resposta final do Claude e devolve o resultado; se o resultado
+        trouxer "seguir" (argumentos de iniciar), essa segunda tarefa começa logo em seguida.
+        continuar: usado só nesse encadeamento (a tarefa anterior ainda conta como rodando)."""
         with self.lock:
-            if self.rodando:
+            if self.rodando and not continuar:
                 return False
+            if not continuar:
+                self.avisos = []
             self.tipo, self.alvo, self.linhas = tipo, alvo, []
             self.rodando, self.codigo, self.inicio = True, None, datetime.now()
             self.total_videos = total_videos
@@ -163,7 +168,7 @@ class Tarefa:
     def _rodar(self, comando, entrada):
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         env.pop("CLAUDECODE", None)
-        claude = self.tipo in ("ideias", "roteiro", "temas")
+        claude = self.tipo in ("ideias", "roteiro", "temas", "pronto")
         try:
             proc = subprocess.Popen(
                 comando, cwd=RAIZ, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -198,6 +203,11 @@ class Tarefa:
                 self.linhas.append(f"Não consegui usar a resposta do Claude: {e}")
                 self.linhas.append(self.resposta[:600])
                 self.codigo = 1
+        seguir = self.resultado.pop("seguir", None) if self.codigo == 0 and isinstance(self.resultado, dict) else None
+        if seguir:
+            self.avisos = self.resultado.get("avisos") or []
+            self.iniciar(**seguir, continuar=True)
+            return
         self.rodando = False
         if self.tipo == "atualizar" and self.codigo == 0:
             # Sai com o código 3: o "Abrir painel.bat" entende como "reabrir" e sobe a versão nova.
@@ -218,7 +228,7 @@ class Tarefa:
                 "etapa": self.etapa, "video": video, "totalVideos": self.total_videos,
                 "nomeVideo": self.nome_video, "pctVideo": round(self.pct * 100),
                 "pctGeral": round(geral * 100), "linhas": self.linhas[-80:],
-                "resultado": self.resultado,
+                "resultado": self.resultado, "avisos": self.avisos,
             }
 
 
@@ -395,8 +405,9 @@ Passos:
    Números e medidas: use o valor exato da fonte; na dúvida, deixe o número de fora.
 4. Siga as regras de dados/aprendizados.md, se existir: não entregue a resposta nos primeiros 10 s,
    guarde o fato mais forte para o fim, frases curtas e faladas.
-4b. Animações (opcional, no máximo 2 por vídeo, só quando ajudam): num trecho que cita um número marcante
-   ou uma comparação de tamanho, acrescente o campo "grafico" nesse trecho:
+4b. {animacoes}
+4c. Número simples (sem escala nem comparação) que merece destaque: em vez de "manim", pode usar o campo
+   "grafico" (aparece por cima dos clipes; no máximo 2 por vídeo):
    número contando: {{"tipo": "numero", "valor": 80, "sufixo": " km/h", "rotulo": "velocidade do soco"}}
    comparação: {{"tipo": "comparacao", "rotulo": "comprimento", "unidade": "m",
                 "itens": [{{"nome": "Humano", "valor": 1.7}}, {{"nome": "Baleia-azul", "valor": 30}}]}}
@@ -406,6 +417,65 @@ Passos:
 6. Não rode o gerador de vídeo nem nenhum outro comando.
 
 No final, responda SOMENTE com JSON: {{"slug": "..."}}
+"""
+
+
+ANIMACOES_MANIM = """Animações Manim (você decide se ajudam): uma cena animada ocupa a tela inteira no lugar
+   dos clipes daquele trecho. Use SÓ onde um desenho explica melhor do que a filmagem: comparação de
+   tamanho/peso/velocidade entre coisas, um número marcante que pede escala (velocidade, força,
+   temperatura), uma linha do tempo, ou uma proporção/porcentagem. Se o texto não tiver nada disso, não use.
+   No máximo 2 por Short (até 4 no vídeo longo); nunca no primeiro trecho (o gancho precisa da imagem do
+   animal) nem em dois trechos seguidos. Números exatos do texto/da fonte; textos curtos, na língua do vídeo.
+   No trecho escolhido, acrescente o campo "manim" em um destes formatos:
+   comparacao (2 a 4 itens, do menor para o destaque, que fica por último):
+     {"tipo": "comparacao", "rotulo": "Comprimento", "unidade": "m",
+      "itens": [{"nome": "Pessoa", "valor": 1.7}, {"nome": "Ônibus", "valor": 12}, {"nome": "T-rex", "valor": 12.3}]}
+   numero ("maximo" = fim da escala e "marca" = referência; os dois são opcionais):
+     {"tipo": "numero", "valor": 20, "sufixo": " km/h", "rotulo": "Velocidade máxima do T-rex",
+      "maximo": 40, "marca": {"nome": "Pessoa correndo", "valor": 25}}
+   linha_do_tempo ("anos" = quanto tempo atrás):
+     {"tipo": "linha_do_tempo", "unidade": "milhões de anos", "conclusao": "frase curta de fechamento",
+      "eventos": [{"rotulo": "Estegossauro", "anos": 150}, {"rotulo": "T-rex", "anos": 66}, {"rotulo": "Hoje", "anos": 0}]}
+   proporcao (valor em %):
+     {"tipo": "proporcao", "valor": 66, "rotulo": "dos neurônios ficam nos braços"}
+   Num trecho com "manim", não use "grafico". O trecho continua com "busca"/"exigir" (servem de reserva)."""
+
+SEM_ANIMACOES = 'Animações: a pessoa pediu para não usar. Não acrescente "manim" nem "grafico"; ponha "animacoes": false no topo do JSON.'
+
+
+PROMPT_PRONTO = """{canal}
+
+A pessoa JÁ ESCREVEU o roteiro e quer que ele vire vídeo do jeito que está.
+Roteiro da pessoa (entre as linhas ====):
+====
+{texto}
+====
+Formato: {formato}
+
+Passos:
+1. Leia o modelo de roteiro {modelo} e use exatamente a mesma estrutura de campos.
+2. Narração ("texto" de cada trecho): use EXATAMENTE as palavras da pessoa, na mesma ordem. Não corrija,
+   não resuma, não troque palavras e não acrescente nada (nem chamada para seguir o canal). Só divida em
+   trechos de 1 a 3 frases (cada trecho vira uma cena). Pode tirar apenas o que claramente não é para
+   ser falado: marcações como "[cena: ...]", "(pausa)", "Narrador:", emojis soltos.
+   {regra_formato}
+3. "animal" (o assunto principal, mesmo que não seja um animal), "busca" e "exigir"/"evitar" em inglês:
+   servem para achar clipes no Pexels/Pixabay, e a palavra precisa aparecer nos endereços dos vídeos.
+   Em "exigir", só palavras que não pertencem a outro assunto. Se o assunto costuma vir como brinquedo,
+   desenho ou estátua (ex.: dinossauro), ponha "toy", "cartoon", "child" em "evitar".
+4. Crie "tituloTela", "duracao" (pelo tamanho do texto: "curto" até ~45 s, "padrao" até ~65 s, "longo"
+   acima disso; vídeo longo = "video") e "publicacao" (titulo, descricao, hashtags) na língua do roteiro,
+   seguindo as "Regras do canal" de dados/aprendizados.md, se existir, para o título.
+   "fontes": as que a pessoa citou no texto; senão, lista vazia.
+5. No topo do JSON: "voz": "{voz}" e "formato": "{formato_json}".
+5b. {animacoes}
+6. Se algum fato do texto parecer errado ou muito duvidoso, NÃO mude o texto: anote em "avisos"
+   (frases curtas, em português, dizendo qual trecho e por quê). Sem pesquisar na internet.
+7. Salve em roteiros/<slug>.json. Slug curto, minúsculas, sem acento, com hífens, e que ainda não
+   exista na pasta roteiros/.
+8. Não rode o gerador de vídeo nem nenhum outro comando.
+
+No final, responda SOMENTE com JSON: {{"slug": "...", "avisos": ["..."]}}
 """
 
 
@@ -472,6 +542,58 @@ def ao_terminar_roteiro(resposta):
     if not r.get("publicacao", {}).get("titulo") or not (r.get("segmentos") or r.get("capitulos")):
         raise ValueError("o roteiro salvo está incompleto")
     return {"slug": slug}
+
+
+def ao_terminar_pronto(voz, formato, animacoes=True):
+    """Confere o roteiro que o Claude montou e já encadeia a geração do vídeo."""
+    def tratar(resposta):
+        dados = extrair_json(resposta)
+        slug = str(dados.get("slug", ""))
+        arq = ROTEIROS / f"{slug}.json"
+        if not NOME_SEGURO.match(slug) or not arq.exists():
+            raise ValueError(f"o roteiro '{slug}' não foi salvo")
+        r = json.loads(arq.read_text(encoding="utf-8"))
+        if not r.get("publicacao", {}).get("titulo") or not (r.get("segmentos") or r.get("capitulos")):
+            raise ValueError("o roteiro salvo está incompleto")
+        r["voz"], r["formato"] = voz, formato  # garante o que a pessoa escolheu
+        if not animacoes:
+            r["animacoes"] = False
+        if formato == "longo":
+            for c in r.get("capitulos", []):
+                c.pop("short", None)  # o texto é da pessoa: nada de Shorts extras
+        avisos = [str(a)[:300] for a in (dados.get("avisos") or []) if str(a).strip()][:6]
+        r["avisos"] = avisos
+        arq.write_text(json.dumps(r, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        cmd = [sys.executable, "-I", "-u", "pipeline/gerar_video.py", f"roteiros/{slug}.json"]
+        return {"slug": slug, "avisos": avisos, "seguir": {"tipo": "gerar", "alvo": slug, "comando": cmd}}
+    return tratar
+
+
+def vozes_do_canal():
+    lng = canal_cfg.idioma(canal_cfg.carregar(obrigatorio=False))
+    return lng["vozes"], lng["amostra"]
+
+
+AMOSTRAS = RAIZ / "trabalho" / "vozes"
+
+
+def amostra_de_voz(voz):
+    """mp3 curto com a voz, para a pessoa ouvir antes de escolher (fica guardado em trabalho/vozes)."""
+    vozes, frase = vozes_do_canal()
+    if voz not in {v["id"] for v in vozes}:
+        return None
+    arq = AMOSTRAS / f"{voz}.mp3"
+    if arq.exists() and arq.stat().st_size > 1500:
+        return arq
+    AMOSTRAS.mkdir(parents=True, exist_ok=True)
+    for _ in range(3):  # o serviço de voz às vezes falha; tenta de novo
+        subprocess.run([sys.executable, "-I", "-m", "edge_tts", "--voice", voz, "--text", frase,
+                        "--write-media", str(arq)], capture_output=True, timeout=60,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if arq.exists() and arq.stat().st_size > 1500:
+            return arq
+        time.sleep(1.5)
+    return None
 
 
 def texto_roteiro(r):
@@ -637,6 +759,7 @@ class Painel(BaseHTTPRequestHandler):
                 "idiomas": {k: v["nome"] for k, v in canal_cfg.IDIOMAS.items()},
                 "lembreteMedir": lembrete_medir(),
                 "titulosGuardados": len(titulos_canal.ler()),
+                "vozes": vozes_do_canal()[0],
                 "medicoes": sorted((p.stem for p in (RAIZ / "dados" / "medicoes").glob("*.md")), reverse=True),
             })
         if len(partes) == 3 and partes[:2] == ["api", "medicao"] and NOME_SEGURO.match(partes[2]):
@@ -646,6 +769,12 @@ class Painel(BaseHTTPRequestHandler):
             return self.erro("relatório não encontrado", 404)
         if caminho == "/api/atualizacao":
             return self.responder({**ATUALIZACAO, "inicioServidor": INICIO_SERVIDOR})
+        if caminho == "/api/voz-amostra":
+            voz = parse_qs(urlparse(self.path).query).get("voz", [""])[0]
+            arq = amostra_de_voz(voz)
+            if not arq:
+                return self.erro("não consegui gerar a amostra agora; tente de novo", 503)
+            return self.enviar_arquivo(arq)
         if caminho == "/api/tarefa":
             return self.responder(TAREFA.estado())
         if caminho == "/api/ideias":
@@ -865,11 +994,37 @@ class Painel(BaseHTTPRequestHandler):
                       if longo else "exemplos/short-exemplo.json (Short)")
             obs = str(dados.get("obs", "")).strip()[:600]
             prompt = PROMPT_ROTEIRO.format(
-                canal=descricao_canal(), modelo=modelo, lingua=lingua_canal(),
+                canal=descricao_canal(), modelo=modelo, lingua=lingua_canal(), animacoes=ANIMACOES_MANIM,
                 angulo=json.dumps({k: angulo.get(k) for k in ("titulo", "formato", "duracao", "gancho", "resumo")},
                                   ensure_ascii=False, indent=1),
                 obs=f"Observações do usuário: {obs}\n" if obs else "")
             ok = TAREFA.iniciar("roteiro", angulo["titulo"], cmd, entrada=prompt, ao_terminar=ao_terminar_roteiro)
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/roteiro-pronto":
+            texto = str(dados.get("texto", "")).strip()
+            if len(texto.split()) < 15:
+                return self.erro("cole o roteiro inteiro (pelo menos algumas frases)")
+            formato = "longo" if dados.get("formato") == "longo" else "short"
+            vozes = vozes_do_canal()[0]
+            voz = dados.get("voz") if dados.get("voz") in {v["id"] for v in vozes} else vozes[0]["id"]
+            cmd = comando_claude(["Read", "Glob", "Grep", "Write(roteiros/**)", "Edit(roteiros/**)"])
+            if not cmd:
+                return self.erro("não achei o Claude Code neste computador", 500)
+            longo = formato == "longo"
+            prompt = PROMPT_PRONTO.format(
+                canal=descricao_canal(), texto=texto[:30000], voz=voz, formato_json=formato,
+                animacoes=ANIMACOES_MANIM if dados.get("animacoes", True) else SEM_ANIMACOES,
+                formato=("vídeo longo horizontal (16:9)" if longo else "Short vertical (9:16)"),
+                modelo=("exemplos/longo-exemplo.json (vídeo longo com capítulos)" if longo
+                        else "exemplos/short-exemplo.json (Short)"),
+                regra_formato=('Vídeo longo: organize em "capitulos". Se o texto tiver títulos de partes, '
+                               "eles viram os títulos dos capítulos (e não são falados); senão, crie capítulos "
+                               'curtos pelo assunto. NÃO crie blocos "short".' if longo else
+                               'Short: tudo em "segmentos", sem capítulos.'))
+            primeira = re.sub(r"\s+", " ", texto)[:60]
+            ok = TAREFA.iniciar("pronto", primeira, cmd, entrada=prompt,
+                                ao_terminar=ao_terminar_pronto(voz, formato, bool(dados.get("animacoes", True))))
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
         if caminho == "/api/publicado":

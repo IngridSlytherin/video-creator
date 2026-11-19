@@ -110,7 +110,7 @@ def segmentos_do_roteiro(roteiro):
                 "capitulo": ci,
                 "primeiroDoCapitulo": si == 0,
                 "exigir": exigir,
-                "evitar": seg.get("evitar") or cap.get("evitar") or [],
+                "evitar": seg.get("evitar") or cap.get("evitar") or roteiro.get("evitar") or [],
             })
     return capitulos, segs
 
@@ -145,7 +145,7 @@ async def narrar_segmento(texto, destino: Path, velocidade, voz=None):
     return palavras
 
 
-def narrar(texto, destino: Path, velocidade, voz=None, tentativas=4):
+def narrar(texto, destino: Path, velocidade, voz=None, tentativas=8):
     """Narra um trecho conferindo se o áudio veio inteiro. O serviço de voz às vezes não devolve
     nada ou devolve a frase cortada: nesses casos, tenta de novo (com uma pequena espera)."""
     esperadas = len([t for t in texto.split() if re.search(r"\w", t)])
@@ -154,14 +154,19 @@ def narrar(texto, destino: Path, velocidade, voz=None, tentativas=4):
         try:
             palavras = asyncio.run(narrar_segmento(texto, destino, velocidade, voz=voz))
             inteiro = len(palavras) >= max(1, int(esperadas * 0.8)) and destino.stat().st_size > 1500
-            if inteiro:
+            # às vezes chegam todas as palavras, mas o áudio para no meio: confere a duração
+            # do arquivo com o fim da última palavra
+            fala = max((p["fimMs"] for p in palavras), default=0) / 1000
+            som = duracao_audio(destino) if inteiro else 0
+            if inteiro and som >= fala - 0.3:
                 return palavras
-            ultimo_erro = f"veio cortado ({len(palavras)} de {esperadas} palavras)"
+            ultimo_erro = (f"áudio cortado ({som:.1f} s de {fala:.1f} s)" if inteiro
+                           else f"veio cortado ({len(palavras)} de {esperadas} palavras)")
         except Exception as e:  # noqa: BLE001 - erros do serviço de voz (sem áudio, conexão)
             ultimo_erro = e.__class__.__name__
         if n < tentativas - 1:
             log(f"  a voz falhou ({ultimo_erro}); tentando de novo...")
-            time.sleep(2 * (n + 1))
+            time.sleep(min(2 * (n + 1), 10))  # ~1 min no total: o serviço costuma voltar
     raise RuntimeError(f"O serviço de voz da Microsoft não respondeu direito ({ultimo_erro}) depois de "
                        f"{tentativas} tentativas. Ele costuma voltar em alguns minutos: tente gerar de novo.")
 
@@ -183,12 +188,12 @@ def silencio(pasta: Path, segundos: float) -> Path:
     return arq
 
 
-def gerar_narracao(segs, pasta: Path, velocidade):
+def gerar_narracao(segs, pasta: Path, velocidade, voz=None):
     log(f"Gerando narração ({len(segs)} trechos)...")
     lista_ffmpeg, cursor = [], 0.0
     for i, seg in enumerate(segs):
         mp3 = pasta / f"voz_{i:03d}.mp3"
-        palavras = narrar(seg["texto"], mp3, velocidade)
+        palavras = narrar(seg["texto"], mp3, velocidade, voz=voz)
         proximo_novo_cap = i + 1 < len(segs) and segs[i + 1]["primeiroDoCapitulo"]
         pausa = PAUSA_ENTRE_CAPITULOS if proximo_novo_cap else PAUSA_ENTRE_SEGMENTOS
         dur = duracao_audio(mp3) + pausa
@@ -360,6 +365,11 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
     baixados = {}   # grupo (animal) -> clipes já baixados, para reaproveitar
     n_arquivos = 0
     for idx, seg in enumerate(segs):
+        if seg.get("_animacao"):  # trecho com animação Manim: a cena ocupa o trecho inteiro
+            clipes.append({"arquivo": seg["_animacao"], "inicio": seg["inicio"], "duracao": seg["duracao"],
+                           "inicioNoClipe": 0, "animacao": True, "assunto": "animação"})
+            log(f"  trecho {idx + 1}/{len(segs)}: animação")
+            continue
         qtd = max(1, math.ceil(seg["duracao"] / cfg["seg_por_clipe"]))
         dur_clipe = seg["duracao"] / qtd
         grupo = tuple(sorted(seg["exigir"]))
@@ -464,6 +474,8 @@ def conferir_clipes(clipes, pasta: Path, aprovados=()):
         return {}
     unicos = {}
     for c in clipes:  # um quadro por arquivo, no primeiro trecho usado
+        if c.get("animacao"):
+            continue
         if c.get("url") not in aprovados:
             unicos.setdefault(c["arquivo"], c)
     if not unicos:
@@ -552,10 +564,84 @@ def baixar_clipes_conferidos(segs, formato, pasta: Path, slug):
     return clipes
 
 
+# ---------- 2c. Animações Manim (campo "manim" de um trecho) ----------
+TIPOS_MANIM = {"comparacao", "numero", "linha_do_tempo", "proporcao"}
+
+
+def renderizar_animacoes(roteiro, segs, formato, pasta: Path):
+    """Transforma cada trecho com "manim" numa cena animada do tamanho exato da fala desse trecho.
+    A cena entra no lugar dos clipes do trecho. Se o Manim não estiver instalado ou a cena falhar,
+    o trecho continua com clipes normais (o vídeo não para)."""
+    pedidos = [(i, s) for i, s in enumerate(segs)
+               if isinstance(s.get("manim"), dict) and s["manim"].get("tipo") in TIPOS_MANIM]
+    if not pedidos:
+        return
+    if roteiro.get("animacoes") is False or os.environ.get("ANIMACOES", "1") == "0":
+        log("Animações desligadas para este vídeo; usando só clipes.")
+        return
+    if importlib.util.find_spec("manim") is None:
+        log("Aviso: o Manim não está instalado (pip install manim); os trechos animados vão usar clipes.")
+        return
+    largura, altura = (1080, 1920) if formato == "short" else (1920, 1080)
+    idioma = canal_cfg.carregar().get("idioma", canal_cfg.IDIOMA_PADRAO)
+    trabalho = RAIZ / "trabalho" / "manim" / pasta.name
+    shutil.rmtree(trabalho, ignore_errors=True)
+    trabalho.mkdir(parents=True, exist_ok=True)
+    for n, (i, seg) in enumerate(pedidos, 1):
+        log(f"Criando animação {n}/{len(pedidos)} ({seg['manim']['tipo']})...")
+        dados = {**seg["manim"], "formato": formato, "idioma": idioma,
+                 "duracao": round(seg["duracao"] + 1.2, 2)}  # sobra no fim: o vídeo nunca fica sem imagem
+        arq_dados = trabalho / f"cena_{i:03d}.json"
+        arq_dados.write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+        nome = f"animacao_{i:03d}"
+        r = subprocess.run([sys.executable, "-I", "-m", "manim", "render", "-qh", "--fps", "30",
+                            "-r", f"{largura},{altura}", "--media_dir", str(trabalho), "-o", nome,
+                            str(RAIZ / "pipeline" / "cenas_manim.py"), "CenaRoteiro"],
+                           cwd=trabalho, env={**os.environ, "CENA_MANIM": str(arq_dados)},
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        feito = next(trabalho.rglob(f"{nome}.mp4"), None)
+        if r.returncode != 0 or not feito:
+            erro = (r.stderr or r.stdout or "").strip().splitlines()[-1:] or ["?"]
+            log(f"  a animação falhou ({erro[0][:160]}); esse trecho vai usar clipes")
+            continue
+        destino = pasta / f"{nome}.mp4"
+        shutil.move(str(feito), destino)
+        seg["_animacao"] = f"projetos/{pasta.name}/{destino.name}"
+    shutil.rmtree(trabalho, ignore_errors=True)
+
+
 # ---------- 3. Render ----------
-def npx(*args):
+RE_SEM_QUADRO = re.compile(r"No frame found at position.*?original source = \S*/(projetos/[^/\s]+/clipe_[\w-]+\.mp4)")
+
+
+def converter_clipe(arq: Path):
+    """Regrava o clipe em H.264 comum (30 fps, até 1920 px). Alguns vídeos dos bancos (60 fps, 2K/4K,
+    timestamps estranhos) fazem o Remotion dizer "No frame found" no meio do render."""
+    tmp = arq.with_suffix(".conv.mp4")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(arq), "-an", "-r", "30",
+                    "-vf", "scale='min(1920,iw)':-2", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+                    "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(tmp)], check=True)
+    tmp.replace(arq)
+
+
+def npx(*args, tentativas=3):
+    """Roda o Remotion. Se um clipe não puder ser lido, converte esse clipe e tenta de novo."""
     cmd = ["npx.cmd" if os.name == "nt" else "npx", *args]
-    subprocess.run(cmd, check=True, cwd=RAIZ)
+    for n in range(tentativas):
+        proc = subprocess.Popen(cmd, cwd=RAIZ, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace")
+        ultimas = []
+        for linha in proc.stdout:
+            print(linha, end="", flush=True)
+            ultimas = (ultimas + [linha])[-60:]
+        if proc.wait() == 0:
+            return
+        m = RE_SEM_QUADRO.search(re.sub(r"\x1b\[[0-9;]*m", "", "".join(ultimas)))
+        arq = RAIZ / "public" / m.group(1) if m else None
+        if not arq or not arq.exists() or n == tentativas - 1:
+            raise subprocess.CalledProcessError(proc.returncode, cmd)
+        log(f"  O clipe {arq.name} veio num formato que o Remotion não lê; convertendo e tentando de novo...")
+        converter_clipe(arq)
 
 
 def info_capitulos(roteiro, capitulos, segs):
@@ -586,13 +672,17 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
 
     capitulos, segs = segmentos_do_roteiro(roteiro)
     velocidade = roteiro.get("velocidadeVoz") or ENV.get("VELOCIDADE_VOZ", "+0%")
-    duracao = gerar_narracao(segs, pasta_pub, velocidade)
+    voz = roteiro.get("voz")  # voz escolhida para este roteiro (opcional); senão, a do canal
+    if voz:
+        log(f"Voz: {voz}")
+    duracao = gerar_narracao(segs, pasta_pub, velocidade, voz=voz)
     faixa = roteiro.get("duracao", "padrao")
     if faixa in DURACOES:
         minimo, maximo = DURACOES[faixa]
         if not minimo <= duracao <= maximo:
             log(f"ATENÇÃO: narração com {duracao:.0f} s, fora da faixa '{faixa}' "
                 f"({minimo}-{maximo} s). Ajuste o tamanho do roteiro.")
+    renderizar_animacoes(roteiro, segs, formato, pasta_pub)
     clipes = baixar_clipes_conferidos(segs, formato, pasta_pub, slug)
     caps = info_capitulos(roteiro, capitulos, segs)
 
@@ -600,8 +690,9 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
     com_thumbnail = formato != "short"
     if com_thumbnail:
         ci = roteiro.get("capaCapitulo", 0)
+        filmados = [c for c in clipes if not c.get("animacao")] or clipes
         clipe_capa = next((c for c, s in zip(clipes, _seg_de_cada_clipe(clipes, segs))
-                           if s["capitulo"] == ci), clipes[0])
+                           if s["capitulo"] == ci and not c.get("animacao")), filmados[0])
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error",
                         "-ss", str(clipe_capa["inicioNoClipe"] + 1.0),
                         "-i", str(RAIZ / "public" / clipe_capa["arquivo"]),
@@ -623,7 +714,8 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
         "formato": formato,
         # animações (campo "grafico" em um trecho do roteiro): número contando ou comparação
         "graficos": [{**s["grafico"], "inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3)}
-                     for s in segs if isinstance(s.get("grafico"), dict) and s["grafico"].get("tipo")],
+                     for s in segs if isinstance(s.get("grafico"), dict) and s["grafico"].get("tipo")
+                     and not s.get("_animacao")],
         "idioma": canal_cfg.carregar().get("idioma", canal_cfg.IDIOMA_PADRAO),
         "capitulos": caps,
     }
@@ -684,6 +776,7 @@ def criar_roteiro_short(roteiro, cap):
         "animal": cap["animal"],
         "tituloTela": info.get("tituloTela", ""),
         "origem": roteiro["slug"],
+        **({"voz": roteiro["voz"]} if roteiro.get("voz") else {}),
         "segmentos": [{**s, "evitar": s.get("evitar") or cap.get("evitar") or []}
                       for s in segmentos],
         "publicacao": {

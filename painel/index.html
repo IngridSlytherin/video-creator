@@ -232,6 +232,15 @@
   .sinais { font-size: 13.5px; color: var(--tinta-2); margin: 10px 0 0; }
   .sinais:empty { display: none; }
   .sem-claude { color: var(--erro); font-size: 14.5px; }
+  .modos { margin-bottom: 14px; }
+  .modos label { font-size: 15.5px; padding: 8px 16px; }
+  .pronto-opcoes { display: grid; gap: 14px; margin-top: 14px; }
+  .voz-op .ouvir { font-size: 12.5px; padding: 2px 9px; margin-left: 2px; }
+  .voz-op small { color: var(--tinta-2); font-weight: 400; }
+  #pronto-conta.alerta, .avisos-tarefa { color: var(--alerta); }
+  .avisos-tarefa { font-size: 14px; margin: 10px 0 0; }
+  .avisos-tarefa ul { margin: 4px 0 0; padding-left: 20px; }
+  .avisos-tarefa:empty { display: none; }
   .angulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 18px; }
   .angulo { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
   .angulo h3 { font-size: 19px; line-height: 1.3; }
@@ -381,6 +390,7 @@
     <div class="barra"><div id="tarefa-barra"></div></div>
     <div class="tarefa-cab"><span id="tarefa-etapa"></span><span id="tarefa-pct"></span></div>
     <div class="etapas" id="tarefa-etapas"></div>
+    <div class="avisos-tarefa" id="tarefa-avisos"></div>
     <details><summary>ver detalhes técnicos</summary><pre id="tarefa-log"></pre></details>
     <div style="text-align:right;margin-top:8px"><button class="leve pequeno" id="tarefa-fechar">Fechar</button></div>
   </div>
@@ -388,6 +398,38 @@
 
 <main>
   <section class="aba" id="aba-novo">
+    <div class="formatos modos" role="radiogroup" aria-label="Como criar o vídeo">
+      <label><input type="radio" name="modo" value="ideias" checked> 💡 Pedir ideias ao Claude</label>
+      <label><input type="radio" name="modo" value="pronto"> 📋 Já tenho o roteiro</label>
+    </div>
+    <div class="pedido cartao" id="modo-pronto" hidden>
+      <h2>Cole o seu roteiro</h2>
+      <p class="sub">O app usa as suas palavras do jeito que estão: só separa em cenas, escolhe as imagens e
+        cria título, descrição e hashtags. Depois monta o vídeo sozinho.</p>
+      <textarea id="pronto-texto" rows="10" placeholder="Você sabia que o polvo tem três corações?&#10;Dois deles bombeiam o sangue pelas brânquias...&#10;&#10;(no vídeo longo, uma linha como '## O sapo' vira o título de um capítulo)"></textarea>
+      <p class="sinais" id="pronto-conta"></p>
+      <div class="pronto-opcoes">
+        <div><span class="rotulo">Tamanho do vídeo</span>
+          <div class="formatos" role="radiogroup">
+            <label><input type="radio" name="pronto-formato" value="short" checked> 📱 Short (em pé, 9:16)</label>
+            <label><input type="radio" name="pronto-formato" value="longo"> 🖥️ Vídeo longo (deitado, 16:9)</label>
+          </div></div>
+        <div><span class="rotulo">Voz da narração</span>
+          <div class="formatos" role="radiogroup" id="pronto-vozes"></div></div>
+        <div><span class="rotulo">Animações</span>
+          <div class="formatos">
+            <label><input type="checkbox" id="pronto-animacoes" checked> ✨ Usar animações quando ajudarem</label>
+          </div>
+          <p class="sinais" style="margin-top:6px">A IA decide sozinha: onde o texto tem tamanhos, números, datas ou
+            porcentagens, aquele trecho vira um desenho animado (comparação, medidor, linha do tempo). O resto
+            continua com vídeos de verdade.</p></div>
+      </div>
+      <div class="linha-pedido">
+        <span class="sinais">Leva alguns minutos. Você acompanha pela barra lá em cima.</span>
+        <button class="destaque" id="pronto-criar">Criar vídeo</button>
+      </div>
+    </div>
+    <div id="modo-ideias">
     <div class="pedido cartao">
       <h2>Sobre o que é o próximo vídeo?</h2>
       <p class="sub">Escreva um tema ou uma ideia do seu canal. O Claude sugere 3 ângulos;
@@ -406,6 +448,7 @@
     </div>
     <div id="ideias"></div>
     <div id="previa"></div>
+    </div>
   </section>
 
   <section class="aba" id="aba-dublar">
@@ -631,6 +674,65 @@ function desenharIdeias(dados) {
     iniciar("/api/escrever", { angulo, obs: $("#obs-texto").value });
   });
 }
+
+// ---------- novo vídeo: "já tenho o roteiro"
+function lerModo() { try { return localStorage.getItem("modoNovo"); } catch { return null; } }
+function salvarModo(v) { try { localStorage.setItem("modoNovo", v); } catch {} }
+function mostrarModo(modo) {
+  $("#modo-pronto").hidden = modo !== "pronto";
+  $("#modo-ideias").hidden = modo === "pronto";
+}
+document.querySelectorAll('input[name="modo"]').forEach(r => r.onchange = () => { salvarModo(r.value); mostrarModo(r.value); });
+if (lerModo() === "pronto") { document.querySelector('input[name="modo"][value="pronto"]').checked = true; mostrarModo("pronto"); }
+
+let vozesDesenhadas = "";
+function desenharVozes() {
+  const vozes = estado.vozes || [];
+  const chave = vozes.map(v => v.id).join();
+  if (chave === vozesDesenhadas) return;
+  vozesDesenhadas = chave;
+  const padrao = vozes.some(v => v.id === (estado.canal || {}).voz) ? estado.canal.voz : (vozes[0] || {}).id;
+  $("#pronto-vozes").innerHTML = vozes.map(v => `
+    <label class="voz-op"><input type="radio" name="pronto-voz" value="${esc(v.id)}" ${v.id === padrao ? "checked" : ""}>
+      ${esc(v.nome)} <small>(${esc(v.tipo)})</small>
+      <button type="button" class="leve pequeno ouvir" data-ouvir="${esc(v.id)}">▶ ouvir</button></label>`).join("");
+  $("#pronto-vozes").querySelectorAll("[data-ouvir]").forEach(b => b.onclick = e => {
+    e.preventDefault();
+    b.closest("label").querySelector("input").checked = true;
+    const texto = b.textContent;
+    b.textContent = "carregando…";
+    const audio = new Audio("/api/voz-amostra?voz=" + encodeURIComponent(b.dataset.ouvir));
+    audio.onplaying = () => { b.textContent = "🔊 tocando"; };
+    audio.onended = () => { b.textContent = texto; };
+    audio.onerror = () => { b.textContent = texto; avisar("O serviço de voz não respondeu agora. Tente de novo.", 4000); };
+    audio.play().catch(() => {});
+  });
+}
+
+function contarPronto() {
+  const n = ($("#pronto-texto").value.match(/[\p{L}\p{N}]+/gu) || []).length;
+  const el = $("#pronto-conta");
+  if (!n) { el.textContent = ""; el.classList.remove("alerta"); return; }
+  const seg = Math.round(n / 2.5);
+  const tempo = seg >= 60 ? `${Math.floor(seg / 60)} min ${String(seg % 60).padStart(2, "0")} s` : `${seg} s`;
+  const longo = document.querySelector('input[name="pronto-formato"]:checked').value === "longo";
+  let dica = "";
+  if (!longo && seg > 70) dica = " · Shorts com mais de 70 s rendem menos no seu canal: que tal cortar um pouco?";
+  if (!longo && seg > 180) dica = " · Passa de 3 min, o limite do Short no YouTube. Escolha vídeo longo ou corte o texto.";
+  if (longo && seg < 120) dica = " · Vídeo longo costuma ter 4 min ou mais.";
+  el.textContent = `${n} palavras · cerca de ${tempo} de narração${dica}`;
+  el.classList.toggle("alerta", !!dica);
+}
+$("#pronto-texto").addEventListener("input", contarPronto);
+document.querySelectorAll('input[name="pronto-formato"]').forEach(r => r.onchange = contarPronto);
+
+$("#pronto-criar").onclick = () => {
+  const texto = $("#pronto-texto").value.trim();
+  if (texto.split(/\s+/).length < 15) { $("#pronto-texto").focus(); avisar("Cole o roteiro inteiro (pelo menos algumas frases)."); return; }
+  const formato = document.querySelector('input[name="pronto-formato"]:checked').value;
+  const voz = (document.querySelector('input[name="pronto-voz"]:checked') || {}).value;
+  iniciar("/api/roteiro-pronto", { texto, formato, voz, animacoes: $("#pronto-animacoes").checked });
+};
 
 async function mostrarPrevia(slug) {
   let r;
@@ -1133,6 +1235,7 @@ const ETAPAS = {
   ideias: ["Lendo o que funciona no canal", "Pronto"],
   temas: ["Lendo o que funciona no canal", "Criando a lista de temas", "Pronto"],
   roteiro: ["Lendo o que funciona no canal", "Conferindo os fatos", "Escrevendo o roteiro", "Pronto"],
+  pronto: ["Lendo o que funciona no canal", "Escrevendo o roteiro", "Pronto"],
 };
 const NOMES_TAREFA = {
   radar: () => "Radar de temas",
@@ -1144,8 +1247,9 @@ const NOMES_TAREFA = {
   ideias: t => `Ideias para "${t.alvo}"`,
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
+  pronto: () => "Preparando o seu roteiro",
 };
-const DICA_TEMPO = { ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
+const DICA_TEMPO = { pronto: "1 a 2 min; depois o vídeo começa sozinho", ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
 
 async function iniciar(caminho, corpo) {
   try { await api(caminho, corpo); }
@@ -1188,6 +1292,10 @@ function desenharTarefa() {
   $("#pedir-ideias").disabled = t.rodando || estado.claude !== true;
   $("#dub-botao").disabled = t.rodando;
   document.querySelectorAll("[data-angulo], #gerar-previa").forEach(b => b.disabled = t.rodando);
+  $("#pronto-criar").disabled = t.rodando || estado.claude !== true;
+  $("#tarefa-avisos").innerHTML = (t.avisos || []).length
+    ? `<strong>⚠️ Pontos para conferir no seu texto</strong> (o vídeo usa o texto como está):<ul>${t.avisos.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`
+    : "";
 }
 $("#tarefa-fechar").onclick = () => { tarefaFechada = true; desenharTarefa(); };
 
@@ -1237,6 +1345,7 @@ async function atualizar() {
   catch (e) { avisar(e.message, 8000); return; }
   desenharVideos();
   desenharRoteiros();
+  desenharVozes();
   desenharTarefa();
   desenharCanal();
   desenharLembrete();

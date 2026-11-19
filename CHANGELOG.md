@@ -3,6 +3,21 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.14 — 19/11/2026
+- **Já tenho o roteiro**: na aba Novo vídeo, cole um roteiro pronto, escolha **Short** (em pé) ou
+  **vídeo longo** (deitado) e a **voz** (com botão para ouvir cada uma) e clique em **Criar vídeo**.
+  O texto fica do jeito que você escreveu; o app separa as cenas, escolhe as imagens, cria título,
+  descrição e hashtags e já monta o vídeo. Fatos duvidosos aparecem como aviso.
+- **Animações automáticas (Manim)**: quando o texto tem tamanhos, números, datas ou porcentagens, a IA
+  pode transformar aquele trecho numa cena animada (comparação com barras, medidor, linha do tempo ou
+  quadradinhos de porcentagem), feita no tempo exato da narração. Ela só usa quando ajuda; o resto
+  continua com vídeos de verdade. Dá para desligar em "Já tenho o roteiro" (✨ Usar animações).
+- Clipe em formato que o Remotion não lê (alguns 60 fps/2K) é convertido e o render tenta de novo.
+- A voz tenta até 8 vezes (cerca de 1 minuto) quando o serviço da Microsoft falha, e agora também
+  percebe quando o áudio de uma frase vem cortado no meio (antes passava e a fala sumia no vídeo).
+- Cada roteiro pode ter a sua própria voz (campo `"voz"`); sem ele, vale a voz do canal.
+- A lista `"evitar"` no topo de um roteiro de Short agora vale para todos os trechos.
+
 ## 1.13 — 19/11/2026
 - Narração protegida: quando o serviço de voz da Microsoft falha (sem áudio) ou devolve a frase
   cortada, o app percebe e tenta de novo (até 4 vezes) antes de desistir com um aviso claro.

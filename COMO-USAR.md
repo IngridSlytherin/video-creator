@@ -13,6 +13,15 @@ precisa ficar aberta enquanto você usa (fechar = desligar o painel).
   clique em **Escrever este roteiro** (1–3 min, ele confere os fatos na internet). Leia a narração na
   prévia e clique em **Gerar vídeo agora**. Usa o Claude Code da sua conta (modelo Sonnet); para trocar,
   coloque `CLAUDE_MODELO=opus` no `.env`.
+- **Novo vídeo › 📋 Já tenho o roteiro**: cole o seu texto, escolha o tamanho (**Short** em pé ou
+  **vídeo longo** deitado) e a **voz** (clique em ▶ ouvir para escutar cada uma) e clique em
+  **Criar vídeo**. O app usa as suas palavras como estão: só separa em cenas, escolhe as imagens e cria
+  título, descrição e hashtags; depois monta o vídeo sozinho. Se algum fato parecer errado, ele avisa
+  (sem mudar o seu texto). No vídeo longo, uma linha como `## O sapo` vira o título de um capítulo.
+- **Animações automáticas**: nos roteiros (pedidos ao Claude ou colados), a IA decide se algum trecho
+  fica melhor como desenho animado: comparação de tamanhos com barras, medidor de velocidade, linha do
+  tempo ou porcentagem. A animação é feita no tempo exato da fala e entra no lugar dos clipes daquele
+  trecho; o resto continua com vídeos de verdade. Para não usar, desmarque **✨ Usar animações**.
 - **Dublar meu vídeo**: envie um vídeo seu (arraste ou clique), cole o texto que a voz vai falar
   (cada linha = um trecho) e clique em **Dublar vídeo**. Vertical vira Short; horizontal, vídeo longo.
   Opções: som original (tirar / baixinho / normal), terminar quando o vídeo ou a narração acabar,

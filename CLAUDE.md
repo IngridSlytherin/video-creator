@@ -49,6 +49,10 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
 - Animações (opcional, até 2 por vídeo): num trecho com número marcante ou comparação de tamanho, use
   `"grafico": {"tipo": "numero", "valor": 80, "sufixo": " km/h", "rotulo": "..."}` ou
   `"grafico": {"tipo": "comparacao", "rotulo": "...", "unidade": "m", "itens": [{"nome": "...", "valor": 1.7}, ...]}`.
+- Animações Manim (opcional, decida se ajudam; até 2 por Short, nunca no 1º trecho nem em trechos
+  seguidos): num trecho com comparação de tamanhos, número que pede escala, linha do tempo ou
+  porcentagem, use `"manim"` (a cena ocupa a tela no lugar dos clipes). Formatos em
+  `pipeline/cenas_manim.py`: `comparacao`, `numero`, `linha_do_tempo`, `proporcao`.
 - Imagens só do Pexels: não proponha temas que dependem de jogos, filmes, marcas ou pessoas famosas.
 - Rode Python com `python -I`. A chave do Pexels fica em `.env` (nunca mostre).
 - Comando `/radar` (`.claude/skills/radar`) sugere temas a partir do radar.

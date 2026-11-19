@@ -35,6 +35,10 @@ IDIOMAS = {
     "pt-BR": {
         "nome": "Português (Brasil)", "lingua": "português do Brasil",
         "voz": "pt-BR-FranciscaNeural", "wiki": "pt",
+        "vozes": [{"id": "pt-BR-FranciscaNeural", "nome": "Francisca", "tipo": "feminina"},
+                  {"id": "pt-BR-AntonioNeural", "nome": "Antônio", "tipo": "masculina"},
+                  {"id": "pt-BR-ThalitaMultilingualNeural", "nome": "Thalita", "tipo": "feminina, mais jovem"}],
+        "amostra": "Oi! Eu posso narrar os seus vídeos. Você sabia que o polvo tem três corações?",
         "noticias": {"hl": "pt-BR", "gl": "BR", "ceid": "BR:pt-419"}, "trends": "BR",
         "youtube": {"hl": "pt", "gl": "BR"},
         "textos": {
@@ -52,6 +56,11 @@ IDIOMAS = {
     "en-US": {
         "nome": "English", "lingua": "inglês (Estados Unidos)",
         "voz": "en-US-JennyNeural", "wiki": "en",
+        "vozes": [{"id": "en-US-JennyNeural", "nome": "Jenny", "tipo": "feminina"},
+                  {"id": "en-US-AriaNeural", "nome": "Aria", "tipo": "feminina"},
+                  {"id": "en-US-GuyNeural", "nome": "Guy", "tipo": "masculina"},
+                  {"id": "en-US-AndrewNeural", "nome": "Andrew", "tipo": "masculina"}],
+        "amostra": "Hi! I can narrate your videos. Did you know an octopus has three hearts?",
         "noticias": {"hl": "en-US", "gl": "US", "ceid": "US:en"}, "trends": "US",
         "youtube": {"hl": "en", "gl": "US"},
         "textos": {
@@ -69,6 +78,9 @@ IDIOMAS = {
     "es-MX": {
         "nome": "Español", "lingua": "espanhol (América Latina)",
         "voz": "es-MX-DaliaNeural", "wiki": "es",
+        "vozes": [{"id": "es-MX-DaliaNeural", "nome": "Dalia", "tipo": "feminina"},
+                  {"id": "es-MX-JorgeNeural", "nome": "Jorge", "tipo": "masculina"}],
+        "amostra": "¡Hola! Puedo narrar tus videos. ¿Sabías que el pulpo tiene tres corazones?",
         "noticias": {"hl": "es-419", "gl": "MX", "ceid": "MX:es-419"}, "trends": "MX",
         "youtube": {"hl": "es", "gl": "MX"},
         "textos": {
