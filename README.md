@@ -13,7 +13,8 @@ tags, thumbnail and the best time to post.
 - **Trending topic radar**: Wikipedia, Google News, Google Trends and YouTube
 - **Ideas and scripts from the panel**: Claude suggests angles, fact-checks and writes the script
 - **Subtitles and other languages**: `.srt` captions plus translated title, description and a **dubbed audio track** (English/Spanish) for YouTube's multi-language audio
-- **Animated graphics**: counting numbers ("0 → 80 km/h") and size comparison bars
+- **Bring your own script**: paste your text, pick Short or long video and the voice, and the video keeps your exact words
+- **Automatic animations (Manim)**: where the script mentions sizes, numbers, dates or percentages, the AI can swap the footage for an animated scene (bars, gauge, timeline); counting numbers over the footage too
 - **Footage check**: before editing, Claude looks at a frame of every clip and swaps the bad ones (billboards, toys, wrong animal)
 - **Results**: upload your YouTube Studio export and see whether the app's videos keep viewers watching longer than your old ones
 - **Dub your own videos**: paste a script and your video gets voice-over and captions
@@ -25,19 +26,36 @@ tags, thumbnail and the best time to post.
 
 ![Panel: finished videos](docs/prints/videos.png)
 
+## What's new in 1.14
+
+- **📋 Já tenho o roteiro** (I already have the script): in Novo vídeo, paste a finished text, choose
+  **Short** (vertical) or **long video** (horizontal) and the **voice** (with a ▶ preview button) and
+  click **Criar vídeo**. Your words stay exactly as written.
+- **✨ Automatic animations**: the AI reads the script and decides on its own whether a part works
+  better as an animated scene: size comparison, speed gauge, timeline or percentage. No data in the
+  text = footage only. You can turn it off.
+- **More reliable narration**: the app notices when the voice service returns a cut-off sentence and
+  records it again.
+
+![Automatic animations in a video](docs/prints/animacoes.png)
+
 ## Screenshots
 
-| New video: ideas from Claude | Trending topic radar |
+| New video: ideas from Claude | New video: I already have the script |
 |---|---|
-| ![New video](docs/prints/novo.png) | ![Radar](docs/prints/radar.png) |
+| ![New video](docs/prints/novo.png) | ![Bring your own script](docs/prints/pronto.png) |
 
-| Scripts: render with one click | Dub your own video |
+| Trending topic radar | Scripts: render with one click |
 |---|---|
-| ![Scripts](docs/prints/roteiros.png) | ![Dub](docs/prints/dublar.png) |
+| ![Radar](docs/prints/radar.png) | ![Scripts](docs/prints/roteiros.png) |
 
-| First run: set up your channel | Results: are the new videos working? |
+| Dub your own video | First run: set up your channel |
 |---|---|
-| ![Channel setup](docs/prints/configurar.png) | ![Results](docs/prints/resultados.png) |
+| ![Dub](docs/prints/dublar.png) | ![Channel setup](docs/prints/configurar.png) |
+
+| Results: are the new videos working? | |
+|---|---|
+| ![Results](docs/prints/resultados.png) | |
 
 ## Installation (Windows)
 

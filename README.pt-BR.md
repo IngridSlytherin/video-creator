@@ -12,7 +12,8 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 - **Radar de temas em alta**: Wikipedia, Google Notícias, Google Trends e YouTube
 - **Ideias e roteiros pelo painel**: o Claude sugere ângulos, confere os fatos e escreve o roteiro
 - **Legendas e outras línguas**: legenda `.srt`, título e descrição traduzidos e **áudio dublado** (inglês/espanhol) para o recurso de várias faixas de áudio do YouTube
-- **Animações**: número contando ("0 → 80 km/h") e comparação com barras
+- **Já tenho o roteiro**: cole o seu texto, escolha Short ou vídeo longo e a voz, e o vídeo sai com as suas palavras
+- **Animações automáticas (Manim)**: onde o texto tem tamanhos, números, datas ou porcentagens, a IA pode trocar os clipes por uma cena animada (barras, medidor, linha do tempo); também há número contando por cima dos clipes
 - **Conferência das imagens**: antes de montar, o Claude olha um quadro de cada clipe e troca os ruins (telão, brinquedo, bicho errado)
 - **Resultados**: envie a exportação do YouTube Studio e veja se os vídeos do app seguram mais o público do que os antigos
 - **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
@@ -22,19 +23,36 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 
 ![Painel: vídeos prontos](docs/prints/videos.png)
 
+## Novidades da versão 1.14
+
+- **📋 Já tenho o roteiro**: na aba Novo vídeo, cole um texto pronto, escolha **Short** (em pé) ou
+  **vídeo longo** (deitado) e a **voz** (Francisca, Antônio ou Thalita, com ▶ ouvir) e clique em
+  **Criar vídeo**. As suas palavras ficam exatamente como estão.
+- **✨ Animações automáticas**: a IA lê o texto e decide sozinha se algum trecho fica melhor como
+  desenho animado: comparação de tamanhos, medidor de velocidade, linha do tempo ou porcentagem. Texto
+  sem dados = vídeo só com clipes. Dá para desligar.
+- **Narração mais confiável**: o app percebe quando o serviço de voz devolve uma frase cortada e grava
+  de novo.
+
+![Animações automáticas no vídeo](docs/prints/animacoes.png)
+
 ## Prints
 
-| Novo vídeo: ideias do Claude | Radar de temas em alta |
+| Novo vídeo: ideias do Claude | Novo vídeo: já tenho o roteiro |
 |---|---|
-| ![Novo vídeo](docs/prints/novo.png) | ![Radar](docs/prints/radar.png) |
+| ![Novo vídeo](docs/prints/novo.png) | ![Já tenho o roteiro](docs/prints/pronto.png) |
 
-| Roteiros: gerar com um clique | Dublar o seu vídeo |
+| Radar de temas em alta | Roteiros: gerar com um clique |
 |---|---|
-| ![Roteiros](docs/prints/roteiros.png) | ![Dublar](docs/prints/dublar.png) |
+| ![Radar](docs/prints/radar.png) | ![Roteiros](docs/prints/roteiros.png) |
 
-| Primeira vez: configure o seu canal | Resultados: os vídeos novos estão funcionando? |
+| Dublar o seu vídeo | Primeira vez: configure o seu canal |
 |---|---|
-| ![Configurar canal](docs/prints/configurar.png) | ![Resultados](docs/prints/resultados.png) |
+| ![Dublar](docs/prints/dublar.png) | ![Configurar canal](docs/prints/configurar.png) |
+
+| Resultados: os vídeos novos estão funcionando? | |
+|---|---|
+| ![Resultados](docs/prints/resultados.png) | |
 
 ## Instalação (Windows)
 

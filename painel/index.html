@@ -9,7 +9,8 @@
 <title>Gerador de vídeos — painel</title>
 <script>
   try {
-    const salvo = localStorage.getItem("tema");
+    // ?print: modo para os prints do README (tema claro, sem o aviso da última tarefa)
+    const salvo = location.search.includes("print") ? "claro" : localStorage.getItem("tema");
     document.documentElement.dataset.tema = salvo || (matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro");
   } catch { document.documentElement.dataset.tema = "claro"; }
 </script>
@@ -588,7 +589,7 @@
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let estado = { videos: [], roteiros: [], radar: [], tarefa: {} };
-let videoSel = null, acompanhando = false, tarefaFechada = false;
+let videoSel = null, acompanhando = false, tarefaFechada = location.search.includes("print");
 
 async function api(caminho, corpo) {
   let r;
@@ -1367,6 +1368,11 @@ atualizar().then(async () => {
   // atalhos: http://localhost:8765/#radar abre direto na aba; #configurar abre a configuração
   const destino = location.hash.slice(1);
   if (destino === "configurar") abrirConfig(false);
+  else if (destino === "pronto") {  // atalho: Novo vídeo › Já tenho o roteiro
+    irPara("novo");
+    document.querySelector('input[name="modo"][value="pronto"]').checked = true;
+    mostrarModo("pronto");
+  }
   else if (["novo", "dublar", "videos", "roteiros", "radar", "resultados"].includes(destino)) irPara(destino);
 });
 </script>
