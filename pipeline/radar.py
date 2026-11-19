@@ -28,6 +28,12 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import requests
+import socket
+import urllib3.util.connection as _conexao
+
+# Algumas redes anunciam IPv6 mas não o entregam: cada conexão esperaria ~21 s antes de cair para o
+# IPv4 (o radar chegou a levar 18 min). Todos os sites usados aqui têm IPv4, então usamos só ele.
+_conexao.allowed_gai_family = lambda: socket.AF_INET
 
 sys.stdout.reconfigure(encoding="utf-8")
 

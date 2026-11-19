@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.12 — 19/11/2026
+- Internet muito mais rápida em redes com IPv6 com defeito: o app passa a usar só IPv4 (cada conexão
+  esperava ~21 s antes; o radar caiu de 18 minutos para 18 segundos, e os downloads de clipes também aceleram).
+
 ## 1.11 — 19/11/2026
 - Radar não trava mais quando a Wikipedia está lenta: depois de 90 s ele segue com as outras fontes
   (notícias, Trends e YouTube) e avisa.
