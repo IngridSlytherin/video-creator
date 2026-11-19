@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.11 — 19/11/2026
+- Radar não trava mais quando a Wikipedia está lenta: depois de 90 s ele segue com as outras fontes
+  (notícias, Trends e YouTube) e avisa.
+
 ## 1.10 — 17/11/2026
 - Download de clipes mais resistente: quando o Pixabay/Pexels pede para esperar (erro 429) o app
   espera e tenta de novo; se um clipe não baixar, ele é pulado e outro entra no lugar (o vídeo não para).

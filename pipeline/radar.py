@@ -71,18 +71,18 @@ def animais_no_texto(texto, animais):
     return [a["pt"] for a in animais if a["_re"] and a["_re"].search(t)]
 
 
-def get(url, cab=UA_API, silencioso=False, **kw):
-    """GET com até 4 tentativas quando o site pede para esperar (429)."""
-    for tentativa in range(4):
+def get(url, cab=UA_API, silencioso=False, tentativas=4, timeout=25, **kw):
+    """GET com até `tentativas` quando o site pede para esperar (429)."""
+    for tentativa in range(tentativas):
         try:
-            r = requests.get(url, headers=cab, timeout=25, **kw)
+            r = requests.get(url, headers=cab, timeout=timeout, **kw)
         except requests.RequestException as e:
             if not silencioso:
                 print(f"  aviso: {url[:70]}... falhou ({e.__class__.__name__})")
             return None
         if r.status_code == 200:
             return r
-        if r.status_code == 429 and tentativa < 3:
+        if r.status_code == 429 and tentativa < tentativas - 1:
             time.sleep(min(60, int(r.headers.get("retry-after") or 0) or 3 * 2**tentativa))
             continue
         if not silencioso:
@@ -98,12 +98,18 @@ def numero(texto):
 
 
 # ---------------------------------------------------------------- Wikipedia
-def views_em_lote(projeto, titulos):
+PRAZO_WIKIPEDIA = 90  # segundos: se a Wikipedia estiver lenta, o radar segue sem ela
+
+
+def views_em_lote(projeto, titulos, prazo=None):
     """Acessos diários (35 dias) de até 50 páginas por pedido, seguindo redirecionamentos.
-    Devolve {titulo_original: [views por dia] ou None se a página não existe}."""
+    Devolve {titulo_original: [views por dia] ou None se a página não existe}.
+    Para quando passa do prazo (time.time()) e devolve o que conseguiu."""
     res = {}
     lista = list(dict.fromkeys(titulos))
     for i in range(0, len(lista), 50):
+        if prazo and time.time() > prazo:
+            break
         lote = lista[i : i + 50]
         mapa = {t: t for t in lote}
         dias = {}
@@ -111,7 +117,10 @@ def views_em_lote(projeto, titulos):
                   "redirects": 1, "format": "json", "formatversion": 2}
         cont = {}
         while True:
-            r = get(f"https://{projeto}/w/api.php", params={**params, **cont})
+            if prazo and time.time() > prazo:
+                break
+            r = get(f"https://{projeto}/w/api.php", params={**params, **cont}, silencioso=True,
+                    tentativas=2, timeout=20)
             if not r:
                 break
             d = r.json()
@@ -158,14 +167,18 @@ def coletar_wikipedia(animais):
     projetos = [("local", local)] + ([("en", "en")] if local != "en" else [])
     print(f"Wikipedia: conferindo acessos de {len(animais)} temas ({', '.join(l.upper() for _, l in projetos)})...")
     res, lidas = {}, 0
+    prazo = time.time() + PRAZO_WIKIPEDIA
     for chave, lang in projetos:
         titulos = [titulo_wiki(a, lang) for a in animais if titulo_wiki(a, lang)]
-        views = views_em_lote(f"{lang}.wikipedia.org", titulos)
+        views = views_em_lote(f"{lang}.wikipedia.org", titulos, prazo)
         for a in animais:
             t = tendencia(views.get(titulo_wiki(a, lang) or ""))
             res.setdefault(a["pt"], {})[chave] = t
             lidas += t is not None
     print(f"  {lidas} de {len(projetos) * len(animais)} páginas lidas")
+    if time.time() > prazo:
+        print(f"  aviso: a Wikipedia está lenta hoje; parei depois de {PRAZO_WIKIPEDIA} s e segui com as "
+              "outras fontes (notícias, Trends e YouTube).")
     return res
 
 
