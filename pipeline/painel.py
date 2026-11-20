@@ -705,6 +705,54 @@ def ler_cortes(slug=None):
     return dados
 
 
+# ---------------------------------------------------------------- chaves (Pexels/Pixabay) pelo painel
+ARQ_ENV = RAIZ / ".env"
+NOMES_CHAVES = {"pexels": "PEXELS_API_KEY", "pixabay": "PIXABAY_API_KEY"}
+
+
+def chave_valida(v):
+    return bool(v) and "cole_sua" not in v and len(v) >= 20
+
+
+def estado_chaves():
+    env = ler_env()
+    return {k: chave_valida(env.get(nome, "")) for k, nome in NOMES_CHAVES.items()}
+
+
+def testar_chave(qual, chave):
+    """Confere a chave fazendo uma busca pequena. Devolve None se funcionou, ou o motivo."""
+    import requests
+    try:
+        if qual == "pexels":
+            r = requests.get("https://api.pexels.com/videos/search", params={"query": "cat", "per_page": 1},
+                             headers={"Authorization": chave}, timeout=30)
+        else:
+            r = requests.get("https://pixabay.com/api/videos/", params={"key": chave, "q": "cat", "per_page": 3},
+                             timeout=30)
+    except requests.RequestException:
+        return "não consegui falar com o site agora; confira a internet e tente de novo"
+    if r.status_code in (400, 401, 403):
+        return "essa chave não funcionou; copie de novo (sem espaços no começo ou no fim)"
+    if r.status_code >= 400:
+        return f"o site respondeu com erro ({r.status_code}); tente de novo em alguns minutos"
+    return None
+
+
+def salvar_chave(nome, valor):
+    """Grava NOME=valor no .env (cria a partir do .env.exemplo se não existir), sem mexer no resto."""
+    if not ARQ_ENV.exists():
+        exemplo = RAIZ / ".env.exemplo"
+        ARQ_ENV.write_text(exemplo.read_text(encoding="utf-8") if exemplo.exists() else "", encoding="utf-8")
+    linhas = ARQ_ENV.read_text(encoding="utf-8").splitlines()
+    for i, l in enumerate(linhas):
+        if l.split("=", 1)[0].strip() == nome and not l.strip().startswith("#"):
+            linhas[i] = f"{nome}={valor}"
+            break
+    else:
+        linhas.append(f"{nome}={valor}")
+    ARQ_ENV.write_text("\n".join(linhas) + "\n", encoding="utf-8")
+
+
 def listar_radar():
     return sorted((p.stem for p in RADAR.glob("*.md")), reverse=True) if RADAR.exists() else []
 
@@ -787,6 +835,7 @@ class Painel(BaseHTTPRequestHandler):
                 "lembreteMedir": lembrete_medir(),
                 "titulosGuardados": len(titulos_canal.ler()),
                 "vozes": vozes_do_canal()[0],
+                "chaves": estado_chaves(),
                 "medicoes": sorted((p.stem for p in (RAIZ / "dados" / "medicoes").glob("*.md")), reverse=True),
             })
         if len(partes) == 3 and partes[:2] == ["api", "medicao"] and NOME_SEGURO.match(partes[2]):
@@ -1037,6 +1086,23 @@ class Painel(BaseHTTPRequestHandler):
                 obs=f"Observações do usuário: {obs}\n" if obs else "")
             ok = TAREFA.iniciar("roteiro", angulo["titulo"], cmd, entrada=prompt, ao_terminar=ao_terminar_roteiro)
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/chaves":
+            salvas = []
+            for qual, nome in NOMES_CHAVES.items():
+                valor = re.sub(r"\s+", "", str(dados.get(qual) or ""))
+                if not valor:
+                    continue
+                if not re.fullmatch(r"[A-Za-z0-9_-]{10,120}", valor):
+                    return self.erro(f"a chave do {qual.capitalize()} parece incompleta; copie de novo")
+                motivo = testar_chave(qual, valor)
+                if motivo:
+                    return self.erro(f"{qual.capitalize()}: {motivo}")
+                salvar_chave(nome, valor)
+                salvas.append(qual)
+            if not salvas:
+                return self.erro("cole a chave antes de salvar")
+            return self.responder({"ok": True, "salvas": salvas, "chaves": estado_chaves()})
 
         if caminho == "/api/cortes/analisar":
             slug = str(dados.get("slug", ""))

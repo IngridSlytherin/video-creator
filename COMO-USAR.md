@@ -22,6 +22,10 @@ precisa ficar aberta enquanto você usa (fechar = desligar o painel).
   fica melhor como desenho animado: comparação de tamanhos com barras, medidor de velocidade, linha do
   tempo ou porcentagem. A animação é feita no tempo exato da fala e entra no lugar dos clipes daquele
   trecho; o resto continua com vídeos de verdade. Para não usar, desmarque **✨ Usar animações**.
+- **🔑 Chaves**: na primeira vez, o painel pede a chave grátis do Pexels (com o passo a passo) e confere
+  se ela funciona; a do Pixabay é opcional. Para trocar depois, clique em **🔑 Chaves** no topo.
+- **Voz reserva**: se a voz da Microsoft não responder nem depois de 8 tentativas, o app narra o vídeo
+  inteiro com uma voz que roda no seu computador (Piper; baixa ~60 MB na primeira vez). O painel avisa.
 - **✂️ Cortes**: envie um vídeo longo seu (com fala) e clique em **Encontrar os melhores momentos**.
   O app transcreve o que é dito (leva mais ou menos 1/3 do tempo do vídeo) e o Claude escolhe de 3 a 5
   trechos que funcionam sozinhos como Shorts. Em cada um: **▶ ver trecho**, título, frase na tela e

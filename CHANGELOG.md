@@ -3,6 +3,18 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.16 — 20/11/2026
+- **Instalar.bat**: dois cliques instalam tudo (Node.js, Python, ffmpeg, Git, dependências), ligam as
+  atualizações automáticas mesmo para quem baixou o .zip e abrem o painel. Pode rodar de novo sem medo.
+- **Chaves pelo painel**: na primeira vez, o painel pede a chave grátis do Pexels (com o passo a passo)
+  e confere se ela funciona. Para trocar depois: **🔑 Chaves** no topo. Ninguém precisa abrir o `.env`.
+- **Voz reserva**: se a voz da Microsoft cair de vez, o vídeo é narrado por uma voz neural que roda no
+  seu computador, sem internet (Piper). O vídeo inteiro usa a mesma voz, para não misturar.
+- **Cortes com legenda revisada**: o Claude corrige palavras que a transcrição ouviu errado (nomes,
+  números, espécies) nos trechos escolhidos.
+- **Render mais rápido**: o pacote do Remotion é feito uma vez só e reaproveitado (antes, cada vídeo
+  refazia o pacote e copiava a pasta `public/` inteira); clipes em 30 fps têm preferência.
+
 ## 1.15 — 19/11/2026
 - **Aba ✂️ Cortes**: envie um vídeo longo seu e receba Shorts prontos. O app transcreve a fala no seu
   computador (Whisper, grátis) e o Claude escolhe de 3 a 5 trechos que funcionam sozinhos, com título,

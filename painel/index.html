@@ -313,8 +313,13 @@
   .md td, .md th { font-size: 14px; }
 
   /* aviso de versão nova */
-  #atualizacao, #lembrete-medir { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
-  #atualizacao[hidden], #lembrete-medir[hidden] { display: none; }
+  #atualizacao, #lembrete-medir, #chaves { max-width: 1240px; margin: 20px auto 0; padding: 0 24px; }
+  #atualizacao[hidden], #lembrete-medir[hidden], #chaves[hidden] { display: none; }
+  .chaves-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .chaves-campos label { font-size: 14px; color: var(--tinta-2); display: grid; gap: 4px; }
+  .chaves-campos input { font: inherit; font-size: 15px; padding: 8px 12px; border: 1px solid var(--linha);
+    border-radius: 12px; background: var(--campo); color: var(--tinta); width: 100%; }
+  @media (max-width: 900px) { .chaves-campos { grid-template-columns: 1fr; } }
   .aviso-versao {
     padding: 14px 20px; border-left: 5px solid var(--verde); display: flex; justify-content: space-between;
     align-items: center; gap: 16px; flex-wrap: wrap;
@@ -363,7 +368,7 @@
   <div class="topo-dentro">
     <div class="marca">
       <h1 id="nome-canal">Seu canal</h1>
-      <p><span id="cat-canal">painel de vídeos</span> · <button class="link-canal" id="abrir-config">⚙ Canal</button> · <button class="link-canal" id="trocar-tema" aria-label="Alternar tema claro e escuro"></button></p>
+      <p><span id="cat-canal">painel de vídeos</span> · <button class="link-canal" id="abrir-config">⚙ Canal</button> · <button class="link-canal" id="abrir-chaves">🔑 Chaves</button> · <button class="link-canal" id="trocar-tema" aria-label="Alternar tema claro e escuro"></button></p>
     </div>
     <nav>
       <button data-aba="novo"><span class="ico" aria-hidden="true">✨</span>Novo vídeo</button>
@@ -388,6 +393,31 @@
       <button class="leve" id="atualizacao-depois">Depois</button>
       <button class="destaque" id="atualizacao-botao">Atualizar agora</button>
     </div>
+  </div>
+</section>
+
+<section id="chaves" hidden>
+  <div class="cartao aviso-versao" style="border-left-color: var(--amarelo); display:block">
+    <strong id="chaves-titulo">🔑 Falta só um passo: a chave grátis do Pexels (é de onde vêm as imagens)</strong>
+    <ol class="passos">
+      <li>Abra <a href="https://www.pexels.com/api/" target="_blank" rel="noopener">pexels.com/api</a> e entre
+        (ou crie uma conta grátis).</li>
+      <li>Clique em <strong>Your API Key</strong>, preencha o formulário curto e copie a chave que aparece.</li>
+      <li>Cole aqui e clique em <strong>Salvar</strong>. O app confere se ela funciona.</li>
+    </ol>
+    <div class="chaves-campos">
+      <label>Chave do Pexels <span class="sinais" id="chave-pexels-ok"></span>
+        <input type="password" id="chave-pexels" autocomplete="off" spellcheck="false" placeholder="cole a chave aqui"></label>
+      <label>Chave do Pixabay <small>(opcional: mais vídeos para escolher; pegue em
+        <a href="https://pixabay.com/api/docs/" target="_blank" rel="noopener">pixabay.com/api/docs</a>, logado)</small>
+        <span class="sinais" id="chave-pixabay-ok"></span>
+        <input type="password" id="chave-pixabay" autocomplete="off" spellcheck="false" placeholder="opcional"></label>
+    </div>
+    <div class="acoes" style="margin:10px 0 0">
+      <button class="leve" id="chaves-fechar" hidden>Fechar</button>
+      <button class="destaque" id="chaves-salvar">Salvar</button>
+    </div>
+    <p class="sinais">As chaves ficam só no seu computador (no arquivo .env), nunca vão para o GitHub.</p>
   </div>
 </section>
 
@@ -938,6 +968,37 @@ function abrirConfig(obrigatorio = false) {
   $("#cfg-nome").focus();
 }
 $("#abrir-config").onclick = () => abrirConfig(false);
+
+// ---------- chaves do Pexels/Pixabay (sem precisar abrir o .env)
+let chavesAbertas = false;
+function desenharChaves() {
+  const ch = estado.chaves || {};
+  const falta = !ch.pexels;
+  $("#chaves").hidden = !(falta || chavesAbertas) || location.search.includes("print");
+  $("#chaves-titulo").textContent = falta
+    ? "🔑 Falta só um passo: a chave grátis do Pexels (é de onde vêm as imagens)"
+    : "🔑 Chaves das imagens";
+  $("#chave-pexels-ok").textContent = ch.pexels ? "✓ funcionando (cole outra só se quiser trocar)" : "";
+  $("#chave-pixabay-ok").textContent = ch.pixabay ? "✓ funcionando" : "";
+  $("#chaves-fechar").hidden = falta;
+}
+$("#abrir-chaves").onclick = () => { chavesAbertas = true; desenharChaves(); $("#chaves").scrollIntoView({ behavior: "smooth" }); };
+$("#chaves-fechar").onclick = () => { chavesAbertas = false; desenharChaves(); };
+$("#chaves-salvar").onclick = async () => {
+  const corpo = { pexels: $("#chave-pexels").value.trim(), pixabay: $("#chave-pixabay").value.trim() };
+  if (!corpo.pexels && !corpo.pixabay) { avisar("Cole a chave antes de salvar."); return; }
+  const b = $("#chaves-salvar");
+  b.disabled = true; b.textContent = "Conferindo…";
+  try {
+    const r = await api("/api/chaves", corpo);
+    estado.chaves = r.chaves;
+    $("#chave-pexels").value = ""; $("#chave-pixabay").value = "";
+    chavesAbertas = false;
+    desenharChaves();
+    avisar("Chave salva e funcionando! ✓", 4000);
+  } catch (e) { alert(e.message); }
+  b.disabled = false; b.textContent = "Salvar";
+};
 $("#cfg-cancelar").onclick = () => { $("#config").hidden = true; };
 $("#cfg-categoria").onchange = e => { $("#cfg-outra-rotulo").hidden = e.target.value !== "__outra"; };
 $("#cfg-salvar").onclick = async () => {
@@ -1518,6 +1579,7 @@ async function atualizar() {
   desenharVideos();
   desenharRoteiros();
   desenharVozes();
+  desenharChaves();
   desenharTarefa();
   desenharCanal();
   desenharLembrete();

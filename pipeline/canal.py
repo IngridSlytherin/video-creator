@@ -35,6 +35,8 @@ IDIOMAS = {
     "pt-BR": {
         "nome": "Português (Brasil)", "lingua": "português do Brasil",
         "voz": "pt-BR-FranciscaNeural", "wiki": "pt",
+        # voz offline (Piper) se a Microsoft cair; só vozes com licença livre para uso comercial
+        "reserva": "pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx",  # CC0
         "vozes": [{"id": "pt-BR-FranciscaNeural", "nome": "Francisca", "tipo": "feminina"},
                   {"id": "pt-BR-AntonioNeural", "nome": "Antônio", "tipo": "masculina"},
                   {"id": "pt-BR-ThalitaMultilingualNeural", "nome": "Thalita", "tipo": "feminina, mais jovem"}],
@@ -56,6 +58,7 @@ IDIOMAS = {
     "en-US": {
         "nome": "English", "lingua": "inglês (Estados Unidos)",
         "voz": "en-US-JennyNeural", "wiki": "en",
+        "reserva": "en/en_US/kristin/medium/en_US-kristin-medium.onnx",  # domínio público ("lessac" é só pesquisa)
         "vozes": [{"id": "en-US-JennyNeural", "nome": "Jenny", "tipo": "feminina"},
                   {"id": "en-US-AriaNeural", "nome": "Aria", "tipo": "feminina"},
                   {"id": "en-US-GuyNeural", "nome": "Guy", "tipo": "masculina"},
@@ -78,6 +81,7 @@ IDIOMAS = {
     "es-MX": {
         "nome": "Español", "lingua": "espanhol (América Latina)",
         "voz": "es-MX-DaliaNeural", "wiki": "es",
+        "reserva": "es/es_MX/claude/high/es_MX-claude-high.onnx",
         "vozes": [{"id": "es-MX-DaliaNeural", "nome": "Dalia", "tipo": "feminina"},
                   {"id": "es-MX-JorgeNeural", "nome": "Jorge", "tipo": "masculina"}],
         "amostra": "¡Hola! Puedo narrar tus videos. ¿Sabías que el pulpo tiene tres corazones?",

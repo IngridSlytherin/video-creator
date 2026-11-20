@@ -17,6 +17,8 @@ tags, thumbnail and the best time to post.
 - **Automatic animations (Manim)**: where the script mentions sizes, numbers, dates or percentages, the AI can swap the footage for an animated scene (bars, gauge, timeline); counting numbers over the footage too
 - **Footage check**: before editing, Claude looks at a frame of every clip and swaps the bad ones (billboards, toys, wrong animal)
 - **Results**: upload your YouTube Studio export and see whether the app's videos keep viewers watching longer than your old ones
+- **Two-click install** (`Instalar.bat`) and the Pexels key pasted right in the panel
+- **Offline backup voice**: if Microsoft's voice service goes down, the video is narrated by a neural voice running on your computer
 - **Cuts from your long videos**: upload a long video of yours; it transcribes the speech locally (Whisper) and Claude picks the best 3–5 moments, which become vertical Shorts with title and captions
 - **Dub your own videos**: paste a script and your video gets voice-over and captions
 - **Relaxing sound videos** (rain, wind, birds) from 10 minutes to hours, with synthesized audio
@@ -28,6 +30,9 @@ tags, thumbnail and the best time to post.
 ![Panel: finished videos](docs/prints/videos.png)
 
 ## What's new
+
+**1.16 — Easier and more reliable:** two-click install (`Instalar.bat`), Pexels key in the panel, an
+offline backup voice, Claude-reviewed captions in cuts and faster rendering.
 
 **1.15 — ✂️ Cortes (cuts) tab:** upload a long video of yours and get Shorts. The app transcribes the
 speech on your computer (Whisper, free) and Claude picks 3 to 5 moments that work on their own, with
@@ -70,7 +75,20 @@ title on top and animated captions below.
 
 ## Installation (Windows)
 
-### Fastest way: let Claude Code install it
+### Easiest way: Instalar.bat (no commands to type)
+
+1. On this GitHub page, click the green **Code** button › **Download ZIP**.
+2. Right-click the downloaded file › **Extract All**.
+3. Open the folder and double-click **`Instalar.bat`**. If you see "Windows protected your PC",
+   click **More info** › **Run anyway**.
+4. Wait (10–20 minutes the first time). If Windows asks permission to install a program, click
+   **Yes**. When it's done, the panel opens by itself.
+5. In the panel, type your channel name and paste your **free Pexels key** (the panel shows how to get one).
+
+From then on, open the app by double-clicking **`Abrir painel.bat`**. For ideas, scripts and cuts,
+also install [Claude Code](https://claude.com/claude-code).
+
+### Or let Claude Code install it
 
 If you have Claude Code, open it in the folder where you want the project and paste:
 
@@ -231,4 +249,5 @@ project folder with `git pull`.
 - Video editing with [Remotion](https://www.remotion.dev): free for individuals and companies of up
   to 3 people. Larger companies need a [license](https://www.remotion.dev/license).
 - Footage from [Pexels](https://www.pexels.com) (free to use).
-- Voice-over with [edge-tts](https://github.com/rany2/edge-tts) (Microsoft neural voices).
+- Voice-over with [edge-tts](https://github.com/rany2/edge-tts) (Microsoft neural voices); offline backup voice with [Piper](https://github.com/OHF-Voice/piper1-gpl).
+- Speech transcription for cuts with [faster-whisper](https://github.com/SYSTRAN/faster-whisper).

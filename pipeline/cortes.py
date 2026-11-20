@@ -137,6 +137,58 @@ def ajustar(c, palavras, duracao):
     return round(ini, 2), round(fim, 2)
 
 
+PROMPT_REVISAO = """Você revisa a legenda de Shorts do canal "{nome}" ({categoria}). A transcrição foi feita por
+computador e às vezes ouve errado: nomes próprios, nomes de animais e espécies, números, unidades,
+palavras estrangeiras (ex.: "récris" em vez de "rex", "sul" em vez de "Sue", "nautons" em vez de "newtons").
+
+Assuntos dos trechos: {assuntos}
+
+Cada palavra vem como número=palavra. Corrija SÓ o que foi claramente mal ouvido, pelo sentido da frase.
+Não reescreva o estilo, não troque gírias nem jeito de falar, não junte nem separe palavras: uma palavra
+corrigida continua sendo uma palavra (mantenha a pontuação colada nela). Na dúvida, não mexa.
+
+{palavras}
+
+Responda SOMENTE com JSON, só com as palavras que mudaram: {{"correcoes": {{"123": "Sue", "456": "newtons."}}}}
+"""
+
+
+def revisar_legenda(frases, cortes, canal):
+    """O Claude corrige palavras mal ouvidas pelo Whisper nos trechos escolhidos (e um pouco em volta,
+    caso a pessoa aumente o corte). Devolve quantas palavras mudaram."""
+    todas = [p for f in frases for p in f["palavras"]]
+    indices = sorted({i for c in cortes for i, p in enumerate(todas)
+                      if c["inicio"] - 15 <= p["i"] <= c["fim"] + 15})
+    if not indices:
+        return 0
+    blocos, anterior = [], None
+    for i in indices:
+        if anterior is not None and i != anterior + 1:
+            blocos.append("\n---")
+        blocos.append(f"{i}={todas[i]['t']}")
+        anterior = i
+    resposta = claude_cli.perguntar(PROMPT_REVISAO.format(
+        nome=canal["nome"], categoria=canal["categoria"], assuntos="; ".join(c["titulo"] for c in cortes),
+        palavras=" ".join(blocos)), ferramentas=("Read",), timeout=600)
+    if not resposta:
+        raise RuntimeError("sem resposta")
+    correcoes = claude_cli.extrair_json(resposta).get("correcoes") or {}
+    mudou = 0
+    for k, novo in correcoes.items():
+        try:
+            i = int(k)
+        except ValueError:
+            continue
+        novo = str(novo).strip()
+        if i in indices and novo and " " not in novo and novo != todas[i]["t"]:
+            todas[i]["t"] = novo
+            mudou += 1
+    for f in frases:  # o texto de cada frase acompanha as palavras corrigidas
+        if f["palavras"]:
+            f["texto"] = " ".join(p["t"] for p in f["palavras"])
+    return mudou
+
+
 def analisar(slug):
     pasta = pasta_de(slug)
     pasta.mkdir(parents=True, exist_ok=True)
@@ -195,6 +247,13 @@ def analisar(slug):
                        "porque": str(c.get("porque", ""))[:300]})
     if not finais:
         raise SystemExit("O Claude não achou trechos bons o suficiente nesse vídeo.")
+    log("Revisando a legenda dos trechos escolhidos...")
+    try:
+        n = revisar_legenda(frases, finais, canal)
+        arq_transcricao.write_text(json.dumps(frases, ensure_ascii=False), encoding="utf-8")
+        log(f"  {n} palavra(s) corrigida(s)" if n else "  nenhuma correção necessária")
+    except Exception as e:  # noqa: BLE001 - a revisão ajuda, mas não pode parar a análise
+        log(f"  não consegui revisar a legenda agora ({e.__class__.__name__}); segue com a transcrição original")
     dados = {"slug": slug, "video": video.name, "largura": largura, "altura": altura,
              "duracao": duracao, "cortes": finais}
     (pasta / "cortes.json").write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")

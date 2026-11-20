@@ -6,3 +6,5 @@ scipy
 manim
 # aba Cortes: transcreve a fala dos seus vídeos longos no seu computador
 faster-whisper
+# voz reserva (offline) para quando a voz da Microsoft cair
+piper-tts

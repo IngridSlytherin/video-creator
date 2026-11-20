@@ -16,6 +16,8 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 - **Animações automáticas (Manim)**: onde o texto tem tamanhos, números, datas ou porcentagens, a IA pode trocar os clipes por uma cena animada (barras, medidor, linha do tempo); também há número contando por cima dos clipes
 - **Conferência das imagens**: antes de montar, o Claude olha um quadro de cada clipe e troca os ruins (telão, brinquedo, bicho errado)
 - **Resultados**: envie a exportação do YouTube Studio e veja se os vídeos do app seguram mais o público do que os antigos
+- **Instalação de dois cliques** (`Instalar.bat`) e chave do Pexels colada no próprio painel
+- **Voz reserva offline**: se a voz da Microsoft cair, o vídeo sai com uma voz neural que roda no seu computador
 - **Cortes dos seus vídeos longos**: envie um vídeo longo seu; o app transcreve a fala no seu computador (Whisper) e o Claude escolhe os 3 a 5 melhores momentos, que viram Shorts verticais com título e legenda
 - **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
 - **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 10 minutos a horas, com som sintetizado
@@ -25,6 +27,9 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 ![Painel: vídeos prontos](docs/prints/videos.png)
 
 ## Novidades
+
+**1.16 — Mais fácil e mais confiável:** instalação com dois cliques (`Instalar.bat`), chave do Pexels
+pelo painel, voz reserva sem internet, legenda dos cortes revisada pelo Claude e render mais rápido.
 
 **1.15 — Aba ✂️ Cortes:** envie um vídeo longo seu e receba Shorts prontos. O app transcreve a fala no
 seu computador (Whisper, grátis) e o Claude escolhe de 3 a 5 trechos que funcionam sozinhos, com título,
@@ -66,6 +71,21 @@ legenda animada embaixo.
 | ![Resultados](docs/prints/resultados.png) | |
 
 ## Instalação (Windows)
+
+### Jeito mais fácil: Instalar.bat (sem digitar comandos)
+
+1. Nesta página do GitHub, clique no botão verde **Code** › **Download ZIP**.
+2. Clique com o botão direito no arquivo baixado › **Extrair tudo**.
+3. Abra a pasta e dê dois cliques em **`Instalar.bat`**. Se aparecer "O Windows protegeu o
+   computador", clique em **Mais informações** › **Executar assim mesmo**.
+4. Espere (na primeira vez, uns 10 a 20 minutos). Se o Windows pedir permissão para instalar algum
+   programa, clique em **Sim**. No fim, o painel abre sozinho.
+5. No painel, digite o nome do canal e cole a **chave grátis do Pexels** (o painel mostra o passo a passo).
+
+Pronto. Daí em diante, abra o app com dois cliques em **`Abrir painel.bat`**. Para ter ideias,
+roteiros e cortes, instale também o [Claude Code](https://claude.com/claude-code).
+
+### Instalação manual (para quem prefere o terminal)
 
 ### 1. Programas necessários (todos gratuitos)
 

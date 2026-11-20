@@ -171,6 +171,66 @@ def narrar(texto, destino: Path, velocidade, voz=None, tentativas=8):
                        f"{tentativas} tentativas. Ele costuma voltar em alguns minutos: tente gerar de novo.")
 
 
+# ---------- voz reserva (Piper: neural, grátis, roda sem internet) ----------
+PASTA_RESERVA = RAIZ / "trabalho" / "vozes-reserva"
+_VOZES_RESERVA = {}
+
+
+def voz_reserva(idioma=None):
+    """Carrega a voz reserva da língua do canal (baixa ~60 MB na primeira vez). None se não der."""
+    try:
+        from piper import PiperVoice
+    except ImportError:
+        return None
+    canal = canal_cfg.carregar(obrigatorio=False) or {}
+    modelo = canal_cfg.IDIOMAS.get(idioma or canal.get("idioma"), canal_cfg.IDIOMAS[canal_cfg.IDIOMA_PADRAO])["reserva"]
+    if modelo not in _VOZES_RESERVA:
+        arq = PASTA_RESERVA / modelo
+        if not arq.exists() or not arq.with_name(arq.name + ".json").exists():
+            try:
+                from huggingface_hub import hf_hub_download
+                log("  baixando a voz reserva (só na primeira vez, ~60 MB)...")
+                for nome in (modelo, modelo + ".json"):
+                    hf_hub_download("rhasspy/piper-voices", nome, local_dir=str(PASTA_RESERVA))
+            except Exception as e:  # noqa: BLE001
+                log(f"  não consegui baixar a voz reserva ({e.__class__.__name__})")
+                return None
+        _VOZES_RESERVA[modelo] = PiperVoice.load(str(arq))
+    return _VOZES_RESERVA[modelo]
+
+
+def narrar_reserva(texto, destino: Path, velocidade, idioma=None):
+    """Narra com a voz reserva. O Piper não diz quando cada palavra é falada: o tempo de cada uma
+    é estimado pelo tamanho dela, dentro do trecho com fala (sem os silêncios das pontas)."""
+    import wave
+    import numpy as np
+    from piper import SynthesisConfig
+    voz = voz_reserva(idioma)
+    if voz is None:
+        raise RuntimeError("voz reserva indisponível")
+    m = re.match(r"([+-]\d+)%", velocidade or "")
+    rapidez = 1 + int(m.group(1)) / 100 if m else 1.0
+    wav = destino.with_suffix(".wav")
+    with wave.open(str(wav), "wb") as w:
+        voz.synthesize_wav(texto, w, syn_config=SynthesisConfig(length_scale=1 / max(0.5, rapidez)))
+    with wave.open(str(wav), "rb") as w:
+        taxa = w.getframerate()
+        amostras = np.frombuffer(w.readframes(w.getnframes()), np.int16)
+    fala = np.nonzero(np.abs(amostras) > 600)[0]
+    ini_s, fim_s = (fala[0] / taxa, fala[-1] / taxa) if len(fala) else (0, len(amostras) / taxa)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(wav), "-ar", "24000", "-ac", "1",
+                    "-c:a", "libmp3lame", "-q:a", "3", str(destino)], check=True)
+    wav.unlink(missing_ok=True)
+    tokens = [t for t in texto.split() if re.search(r"\w", t)]
+    pesos = [len(t) + 2 + (6 if re.search(r"[.,!?;:]$", t) else 0) for t in tokens]
+    total, cursor, palavras = sum(pesos) or 1, ini_s, []
+    for t, p in zip(tokens, pesos):
+        dur = (fim_s - ini_s) * p / total
+        palavras.append({"texto": t, "inicioMs": cursor * 1000, "fimMs": (cursor + dur * 0.85) * 1000})
+        cursor += dur
+    return palavras
+
+
 def duracao_audio(caminho: Path) -> float:
     r = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -190,10 +250,22 @@ def silencio(pasta: Path, segundos: float) -> Path:
 
 def gerar_narracao(segs, pasta: Path, velocidade, voz=None):
     log(f"Gerando narração ({len(segs)} trechos)...")
+    try:
+        return _gerar_narracao(segs, pasta, velocidade, voz, reserva=False)
+    except RuntimeError as e:
+        if voz_reserva() is None:
+            raise
+        # Se a voz da Microsoft cair de vez, o vídeo inteiro usa a reserva (para não misturar duas vozes).
+        log(f"A voz da Microsoft não está respondendo ({str(e)[:80]}...). Usando a voz reserva neste vídeo.")
+        return _gerar_narracao(segs, pasta, velocidade, voz, reserva=True)
+
+
+def _gerar_narracao(segs, pasta: Path, velocidade, voz, reserva):
     lista_ffmpeg, cursor = [], 0.0
     for i, seg in enumerate(segs):
         mp3 = pasta / f"voz_{i:03d}.mp3"
-        palavras = narrar(seg["texto"], mp3, velocidade, voz=voz)
+        palavras = (narrar_reserva(seg["texto"], mp3, velocidade) if reserva
+                    else narrar(seg["texto"], mp3, velocidade, voz=voz))
         proximo_novo_cap = i + 1 < len(segs) and segs[i + 1]["primeiroDoCapitulo"]
         pausa = PAUSA_ENTRE_CAPITULOS if proximo_novo_cap else PAUSA_ENTRE_SEGMENTOS
         dur = duracao_audio(mp3) + pausa
@@ -315,8 +387,9 @@ def melhor_arquivo(video):
     # Vertical: largura ~1080. Horizontal: ~1440 de altura dá folga para o recorte
     # vertical do Short e boa nitidez no longo, sem baixar 4K pesado à toa.
     alvo = 1080 if video["_vertical"] else 1440
+    # 60 fps só pesa no render (o vídeo final é 30 fps): na dúvida, fica com o de 30.
     arquivos.sort(key=lambda a: (min(a["width"], a["height"]) < 1080,
-                                 abs(min(a["width"], a["height"]) - alvo)))
+                                 abs(min(a["width"], a["height"]) - alvo) + (200 if (a.get("fps") or 30) > 31 else 0)))
     return arquivos[0] if arquivos else None
 
 
@@ -624,17 +697,95 @@ def converter_clipe(arq: Path):
     tmp.replace(arq)
 
 
+def arquivos_do_video(args):
+    """Arquivos de public/ que este render usa (os caminhos que aparecem no props.json)."""
+    props = next((a.split("=", 1)[1] for a in args if str(a).startswith("--props=")), None)
+    if not props:
+        return None
+    try:
+        dados = json.loads(Path(props).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    usados = set()
+
+    def andar(o):
+        if isinstance(o, dict):
+            for v in o.values():
+                andar(v)
+        elif isinstance(o, list):
+            for v in o:
+                andar(v)
+        elif isinstance(o, str) and "/" in o and len(o) < 300 and (RAIZ / "public" / o).is_file():
+            usados.add(o)
+    andar(dados)
+    return usados
+
+
+def pacote_remotion():
+    """O Remotion "empacota" o projeto (~8 s) e copia a pasta public/ inteira a cada render.
+    Aqui o pacote é feito uma vez só (com public/ vazia) e reaproveitado até o código de src/ mudar.
+    Devolve a pasta do pacote, ou None se não deu (aí o render segue do jeito normal)."""
+    h = hashlib.md5()
+    for arq in sorted([*(RAIZ / "src").rglob("*"), RAIZ / "package-lock.json", RAIZ / "remotion.config.ts"]):
+        if arq.is_file():
+            h.update(arq.name.encode())
+            h.update(arq.read_bytes())
+    base = RAIZ / "trabalho" / "pacote"
+    pasta = base / h.hexdigest()[:12]
+    if (pasta / "index.html").exists():
+        return pasta
+    shutil.rmtree(base, ignore_errors=True)  # pacotes de versões antigas
+    vazia = RAIZ / "trabalho" / "public-vazia"
+    vazia.mkdir(parents=True, exist_ok=True)
+    log("Preparando o pacote do Remotion (só quando o app muda)...")
+    r = subprocess.run(["npx.cmd" if os.name == "nt" else "npx", "remotion", "bundle", "src/index.ts",
+                        f"--out-dir={pasta}", f"--public-dir={vazia}"], cwd=RAIZ, capture_output=True,
+                       text=True, encoding="utf-8", errors="replace")
+    if r.returncode != 0 or not (pasta / "index.html").exists():
+        shutil.rmtree(pasta, ignore_errors=True)
+        return None
+    return pasta
+
+
+def preparar_render(args):
+    """Troca src/index.ts pelo pacote pronto e põe nele só os arquivos deste vídeo (hardlinks:
+    instantâneo, sem ocupar espaço). Devolve (args, pasta pública usada) — ou os args originais."""
+    if len(args) < 3 or args[0] != "remotion" or args[1] not in ("render", "still") or args[2] != "src/index.ts":
+        return list(args), None
+    usados = arquivos_do_video(args)
+    pacote = pacote_remotion() if usados is not None else None
+    if not pacote:
+        return list(args), None
+    publico = pacote / "public"
+    shutil.rmtree(publico, ignore_errors=True)
+    for rel in usados:
+        alvo = publico / rel
+        alvo.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.link(RAIZ / "public" / rel, alvo)
+        except OSError:  # outro disco ou sistema sem hardlink: copia
+            shutil.copy2(RAIZ / "public" / rel, alvo)
+    return [args[0], args[1], str(pacote), *args[3:]], publico
+
+
 def npx(*args, tentativas=3):
     """Roda o Remotion. Se um clipe não puder ser lido, converte esse clipe e tenta de novo."""
-    cmd = ["npx.cmd" if os.name == "nt" else "npx", *args]
     for n in range(tentativas):
+        try:
+            usar, publico = preparar_render(args)
+        except OSError:
+            usar, publico = list(args), None
+        cmd = ["npx.cmd" if os.name == "nt" else "npx", *usar]
         proc = subprocess.Popen(cmd, cwd=RAIZ, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, encoding="utf-8", errors="replace")
         ultimas = []
         for linha in proc.stdout:
             print(linha, end="", flush=True)
             ultimas = (ultimas + [linha])[-60:]
-        if proc.wait() == 0:
+        codigo = proc.wait()
+        if publico:
+            shutil.rmtree(publico, ignore_errors=True)
+        if codigo == 0:
             return
         m = RE_SEM_QUADRO.search(re.sub(r"\x1b\[[0-9;]*m", "", "".join(ultimas)))
         arq = RAIZ / "public" / m.group(1) if m else None
