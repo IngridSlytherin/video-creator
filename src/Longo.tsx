@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { ESTILO_LONGO, Legendas } from "./Legendas";
 import { Graficos } from "./Graficos";
+import { Entrada } from "./Transicao";
+import { Efeitos, MusicaDeFundo } from "./Som";
 import { CORES, FONTE, PropsVideo } from "./tipos";
 
 // Zoom bem lento: o vídeo longo pede ritmo mais calmo que o Short.
@@ -105,24 +107,30 @@ export const Longo: React.FC<PropsVideo> = ({
   semLegendas = false,
   graficos = [],
   idioma = "pt-BR",
+  efeitos = [],
+  duracaoTransicao = 0.6,
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       {clipes.map((c, i) => {
-        const de = Math.round(c.inicio * fps);
+        // com transição, o clipe começa um pouco antes e entra por cima do anterior
+        const t = i > 0 && c.transicao ? Math.round(duracaoTransicao * fps) : 0;
+        const de = Math.round(c.inicio * fps) - t;
         const ate = i === clipes.length - 1 ? durationInFrames : Math.round((c.inicio + c.duracao) * fps);
         return (
           <Sequence key={`${c.arquivo}-${i}`} from={de} durationInFrames={ate - de} name={`Clipe ${i + 1}`}>
-            <ClipeLento
-              src={c.arquivo}
-              frames={ate - de}
-              sentido={i % 2 ? -1 : 1}
-              inicioFrames={Math.round((c.inicioNoClipe ?? 0) * fps)}
-              volume={volumeOriginal}
-              semZoom={semZoom || Boolean(c.animacao)}
-            />
+            <Entrada tipo={c.transicao} frames={t}>
+              <ClipeLento
+                src={c.arquivo}
+                frames={ate - de}
+                sentido={i % 2 ? -1 : 1}
+                inicioFrames={Math.max(0, Math.round((c.inicioNoClipe ?? 0) * fps) - t)}
+                volume={volumeOriginal}
+                semZoom={semZoom || Boolean(c.animacao)}
+              />
+            </Entrada>
           </Sequence>
         );
       })}
@@ -161,7 +169,8 @@ export const Longo: React.FC<PropsVideo> = ({
       {semLegendas ? null : <Legendas palavras={palavras} estilo={ESTILO_LONGO} />}
 
       {narracao ? <Audio src={staticFile(narracao)} /> : null}
-      {musica ? <Audio src={staticFile(musica)} volume={0.06} loop /> : null}
+      {musica ? <MusicaDeFundo src={musica} palavras={palavras} baixo={0.06} alto={0.16} /> : null}
+      <Efeitos efeitos={efeitos} />
     </AbsoluteFill>
   );
 };

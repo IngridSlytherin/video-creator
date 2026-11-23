@@ -9,7 +9,7 @@ narração com voz neural, busca clipes no Pexels, monta o vídeo com legendas e
 para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário de postar.
 
 - **Shorts** verticais (30 s a 2 min) e **vídeos longos** horizontais, que viram vários Shorts automaticamente
-- **Radar de temas em alta**: Wikipedia, Google Notícias, Google Trends e YouTube
+- **Radar de temas em alta**: Wikipedia, Google Notícias, Google Trends e YouTube, mais os **vídeos que estouraram**: os do seu nicho que fizeram 3× ou mais o normal do próprio canal
 - **Ideias e roteiros pelo painel**: o Claude sugere ângulos, confere os fatos e escreve o roteiro
 - **Legendas e outras línguas**: legenda `.srt`, título e descrição traduzidos e **áudio dublado** (inglês/espanhol) para o recurso de várias faixas de áudio do YouTube
 - **Já tenho o roteiro**: cole o seu texto, escolha Short ou vídeo longo e a voz, e o vídeo sai com as suas palavras
@@ -27,6 +27,10 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 ![Painel: vídeos prontos](docs/prints/videos.png)
 
 ## Novidades
+
+**1.17 — Acabamento de edição e radar mais esperto:** transições entre as cenas, efeitos sonoros
+(whoosh e pop, feitos por código) e música que abaixa quando a voz fala. No radar, os **vídeos que
+estouraram**: os do seu nicho que fizeram 3× ou mais o normal do próprio canal.
 
 **1.16 — Mais fácil e mais confiável:** instalação com dois cliques (`Instalar.bat`), chave do Pexels
 pelo painel, voz reserva sem internet, legenda dos cortes revisada pelo Claude e render mais rápido.
@@ -133,7 +137,7 @@ o Pixabay como segunda fonte de vídeos (mais opções quando o Pexels tem pouco
 
 Coloque arquivos `.mp3` de música **instrumental** em `public/musica/`. Uma boa fonte é o
 YouTube Studio > Biblioteca de áudio, que tem músicas que você pode usar nos seus vídeos.
-Sem música, o vídeo sai só com a narração.
+Sem música, o vídeo sai só com a narração. A música abaixa sozinha enquanto a voz fala e sobe nas pausas.
 
 ### 5. Skills do Remotion para o Claude Code (opcional)
 

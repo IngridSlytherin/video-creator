@@ -11,6 +11,8 @@ import {
 } from "remotion";
 import { Legendas } from "./Legendas";
 import { Graficos } from "./Graficos";
+import { Entrada } from "./Transicao";
+import { Efeitos, MusicaDeFundo } from "./Som";
 import { CORES, FONTE, PropsVideo } from "./tipos";
 
 // Clipe com leve zoom, para não ficar parado (efeito "Ken Burns").
@@ -52,6 +54,8 @@ export const Short: React.FC<PropsVideo> = ({
   semLegendas = false,
   graficos = [],
   idioma = "pt-BR",
+  efeitos = [],
+  duracaoTransicao = 0.4,
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -59,20 +63,24 @@ export const Short: React.FC<PropsVideo> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       {clipes.map((c, i) => {
-        const de = Math.round(c.inicio * fps);
+        // com transição, o clipe começa um pouco antes e entra por cima do anterior
+        const t = i > 0 && c.transicao ? Math.round(duracaoTransicao * fps) : 0;
+        const de = Math.round(c.inicio * fps) - t;
         // o último clipe vai até o fim do vídeo
         const ate =
           i === clipes.length - 1 ? durationInFrames : Math.round((c.inicio + c.duracao) * fps);
         return (
           <Sequence key={`${c.arquivo}-${i}`} from={de} durationInFrames={ate - de} name={`Clipe ${i + 1}`}>
-            <ClipeComZoom
-              src={c.arquivo}
-              frames={ate - de}
-              sentido={i % 2 ? -1 : 1}
-              inicioFrames={Math.round((c.inicioNoClipe ?? 0) * fps)}
-              volume={volumeOriginal}
-              semZoom={semZoom || Boolean(c.animacao)}
-            />
+            <Entrada tipo={c.transicao} frames={t}>
+              <ClipeComZoom
+                src={c.arquivo}
+                frames={ate - de}
+                sentido={i % 2 ? -1 : 1}
+                inicioFrames={Math.max(0, Math.round((c.inicioNoClipe ?? 0) * fps) - t)}
+                volume={volumeOriginal}
+                semZoom={semZoom || Boolean(c.animacao)}
+              />
+            </Entrada>
           </Sequence>
         );
       })}
@@ -120,7 +128,8 @@ export const Short: React.FC<PropsVideo> = ({
       />
 
       {narracao ? <Audio src={staticFile(narracao)} /> : null}
-      {musica ? <Audio src={staticFile(musica)} volume={0.08} loop /> : null}
+      {musica ? <MusicaDeFundo src={musica} palavras={palavras} baixo={0.08} alto={0.2} /> : null}
+      <Efeitos efeitos={efeitos} />
     </AbsoluteFill>
   );
 };

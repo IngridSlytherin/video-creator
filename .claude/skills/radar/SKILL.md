@@ -33,6 +33,9 @@ leia só `dados/aprendizados.md` (se existir) e `historico.json` (se existir), s
    - Varie o formato dos títulos entre as sugestões (no máximo 1 começando com "Por que").
    - Confira se há imagens reais do assunto no Pexels (busca em inglês) antes de sugerir.
    - Vídeos do YouTube servem para ver formato e título que funcionam. Nunca copie o roteiro.
+   - Dê atenção à seção "Vídeos que estouraram" (3× ou mais o normal do próprio canal): é o sinal
+     mais forte de que **o assunto ou o formato** puxou público. Diga em "Por que agora" quando um
+     tema vier dela (ex.: "um vídeo sobre isso fez 15× o normal do canal").
 4. Pergunte qual tema o usuário quer. Quando ele escolher, escreva o roteiro em
    `roteiros/<slug>.json` seguindo os modelos (`exemplos/short-exemplo.json` para Short,
    `exemplos/longo-exemplo.json` para longo), com fatos verificáveis e fontes em

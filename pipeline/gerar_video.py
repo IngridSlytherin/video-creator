@@ -56,11 +56,24 @@ DURACOES = {
 CONFIG_FORMATO = {
     "short": {"orientacoes": ("portrait", "landscape"), "seg_por_clipe": 2.5,
               "novos_por_segmento": None},
-    # no longo, só horizontal (vertical recortado ficaria horrível) e menos downloads:
-    # cada clipe baixado é reaproveitado em mais de um trecho do mesmo animal.
-    "longo": {"orientacoes": ("landscape",), "seg_por_clipe": 4.5,
+    # no longo, primeiro os deitados; os em pé só entram depois (quando o assunto tem pouca filmagem),
+    # no meio da tela com fundo desfocado (vertical recortado para deitado ficaria horrível).
+    # Menos downloads: cada clipe baixado é reaproveitado em mais de um trecho do mesmo animal.
+    "longo": {"orientacoes": ("landscape", "portrait"), "seg_por_clipe": 4.5,
               "novos_por_segmento": 3},
 }
+
+
+def deitar_clipe(arq: Path):
+    """Clipe em pé num vídeo deitado: ele fica inteiro no meio, sobre uma cópia dele desfocada."""
+    tmp = arq.with_suffix(".deitado.mp4")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(arq), "-an", "-r", "30", "-filter_complex",
+                    "[0:v]split[a][b];[a]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,"
+                    "scale=480:270,boxblur=10:2,scale=1920:1080,eq=brightness=-0.2[fundo];"
+                    "[b]scale=-2:1080,setsar=1[frente];[fundo][frente]overlay=(W-w)/2:0",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+                    "-movflags", "+faststart", str(tmp)], check=True)
+    tmp.replace(arq)
 
 
 
@@ -486,6 +499,12 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
                 if not destino.exists():
                     try:
                         baixar(melhor_arquivo(candidato)["link"], destino)
+                        if formato == "longo" and candidato.get("_vertical"):
+                            deitar_clipe(destino)
+                    except subprocess.CalledProcessError:
+                        destino.unlink(missing_ok=True)
+                        log("  clipe pulado (não consegui ajustar o formato); tentando outro")
+                        continue
                     except requests.RequestException as e:
                         # um clipe que não baixa não pode parar o vídeo: pula e tenta o próximo
                         log(f"  clipe pulado (não baixou: {e.__class__.__name__}); tentando outro")
@@ -504,11 +523,22 @@ def baixar_clipes(segs, formato, pasta: Path, slug):
                 base = meus[-1]
             else:
                 # Reaproveita um clipe já baixado do mesmo animal, mostrando outro trecho.
-                if not meus:
-                    raise RuntimeError(f"Nenhum clipe encontrado para: {seg['busca']}")
-                livres = [b for b in meus if b["duracaoTotal"] - b["usado"] >= dur_clipe]
+                opcoes = meus
+                if not opcoes:
+                    # Nenhum clipe para este trecho (ex.: o banco chama o jacaré de "crocodile", não
+                    # "caiman"): usa os clipes já baixados que dividem algum termo (ex.: "jaguar"),
+                    # ou, em último caso, qualquer clipe do vídeo. Um trecho não pode parar o vídeo.
+                    termos = set(seg["exigir"])
+                    opcoes = [b for g, lst in baixados.items() if termos & set(g) for b in lst] or \
+                             [b for lst in baixados.values() for b in lst]
+                    if not opcoes:
+                        raise RuntimeError(f"Nenhum clipe encontrado para: {seg['busca']}")
+                    if k == 0:
+                        log(f"  trecho {idx + 1}: nenhum clipe de {', '.join(seg['exigir'])}; "
+                            "usando clipes parecidos do vídeo")
+                livres = [b for b in opcoes if b["duracaoTotal"] - b["usado"] >= dur_clipe]
                 base = max(livres, key=lambda b: b["duracaoTotal"] - b["usado"]) if livres \
-                    else min(meus, key=lambda b: b["usado"])
+                    else min(opcoes, key=lambda b: b["usado"])
             trecho = base["usado"] % max(0.1, base["duracaoTotal"] - dur_clipe)
             base["usado"] = trecho + dur_clipe
             clipes.append({"arquivo": base["arquivo"], "inicio": inicio, "duracao": dur_clipe,
@@ -850,6 +880,11 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
                         "-frames:v", "1", "-q:v", "2", str(pasta_pub / "capa.jpg")], check=True)
 
     musicas = sorted((RAIZ / "public" / "musica").glob("*.mp3"))
+    # animações (campo "grafico" em um trecho do roteiro): número contando ou comparação
+    graficos = [{**s["grafico"], "inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3)}
+                for s in segs if isinstance(s.get("grafico"), dict) and s["grafico"].get("tipo")
+                and not s.get("_animacao")]
+    efeitos = transicoes_e_efeitos(clipes, segs, graficos, formato)
     props = {
         "duracaoSegundos": round(duracao + 0.6, 2),
         "narracao": f"projetos/{slug}/narracao.mp3",
@@ -863,10 +898,10 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
         "segmentos": [{"inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3), "texto": s["texto"],
                        "palavras": len(s["palavras"])} for s in segs],
         "formato": formato,
-        # animações (campo "grafico" em um trecho do roteiro): número contando ou comparação
-        "graficos": [{**s["grafico"], "inicio": round(s["inicio"], 3), "duracao": round(s["duracao"], 3)}
-                     for s in segs if isinstance(s.get("grafico"), dict) and s["grafico"].get("tipo")
-                     and not s.get("_animacao")],
+        "graficos": graficos,
+        # transições ficam em cada clipe ("transicao"); aqui os sons (whoosh/pop) com o tempo de cada um
+        "efeitos": efeitos,
+        "duracaoTransicao": DURACAO_TRANSICAO.get(formato, 0.5),
         "idioma": canal_cfg.carregar().get("idioma", canal_cfg.IDIOMA_PADRAO),
         "capitulos": caps,
     }
@@ -904,6 +939,46 @@ def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
             if cap.get("short"):
                 arq = criar_roteiro_short(roteiro, cap)
                 main(arq, manter_clipes=manter_clipes, gerar_shorts=False)
+
+
+TRANSICOES = ("wipe", "deslize", "iris", "zoom")  # src/Transicao.tsx
+DURACAO_TRANSICAO = {"short": 0.4, "longo": 0.6}  # segundos
+
+
+def transicoes_e_efeitos(clipes, segs, graficos, formato):
+    """Marca a transição de cada clipe que começa um trecho novo da fala (nunca a mesma duas vezes
+    seguidas; dentro do mesmo trecho o corte continua seco) e monta a lista de efeitos sonoros:
+    um whoosh em cada transição e um pop quando aparece um número/gráfico. Devolve os efeitos."""
+    try:
+        sons = _carregar_modulo("efeitos").arquivos()
+    except Exception as e:  # sem numpy/scipy ou erro ao gravar: segue sem efeitos
+        log(f"  (efeitos sonoros desligados: {e})")
+        sons = None
+    inicios = [s["inicio"] for s in segs]
+    dur = DURACAO_TRANSICAO.get(formato, 0.5)
+    anterior, efeitos = None, []
+    for i, c in enumerate(clipes):
+        if i == 0 or c["arquivo"] == clipes[i - 1]["arquivo"]:
+            continue
+        if not any(abs(c["inicio"] - x) < 0.05 for x in inicios):
+            continue
+        tipo = random.choice([t for t in TRANSICOES if t != anterior])
+        c["transicao"] = anterior = tipo
+        if sons:
+            # o arquivo do whoosh tem ~0,7 s e o ponto mais forte perto do meio: cai no corte
+            efeitos.append({"arquivo": random.choice(sons["whoosh"]), "volume": 0.22 if formato == "short" else 0.16,
+                            "inicio": round(max(0.0, c["inicio"] - dur / 2 - 0.38), 3)})
+    if sons:
+        for g in graficos:
+            efeitos.append({"arquivo": sons["pop"], "volume": 0.35, "inicio": round(g["inicio"] + 0.05, 3)})
+    return sorted(efeitos, key=lambda e: e["inicio"])
+
+
+def _carregar_modulo(nome):
+    spec = importlib.util.spec_from_file_location(nome, RAIZ / "pipeline" / f"{nome}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _seg_de_cada_clipe(clipes, segs):

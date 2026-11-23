@@ -10,7 +10,7 @@ edits the video with captions, and hands you everything ready to publish: video,
 tags, thumbnail and the best time to post.
 
 - **Shorts** (vertical, 30 s to 2 min) and **long videos** (horizontal) that are automatically cut into Shorts
-- **Trending topic radar**: Wikipedia, Google News, Google Trends and YouTube
+- **Trending topic radar**: Wikipedia, Google News, Google Trends and YouTube, plus **outliers**: videos in your niche that got 3× or more their own channel's usual views
 - **Ideas and scripts from the panel**: Claude suggests angles, fact-checks and writes the script
 - **Subtitles and other languages**: `.srt` captions plus translated title, description and a **dubbed audio track** (English/Spanish) for YouTube's multi-language audio
 - **Bring your own script**: paste your text, pick Short or long video and the voice, and the video keeps your exact words
@@ -30,6 +30,10 @@ tags, thumbnail and the best time to post.
 ![Panel: finished videos](docs/prints/videos.png)
 
 ## What's new
+
+**1.17 — Editing polish and a smarter radar:** transitions between scenes, sound effects (whoosh and
+pop, synthesized in code) and music that ducks under the voice. The radar now shows **outliers**:
+videos in your niche that got 3× or more their own channel's usual views.
 
 **1.16 — Easier and more reliable:** two-click install (`Instalar.bat`), Pexels key in the panel, an
 offline backup voice, Claude-reviewed captions in cuts and faster rendering.
@@ -145,7 +149,7 @@ as a second footage source (more options when Pexels has little material on a to
 #### 4. Background music (optional)
 
 Put **instrumental** `.mp3` files in `public/musica/`. YouTube Studio > Audio Library is a good
-source of music you're allowed to use. Without music, videos only have the voice-over.
+source of music you're allowed to use. Without music, videos only have the voice-over. The music ducks automatically while the voice speaks.
 
 #### 5. Remotion skills for Claude Code (optional)
 

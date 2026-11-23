@@ -3,6 +3,24 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.17 — 23/11/2026
+- **Vídeos com acabamento de edição**:
+  - **Transições** quando a fala muda de trecho: cortina, deslize, círculo que abre e zoom com
+    desfoque, sem repetir a mesma duas vezes seguidas. Dentro do mesmo trecho o corte continua seco.
+  - **Efeitos sonoros**: um "whoosh" em cada transição e um "pop" quando aparece um número ou
+    gráfico. São feitos por código, como os sons relaxantes, então não têm direitos autorais.
+  - **Música que abaixa sob a voz**: fica baixinha enquanto a narração fala, sobe nas pausas e some
+    no final. Vale também para o áudio dublado em inglês e espanhol.
+- **Radar: vídeos que estouraram**. Para os vídeos mais vistos da semana no seu nicho, o radar olha os
+  vídeos recentes do mesmo canal (feed público do YouTube, sem chave) e calcula o normal dele (a mediana
+  das views). Os que fizeram **3× ou mais** o normal aparecem numa tabela nova: vídeo, canal, views,
+  normal do canal e quantas vezes acima. Isso mostra quando foi **o assunto ou o formato** que puxou o
+  público, e não só o tamanho do canal. O tema desses vídeos ganha pontos no ranking.
+- Um trecho sem nenhum clipe não para mais o vídeo: ele usa clipes parecidos já baixados (ex.: o
+  Pexels chama o jacaré de "crocodile", e a busca por "caiman" não achava nada).
+- Vídeo longo com mais imagens: quando o assunto tem pouca filmagem deitada, entram também filmagens
+  em pé, no meio da tela com fundo desfocado. Roteiros novos buscam onça-preta como "black panther".
+
 ## 1.16 — 20/11/2026
 - **Instalar.bat**: dois cliques instalam tudo (Node.js, Python, ffmpeg, Git, dependências), ligam as
   atualizações automáticas mesmo para quem baixou o .zip e abrem o painel. Pode rodar de novo sem medo.

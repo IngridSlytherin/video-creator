@@ -171,13 +171,27 @@ def dublar_trilha(segs, trechos, lingua, props, formato, destino_mp3, tmp):
     mistura = "".join(f"[t{i}]" for i in range(n)) + f"amix=inputs={n}:normalize=0:dropout_transition=0[voz]"
     filtros.append(mistura)
     musica = props.get("musica")
+    k = n
+    saida = "[voz]"
     if musica and (RAIZ / "public" / musica).exists():
+        # como no vídeo: a música abaixa quando a voz fala e sobe nas pausas
         entradas += ["-stream_loop", "-1", "-i", str(RAIZ / "public" / musica)]
-        filtros.append(f"[{n}:a]volume={VOLUME_MUSICA.get(formato, 0.07)}[mus]")
-        filtros.append("[voz][mus]amix=inputs=2:normalize=0:duration=first[mix]")
+        alto = VOLUME_MUSICA.get(formato, 0.07) * 2.5
+        filtros.append("[voz]asplit=2[voz1][chave]")
+        filtros.append(f"[{k}:a]volume={alto:.3f}[mus]")
+        filtros.append("[mus][chave]sidechaincompress=threshold=0.015:ratio=6:attack=60:release=700[musb]")
+        filtros.append("[voz1][musb]amix=inputs=2:normalize=0:duration=first[mix]")
         saida = "[mix]"
-    else:
-        saida = "[voz]"
+        k += 1
+    efeitos = [e for e in props.get("efeitos", []) if (RAIZ / "public" / e["arquivo"]).exists()]
+    if efeitos:  # os mesmos whoosh/pop do vídeo, no mesmo tempo
+        for j, e in enumerate(efeitos):
+            entradas += ["-i", str(RAIZ / "public" / e["arquivo"])]
+            ms = int(e["inicio"] * 1000)
+            filtros.append(f"[{k + j}:a]volume={e['volume']},adelay={ms}|{ms}[e{j}]")
+        rotulos = "".join(f"[e{j}]" for j in range(len(efeitos)))
+        filtros.append(f"{saida}{rotulos}amix=inputs={len(efeitos) + 1}:normalize=0:duration=first[comefeitos]")
+        saida = "[comefeitos]"
     # mesmo volume do vídeo original (os vídeos saem por volta de -18 LUFS)
     filtros.append(f"{saida}apad,atrim=0:{total:.3f},loudnorm=I=-18:TP=-1.5:LRA=11[fim]")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *entradas, "-filter_complex", ";".join(filtros),

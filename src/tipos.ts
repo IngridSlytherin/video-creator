@@ -8,7 +8,11 @@ export type Clipe = {
   autor?: string;
   url?: string;
   animacao?: boolean; // cena feita com Manim: sem zoom (o desenho já está enquadrado)
+  transicao?: "wipe" | "deslize" | "iris" | "zoom"; // como este clipe entra (src/Transicao.tsx)
 };
+
+// Efeito sonoro (whoosh, pop) num momento do vídeo.
+export type Efeito = { arquivo: string; inicio: number; volume: number };
 
 // Animação por cima do vídeo durante um trecho da fala (campo "grafico" no roteiro).
 export type Grafico = {
@@ -42,6 +46,8 @@ export type PropsVideo = {
   semLegendas?: boolean;
   graficos?: Grafico[];
   idioma?: string; // formato dos números (ex.: "pt-BR" usa vírgula decimal)
+  efeitos?: Efeito[];
+  duracaoTransicao?: number; // segundos
 };
 
 export const exemploProps: PropsVideo = {

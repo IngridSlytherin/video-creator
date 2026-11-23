@@ -4,6 +4,7 @@ __pycache__/
 saida/
 trabalho/
 public/projetos/
+public/efeitos/
 
 # segredos (cada pessoa usa a própria chave: veja .env.exemplo)
 .env

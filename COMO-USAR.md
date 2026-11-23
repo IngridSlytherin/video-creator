@@ -64,6 +64,9 @@ python -I pipeline/radar.py
   ela já vem pronta (133 animais). Para outras categorias, o painel pede ao Claude Code para criar
   (2–4 min). Sem a lista, o radar mostra as notícias e vídeos da semana, só sem pontuar temas.
 - As buscas de notícias e do YouTube ficam em `dados/canal.json`, em `radar`.
+- **Vídeos que estouraram**: para os vídeos mais vistos da semana, o radar compara com o normal do
+  próprio canal (a mediana das views dos vídeos recentes dele, pelo feed público do YouTube). Os que
+  fizeram 3× ou mais aparecem numa tabela no relatório, e o tema deles ganha pontos no ranking.
 
 ## Gerar um vídeo pelo terminal
 1. Crie um roteiro em `roteiros/` (copie `exemplos/short-exemplo.json`).
@@ -219,7 +222,9 @@ npx remotion studio
 ## Configurações
 - `.env`: chave do Pexels e velocidade da fala (`VELOCIDADE_VOZ`).
 - Música de fundo: coloque arquivos `.mp3` em `public/musica/` (ex.: da Biblioteca de áudio do
-  YouTube Studio). O gerador escolhe uma automaticamente, em volume baixo.
+  YouTube Studio). O gerador escolhe uma automaticamente; ela fica baixinha enquanto a voz fala e sobe nas pausas.
+- Transições e efeitos sonoros (whoosh/pop) entram sozinhos. Os sons ficam em `public/efeitos/` e são
+  feitos por `pipeline/efeitos.py` (sem direitos autorais).
 - Cores e fonte: `src/tipos.ts`.
 
 ## Arquivos

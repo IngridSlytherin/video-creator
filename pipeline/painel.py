@@ -404,7 +404,9 @@ Passos:
 3. "animal" (o assunto principal do vídeo, mesmo que não seja um animal), "busca" e "exigir"/"evitar"
    em inglês: são usados para achar clipes no Pexels, e a palavra precisa aparecer nos endereços dos
    vídeos. Em "exigir", use só palavras que não pertencem a outro assunto (ex.: camarão-louva-a-deus =
-   ["shrimp"], nunca "mantis", que traria o inseto). Escolha assuntos que existam em vídeo de banco de
+   ["shrimp"], nunca "mantis", que traria o inseto). Use o nome comum que os bancos de vídeo usam, não o
+   científico ou regional: jacaré = "alligator"/"crocodile" (o Pexels quase nunca escreve "caiman"), onça-preta = "black panther";
+   na dúvida, ponha os dois em "exigir". Escolha assuntos que existam em vídeo de banco de
    imagens (nada de jogos, filmes, marcas ou pessoas famosas). Todo o resto (narração, tituloTela,
    título, descrição, hashtags, títulos dos capítulos) em {lingua}.
    Números e medidas: use o valor exato da fonte; na dúvida, deixe o número de fora.
@@ -466,7 +468,8 @@ Passos:
    {regra_formato}
 3. "animal" (o assunto principal, mesmo que não seja um animal), "busca" e "exigir"/"evitar" em inglês:
    servem para achar clipes no Pexels/Pixabay, e a palavra precisa aparecer nos endereços dos vídeos.
-   Em "exigir", só palavras que não pertencem a outro assunto. Se o assunto costuma vir como brinquedo,
+   Em "exigir", só palavras que não pertencem a outro assunto, com o nome comum que os bancos de vídeo
+   usam (jacaré = "alligator"/"crocodile", não "caiman"; onça-preta = "panther"; na dúvida, os dois). Se o assunto costuma vir como brinquedo,
    desenho ou estátua (ex.: dinossauro), ponha "toy", "cartoon", "child" em "evitar".
 4. Crie "tituloTela", "duracao" (pelo tamanho do texto: "curto" até ~45 s, "padrao" até ~65 s, "longo"
    acima disso; vídeo longo = "video") e "publicacao" (titulo, descricao, hashtags) na língua do roteiro,

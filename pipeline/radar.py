@@ -22,6 +22,7 @@ import math
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 import unicodedata
 from datetime import date, datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -266,6 +267,8 @@ def videos_da_busca(texto_html):
                         "publicado": v.get("publishedTimeText", {}).get("simpleText", ""),
                         "duracao": v.get("lengthText", {}).get("simpleText", ""),
                         "canal": (v.get("ownerText", {}).get("runs") or [{}])[0].get("text", ""),
+                        "canal_id": ((v.get("ownerText", {}).get("runs") or [{}])[0]
+                                     .get("navigationEndpoint", {}).get("browseEndpoint", {}).get("browseId", "")),
                     }
                 )
             for x in o.values():
@@ -300,6 +303,55 @@ def coletar_youtube(animais):
     lista = sorted(vistos.values(), key=lambda v: -v["views"])
     print(f"  {len(lista)} vídeos encontrados")
     return lista
+
+
+# ---------------------------------------------------------------- acima do normal do canal
+VEZES_ACIMA = 3  # "estourou": 3x ou mais a mediana dos outros vídeos recentes do mesmo canal
+
+
+def media_dos_canais(videos, limite=25):
+    """Para os vídeos mais vistos da busca, compara com o normal do próprio canal: pega os vídeos
+    recentes do canal no feed público (os últimos 15, com views) e calcula a mediana (o "normal" dele,
+    sem deixar um vídeo viral puxar a conta). Vídeos com menos de 3 dias ficam de fora (ainda estão
+    crescendo). Acrescenta "media_canal" e "vezes" em cada vídeo que deu para medir."""
+    print("YouTube: comparando com a média normal de cada canal...")
+    recentes = datetime.now(tz=None).astimezone() - timedelta(days=3)
+
+    def feed(cid):
+        r = get("https://www.youtube.com/feeds/videos.xml", cab=UA_WEB, silencioso=True, tentativas=2,
+                timeout=20, params={"channel_id": cid})
+        lista = []
+        for bloco in re.findall(r"<entry>(.*?)</entry>", r.text if r else "", re.S):
+            vid = re.search(r"<yt:videoId>(.*?)</yt:videoId>", bloco)
+            vw = re.search(r'<media:statistics views="(\d+)"', bloco)
+            pub = re.search(r"<published>(.*?)</published>", bloco)
+            if vid and vw and pub:
+                try:
+                    lista.append((vid.group(1), int(vw.group(1)), datetime.fromisoformat(pub.group(1))))
+                except ValueError:
+                    continue
+        return lista
+
+    canais = list(dict.fromkeys(v.get("canal_id") for v in videos[:limite]
+                                if (v.get("canal_id") or "").startswith("UC")))
+    with ThreadPoolExecutor(max_workers=6) as ex:  # um canal por vez levava ~2 s cada
+        cache = dict(zip(canais, ex.map(feed, canais)))
+    medidos = 0
+    for v in videos[:limite]:
+        cid = v.get("canal_id")
+        if cid not in cache:
+            continue
+        outros = sorted(n for vid, n, quando in cache[cid] if vid != v["id"] and quando < recentes)
+        if len(outros) < 4:
+            continue
+        meio = len(outros) // 2
+        mediana = outros[meio] if len(outros) % 2 else (outros[meio - 1] + outros[meio]) / 2
+        v["media_canal"] = round(mediana)
+        v["vezes"] = round(v["views"] / max(mediana, 1), 1)
+        medidos += 1
+    acima = [v for v in videos if v.get("vezes", 0) >= VEZES_ACIMA]
+    print(f"  {medidos} vídeos comparados; {len(acima)} acima do normal ({VEZES_ACIMA}x ou mais)")
+    return acima
 
 
 # ---------------------------------------------------------------- já feitos
@@ -344,6 +396,7 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
         n_tr = sum(nome in t["animais"] for t in trends)
         vids = [v for v in videos if nome in v["animais"]]
         yt = sum(v["views"] for v in vids)
+        estouro = max((v.get("vezes", 0) for v in vids), default=0)
 
         pontos = 0.0
         motivos = []
@@ -364,6 +417,10 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
         if yt:
             pontos += 1.2 * math.log10(1 + yt)
             motivos.append(f"YouTube: {len(vids)} vídeo{'s' if len(vids) > 1 else ''}, {mil(yt)} views na semana")
+        if estouro >= VEZES_ACIMA:
+            # um vídeo do tema foi muito acima do normal do próprio canal: o assunto puxou o público
+            pontos += 2 * math.log2(estouro)
+            motivos.append(f"vídeo {fmt_vezes(estouro)} acima do normal do canal")
         pontos *= PESO_GRUPO.get(a.get("grupo", ""), 1.0)
         if nome in feitos:
             # repetir o animal não atrapalha (só repetir a mesma pergunta): pesa pouco
@@ -388,7 +445,11 @@ def pontuar(animais, wiki, noticias, trends, videos, feitos):
 
 
 # ---------------------------------------------------------------- relatório
-def escrever_md(hoje, ranking, noticias, trends, todos_trends, videos):
+def fmt_vezes(x):
+    return f"{x:.1f}".replace(".", ",").replace(",0", "") + "×"
+
+
+def escrever_md(hoje, ranking, noticias, trends, todos_trends, videos, acima=()):
     L = [f"# Radar {NOME_CANAL} — {hoje:%d/%m/%Y}", ""]
     L.append("Fontes: Wikipedia (acessos dos últimos 7 dias contra as 4 semanas anteriores), "
              f"Google Notícias (7 dias), Google Trends {IDIOMA['trends']} (hoje) e busca do YouTube (esta semana).")
@@ -407,7 +468,20 @@ def escrever_md(hoje, ranking, noticias, trends, todos_trends, videos):
     L += ["", "## Vídeos da categoria que mais bombaram no YouTube esta semana", "",
           "Use para ver **formatos e títulos** que estão funcionando (não para copiar).", ""]
     for v in videos[:15]:
-        L.append(f"- **{mil(v['views'])} views** · {v['titulo']} — {v['canal']} ({v['duracao']}, {v['publicado']})")
+        extra = f" · {fmt_vezes(v['vezes'])} o normal do canal" if v.get("vezes") else ""
+        L.append(f"- **{mil(v['views'])} views** · {v['titulo']} — {v['canal']} ({v['duracao']}, {v['publicado']}){extra}")
+
+    L += ["", f"## Vídeos que estouraram: {VEZES_ACIMA}× ou mais o normal do próprio canal", "",
+          "O normal do canal é a mediana das views dos vídeos recentes dele (os de menos de 3 dias ficam de fora). "
+          "Um vídeo muito acima do normal mostra que **o assunto ou o formato** puxou público, não só o tamanho do canal.", ""]
+    if acima:
+        L += ["| Vídeo | Canal | Views | Normal do canal | Vezes |", "|---|---|---|---|---|"]
+        for v in sorted(acima, key=lambda v: -v["vezes"])[:15]:
+            titulo = v["titulo"].replace("|", "/")
+            L.append(f"| {titulo} | {v['canal'].replace('|', '/')} | {mil(v['views'])} | {mil(v['media_canal'])} | "
+                     f"**{fmt_vezes(v['vezes'])}** |")
+    else:
+        L.append("- Nenhum vídeo da busca desta semana ficou tão acima do normal do canal.")
 
     L += ["", f"## Google Trends {IDIOMA['trends']} (hoje)", ""]
     if trends:
@@ -445,17 +519,19 @@ def main():
     noticias = coletar_noticias(animais)
     trends, todos_trends = coletar_trends(animais)
     videos = coletar_youtube(animais)
+    acima = media_dos_canais(videos)
     feitos = animais_ja_feitos(animais)
 
     ranking = pontuar(animais, wiki, noticias, trends, videos, feitos)
 
     PASTA_RADAR.mkdir(parents=True, exist_ok=True)
     md = PASTA_RADAR / f"{hoje:%Y-%m-%d}.md"
-    md.write_text(escrever_md(hoje, ranking, noticias, trends, todos_trends, videos), encoding="utf-8")
+    md.write_text(escrever_md(hoje, ranking, noticias, trends, todos_trends, videos, acima), encoding="utf-8")
     (PASTA_RADAR / f"{hoje:%Y-%m-%d}.json").write_text(
         json.dumps(
             {"data": hoje.isoformat(), "gerado": datetime.now().isoformat(timespec="minutes"),
-             "ranking": ranking, "noticias": noticias, "trends": trends, "youtube": videos},
+             "ranking": ranking, "noticias": noticias, "trends": trends, "youtube": videos,
+             "acimaDoNormal": [v["id"] for v in acima]},
             ensure_ascii=False, indent=1,
         ),
         encoding="utf-8",
