@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.18 — 23/11/2026
+- As transições ficam **sem o whoosh** (o som chamava atenção demais). O pop dos números e
+  gráficos continua. Quem quiser o whoosh de volta: `WHOOSH=1` no `.env`.
+
 ## 1.17 — 23/11/2026
 - **Vídeos com acabamento de edição**:
   - **Transições** quando a fala muda de trecho: cortina, deslize, círculo que abre e zoom com

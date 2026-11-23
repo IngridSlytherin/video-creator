@@ -31,8 +31,8 @@ tags, thumbnail and the best time to post.
 
 ## What's new
 
-**1.17 — Editing polish and a smarter radar:** transitions between scenes, sound effects (whoosh and
-pop, synthesized in code) and music that ducks under the voice. The radar now shows **outliers**:
+**1.17 — Editing polish and a smarter radar:** transitions between scenes, a soft "pop" when numbers
+appear (synthesized in code) and music that ducks under the voice. The radar now shows **outliers**:
 videos in your niche that got 3× or more their own channel's usual views.
 
 **1.16 — Easier and more reliable:** two-click install (`Instalar.bat`), Pexels key in the panel, an

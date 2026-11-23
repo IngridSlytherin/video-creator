@@ -223,7 +223,7 @@ npx remotion studio
 - `.env`: chave do Pexels e velocidade da fala (`VELOCIDADE_VOZ`).
 - Música de fundo: coloque arquivos `.mp3` em `public/musica/` (ex.: da Biblioteca de áudio do
   YouTube Studio). O gerador escolhe uma automaticamente; ela fica baixinha enquanto a voz fala e sobe nas pausas.
-- Transições e efeitos sonoros (whoosh/pop) entram sozinhos. Os sons ficam em `public/efeitos/` e são
+- Transições e o "pop" dos números entram sozinhos (o whoosh nas transições só com `WHOOSH=1` no `.env`). Os sons ficam em `public/efeitos/` e são
   feitos por `pipeline/efeitos.py` (sem direitos autorais).
 - Cores e fonte: `src/tipos.ts`.
 

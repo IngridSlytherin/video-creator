@@ -28,8 +28,8 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 
 ## Novidades
 
-**1.17 — Acabamento de edição e radar mais esperto:** transições entre as cenas, efeitos sonoros
-(whoosh e pop, feitos por código) e música que abaixa quando a voz fala. No radar, os **vídeos que
+**1.17 — Acabamento de edição e radar mais esperto:** transições entre as cenas, um "pop" quando
+aparece um número (feito por código) e música que abaixa quando a voz fala. No radar, os **vídeos que
 estouraram**: os do seu nicho que fizeram 3× ou mais o normal do próprio canal.
 
 **1.16 — Mais fácil e mais confiável:** instalação com dois cliques (`Instalar.bat`), chave do Pexels

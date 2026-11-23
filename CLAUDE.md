@@ -36,7 +36,7 @@ Sistema local e gratuito: roteiro → narração (edge-tts) → clipes do Pexels
 | `pipeline/dublar.py` | Narração + legenda sobre um vídeo enviado pela pessoa |
 | `pipeline/cortes.py` | Aba Cortes: transcreve (Whisper) um vídeo longo da pessoa, o Claude escolhe trechos, vira Shorts |
 | `pipeline/relaxante.py` + `pipeline/sons.py` | Vídeos longos de sons relaxantes (som sintetizado) |
-| `pipeline/efeitos.py` | Efeitos sonoros sintetizados (whoosh nas transições, pop nos gráficos) |
+| `pipeline/efeitos.py` | Efeitos sonoros sintetizados (pop nos gráficos; whoosh nas transições só com WHOOSH=1) |
 | `pipeline/canal.py` | Configuração do canal |
 | `src/` | Composições Remotion (Short, Longo, Thumbnail, Legendas) |
 | `exemplos/` | Modelos de roteiro (Short e longo) |

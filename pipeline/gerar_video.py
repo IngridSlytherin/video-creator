@@ -948,7 +948,7 @@ DURACAO_TRANSICAO = {"short": 0.4, "longo": 0.6}  # segundos
 def transicoes_e_efeitos(clipes, segs, graficos, formato):
     """Marca a transição de cada clipe que começa um trecho novo da fala (nunca a mesma duas vezes
     seguidas; dentro do mesmo trecho o corte continua seco) e monta a lista de efeitos sonoros:
-    um whoosh em cada transição e um pop quando aparece um número/gráfico. Devolve os efeitos."""
+    um pop quando aparece um número/gráfico (e um whoosh por transição, se WHOOSH=1). Devolve os efeitos."""
     try:
         sons = _carregar_modulo("efeitos").arquivos()
     except Exception as e:  # sem numpy/scipy ou erro ao gravar: segue sem efeitos
@@ -964,7 +964,7 @@ def transicoes_e_efeitos(clipes, segs, graficos, formato):
             continue
         tipo = random.choice([t for t in TRANSICOES if t != anterior])
         c["transicao"] = anterior = tipo
-        if sons:
+        if sons and ENV.get("WHOOSH", "0") == "1":  # desligado por padrão (WHOOSH=1 no .env liga)
             # o arquivo do whoosh tem ~0,7 s e o ponto mais forte perto do meio: cai no corte
             efeitos.append({"arquivo": random.choice(sons["whoosh"]), "volume": 0.22 if formato == "short" else 0.16,
                             "inicio": round(max(0.0, c["inicio"] - dur / 2 - 0.38), 3)})
