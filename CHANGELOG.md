@@ -3,6 +3,10 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.19 — 24/11/2026
+- Nada de sobra no disco: quando um vídeo dá erro no meio (ou é cancelado), os clipes baixados
+  também são apagados. Antes eles ficavam na pasta e podiam somar centenas de MB.
+
 ## 1.18 — 23/11/2026
 - As transições ficam **sem o whoosh** (o som chamava atenção demais). O pop dos números e
   gráficos continua. Quem quiser o whoosh de volta: `WHOOSH=1` no `.env`.

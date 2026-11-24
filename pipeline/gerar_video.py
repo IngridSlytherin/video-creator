@@ -839,6 +839,34 @@ def info_capitulos(roteiro, capitulos, segs):
 
 
 def main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
+    """Gera o vídeo. Se der erro no meio, apaga os clipes baixados mesmo assim (não acumulam no disco;
+    na próxima tentativa a pasta do vídeo é refeita do zero de qualquer jeito)."""
+    try:
+        _main(caminho_roteiro, manter_clipes, gerar_shorts)
+    except BaseException:
+        if not manter_clipes:
+            try:
+                slug = json.loads(Path(caminho_roteiro).read_text(encoding="utf-8"))["slug"]
+                for a in (RAIZ / "public" / "projetos" / slug).glob("clipe_*.mp4"):
+                    a.unlink(missing_ok=True)
+            except (OSError, ValueError, KeyError):
+                pass
+        raise
+
+
+def limpar_sobras(horas=2):
+    """Clipes esquecidos por um vídeo cancelado (o programa fechado no meio não chega a apagar)."""
+    limite = time.time() - horas * 3600
+    for a in (RAIZ / "public" / "projetos").glob("*/clipe_*.mp4"):
+        try:
+            if a.stat().st_mtime < limite:
+                a.unlink()
+        except OSError:
+            pass
+
+
+def _main(caminho_roteiro, manter_clipes=False, gerar_shorts=True):
+    limpar_sobras()
     caminho_roteiro = Path(caminho_roteiro)
     roteiro = json.loads(caminho_roteiro.read_text(encoding="utf-8"))
     slug = roteiro["slug"]
