@@ -37,3 +37,7 @@ public/musica/*.mp3
 # projetos de teste feitos com HyperFrames (fora do pipeline)
 collie-short/
 gato-cai-de-pe/
+
+# vídeos relaxantes criados pelo painel (o de exemplo continua no projeto)
+relax/*.json
+!relax/chuva-vento-passaros-12min.json

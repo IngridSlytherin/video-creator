@@ -11,6 +11,7 @@ Resultado em saida/<slug>/: video.mp4, thumbnail.png e publicacao.txt.
 """
 import importlib.util
 import json
+import math
 import random
 import shutil
 import subprocess
@@ -37,8 +38,48 @@ TRECHO = 16.0  # quanto tempo cada clipe fica na tela
 TRANSICAO = 2.0  # dissolve entre clipes
 CLIPES_POR_PARTE = 9
 LARGURA, ALTURA, FPS = 1920, 1080, 30
-# crf 23: chuva tem muito detalhe e deixa o arquivo enorme; 23 mantém a qualidade e fica ~metade
-X264 = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-r", str(FPS)]
+# chuva tem muito detalhe e deixa o arquivo enorme (crf 23: ~1 GB a cada 30 min). crf 30 com preset
+# "medium" fica bem menor; o YouTube recomprime tudo de qualquer jeito, então a diferença não aparece lá.
+# (O tempo de codificação não cresce com a duração: os trechos são feitos uma vez e repetidos.)
+X264 = ["-c:v", "libx264", "-preset", "medium", "-crf", "30", "-pix_fmt", "yuv420p", "-r", str(FPS)]
+
+
+# Cada som disponível (pipeline/sons.py) com volume e as imagens que combinam com ele.
+# O painel (opção "Sons relaxantes") monta o roteiro a partir daqui.
+PRESETS = {
+    "chuva_fraca": {"nome": "Chuva fraca", "volume": -27,
+                    "buscas": ["light rain leaves", "rain drops on leaves", "drizzle nature", "raindrops puddle",
+                               "rain on plants", "rain forest"],
+                    "exigir": ["rain", "raindrop", "raindrops", "drizzle", "drops", "droplets"]},
+    "chuva_media": {"nome": "Chuva", "volume": -22,
+                    "buscas": ["rain forest", "rain falling nature", "rain on window", "rain lake",
+                               "rainy day trees", "rain on leaves"],
+                    "exigir": ["rain", "rainy", "raindrop", "raindrops"]},
+    "vento_passaros": {"nome": "Vento e pássaros", "volume": -24,
+                       "buscas": ["wind grass", "trees wind", "meadow wind", "forest morning", "bird on branch",
+                                  "wheat field wind"],
+                       "exigir": ["wind", "windy", "grass", "meadow", "tree", "trees", "forest", "bird", "birds",
+                                  "field", "wheat"],
+                       "evitar": ["rain", "rainy", "snow"]},
+}
+EVITAR = ["car", "cars", "traffic", "taxi", "umbrella", "road", "highway", "storm", "thunder", "lightning",
+          "flood", "bus", "train", "fire", "court", "tennis", "parking", "asphalt", "sidewalk", "pavement",
+          "basketball", "stadium"]
+
+
+def montar_roteiro(slug, lista_sons, minutos, textos):
+    """Roteiro de vídeo relaxante: os sons escolhidos em ordem, dividindo o tempo igualmente.
+    textos: tituloTela, titulos (um por som, na língua do canal) e publicacao."""
+    base, sobra = divmod(int(minutos), len(lista_sons))
+    titulos = textos.get("titulos") or []
+    partes = []
+    for i, som in enumerate(lista_sons):
+        p = PRESETS[som]
+        partes.append({"titulo": str(titulos[i]) if i < len(titulos) and titulos[i] else p["nome"],
+                       "som": som, "minutos": base + (1 if i < sobra else 0), "volume": p["volume"],
+                       "buscas": p["buscas"], "exigir": p["exigir"], **({"evitar": p["evitar"]} if "evitar" in p else {})})
+    return {"slug": slug, "tituloTela": textos.get("tituloTela") or partes[0]["titulo"].upper(),
+            "capaParte": 0, "partes": partes, "evitar": EVITAR, "publicacao": textos["publicacao"]}
 
 
 def ff(*args):
@@ -46,31 +87,54 @@ def ff(*args):
 
 
 # ---------------------------------------------------------------- som
+BLOCO_SOM = 6 * 60  # cada som é sintetizado com 6 min e repetido sem emenda (vídeos de horas sem gastar memória)
+LACO = 5.0  # segundos de mistura entre o fim e o começo do bloco
+
+
+def bloco_em_laco(origem, destino, segundos):
+    """Transforma um som de (segundos + LACO) num bloco de `segundos` que pode tocar em repetição
+    sem emenda: o começo é misturado com o que viria depois do fim."""
+    taxa, x = sons.wavfile.read(str(origem))
+    x = x.astype(sons.np.float32) / 32767
+    n, f = int(segundos * taxa), int(LACO * taxa)
+    laco = x[:n].copy()
+    r = sons.np.linspace(0, 1, f, dtype=sons.np.float32)[:, None]
+    # potência constante (ruído de chuva/vento não "afunda" no meio da mistura)
+    laco[:f] = x[n:n + f] * sons.np.sqrt(1 - r) + x[:f] * sons.np.sqrt(r)
+    sons.salvar_wav(laco, str(destino))
+
+
 def montar_audio(partes, pasta):
-    arquivos = []
+    blocos, duracoes = [], []
     for i, p in enumerate(partes):
         segundos = p["minutos"] * 60 + (CRUZ_AUDIO if i < len(partes) - 1 else 0)
-        log(f"Sintetizando som {i + 1}/{len(partes)}: {p['titulo']} ({segundos / 60:.1f} min)...")
+        base = min(segundos, BLOCO_SOM)
+        log(f"Sintetizando som {i + 1}/{len(partes)}: {p['titulo']} ({segundos / 60:.0f} min)...")
         bruto = pasta / f"som_{i}_bruto.wav"
-        sons.gerar(p["som"], segundos, bruto, semente=random.randint(1, 10**6))
+        sons.gerar(p["som"], base + LACO, bruto, semente=random.randint(1, 10**6))
+        laco = pasta / f"som_{i}_laco.wav"
+        bloco_em_laco(bruto, laco, base)
         final = pasta / f"som_{i}.wav"
-        ff("-i", bruto, "-af", f"loudnorm=I={p.get('volume', -24)}:TP=-3:LRA=11", "-ar", "44100", final)
+        ff("-i", laco, "-af", f"loudnorm=I={p.get('volume', -24)}:TP=-3:LRA=11", "-ar", "44100", final)
         bruto.unlink()
-        arquivos.append(final)
+        laco.unlink()
+        blocos.append(final)
+        duracoes.append(segundos)
 
     log("Juntando os sons com transições suaves...")
-    entradas, filtro, ultimo = [], [], "[0:a]"
-    for f in arquivos:
-        entradas += ["-i", f]
-    for i in range(1, len(arquivos)):
-        saida = f"[a{i}]"
-        filtro.append(f"{ultimo}[{i}:a]acrossfade=d={CRUZ_AUDIO}:c1=tri:c2=tri{saida}")
-        ultimo = saida
+    entradas, filtro = [], []
+    for i, (f, d) in enumerate(zip(blocos, duracoes)):
+        entradas += ["-stream_loop", "-1", "-i", f]
+        filtro.append(f"[{i}:a]atrim=0:{d:.2f},asetpts=PTS-STARTPTS[s{i}]")
+    ultimo = "[s0]"
+    for i in range(1, len(blocos)):
+        filtro.append(f"{ultimo}[s{i}]acrossfade=d={CRUZ_AUDIO}:c1=tri:c2=tri[a{i}]")
+        ultimo = f"[a{i}]"
     total = sum(p["minutos"] * 60 for p in partes)
     filtro.append(f"{ultimo}afade=t=in:d=4,afade=t=out:st={total - 20}:d=20[saida]")
-    audio = pasta / "audio.wav"
-    ff(*entradas, "-filter_complex", ";".join(filtro), "-map", "[saida]", audio)
-    for f in arquivos:
+    audio = pasta / "audio.m4a"  # comprimido: 3 h em WAV passariam de 1,9 GB
+    ff(*entradas, "-filter_complex", ";".join(filtro), "-map", "[saida]", "-c:a", "aac", "-b:a", "192k", audio)
+    for f in blocos:
         f.unlink()
     return audio, gv.duracao_audio(audio)
 
@@ -126,50 +190,53 @@ def baixar_clipes(partes, evitar_geral, pasta):
 
 
 def montar_video(partes, por_parte, total, pasta):
-    """Trechos de TRECHO s com dissolve de TRANSICAO s. Para não pesar na memória,
-    cada trecho e cada transição viram arquivos e no fim tudo é emendado sem recodificar."""
-    # que parte está tocando em cada momento (troca no meio da transição de áudio)
-    limites, t = [], 0.0
-    for p in partes:
-        t += p["minutos"] * 60
-        limites.append(t)
+    """Trechos de TRECHO s com dissolve de TRANSICAO s. Cada parte tem um ciclo de trechos (cada clipe
+    aparece até 2 vezes, em pedaços diferentes) que se repete até cobrir a duração: um vídeo de 3 h
+    prepara só algumas dezenas de arquivos, e no fim tudo é emendado sem recodificar."""
+    sequencia, ciclos = [], []
+    for i, p in enumerate(partes):
+        lista = por_parte[i]
+        unidades = math.ceil(p["minutos"] * 60 / TRECHO) + (1 if i == len(partes) - 1 else 0)
+        ciclo = []
+        for k in range(min(unidades, 2 * len(lista))):
+            c = lista[k % len(lista)]
+            rodada = k // len(lista)  # na 2ª volta, usa outro pedaço do mesmo clipe
+            folga = max(0.0, c["duracao"] - (TRECHO + TRANSICAO) - 0.5)
+            inicio = min(folga, 7.0) if rodada else random.uniform(0, min(folga, 3))
+            ciclo.append((c, inicio))
+        ciclos.append(ciclo)
+        sequencia += [(i, k % len(ciclo)) for k in range(unidades)]
 
-    plano, t, giro = [], 0.0, [0] * len(partes)
-    while t < total + 1:
-        parte = next((i for i, lim in enumerate(limites) if t < lim), len(partes) - 1)
-        lista = por_parte[parte]
-        c = lista[giro[parte] % len(lista)]
-        rodada = giro[parte] // len(lista)  # se repetir o clipe, usa outro pedaço dele
-        giro[parte] += 1
-        folga = max(0.0, c["duracao"] - (TRECHO + TRANSICAO) - 0.5)
-        inicio = min(folga, rodada * 7.0) if rodada else random.uniform(0, min(folga, 3))
-        plano.append((c, inicio))
-        t += TRECHO
-
-    log(f"Preparando {len(plano)} trechos de imagem...")
+    unicos = [(i, k) for i, ciclo in enumerate(ciclos) for k in range(len(ciclo))]
+    log(f"Preparando {len(unicos)} trechos de imagem...")
     norm = (f"scale={LARGURA}:{ALTURA}:force_original_aspect_ratio=increase,crop={LARGURA}:{ALTURA},"
             f"fps={FPS},setsar=1,eq=saturation=0.92:brightness=-0.02,format=yuv420p")
-    trechos = []
-    for k, (c, ini) in enumerate(plano):
-        destino = pasta / f"t{k:03d}.mp4"
+    trechos, miolos = {}, {}
+    for i, k in unicos:
+        c, ini = ciclos[i][k]
+        destino = pasta / f"t{i}_{k:03d}.mp4"
         ff("-ss", f"{ini:.2f}", "-t", TRECHO + TRANSICAO, "-i", c["arquivo"], "-an", "-vf", norm, *X264, destino)
-        trechos.append(destino)
+        trechos[(i, k)] = destino
+        # miolo: sem o começo (que entra na transição anterior) e sem o fim (que entra na próxima)
+        miolo = pasta / f"m{i}_{k:03d}.mp4"
+        ff("-ss", TRANSICAO, "-to", TRECHO, "-i", destino, *X264, miolo)
+        miolos[(i, k)] = miolo
 
     log("Montando as transições...")
-    pedacos = []
-    for k, tr in enumerate(trechos):
-        # miolo do trecho (sem o começo, que já entrou na transição anterior, e sem o fim)
-        ini = 0 if k == 0 else TRANSICAO
-        fim = TRECHO
-        miolo = pasta / f"m{k:03d}.mp4"
-        ff("-ss", ini, "-to", fim, "-i", tr, *X264, miolo)
-        pedacos.append(miolo)
-        if k + 1 < len(trechos):
-            trans = pasta / f"x{k:03d}.mp4"
-            ff("-ss", TRECHO, "-i", tr, "-t", TRANSICAO, "-i", trechos[k + 1],
+    transicoes, pedacos = {}, []
+    for j, atual in enumerate(sequencia):
+        pedacos.append(miolos[atual])
+        if j + 1 == len(sequencia):
+            break
+        prox = sequencia[j + 1]
+        if (atual, prox) not in transicoes:
+            trans = pasta / f"x{len(transicoes):03d}.mp4"
+            ff("-ss", TRECHO, "-i", trechos[atual], "-t", TRANSICAO, "-i", trechos[prox],
                "-filter_complex", f"[0:v][1:v]xfade=transition=fade:duration={TRANSICAO}:offset=0[v]",
                "-map", "[v]", *X264, trans)
-            pedacos.append(trans)
+            transicoes[(atual, prox)] = trans
+        pedacos.append(transicoes[(atual, prox)])
+    plano = [ciclos[i][k] for i, k in unicos]
 
     lista = pasta / "pedacos.txt"
     lista.write_text("".join(f"file '{p.name}'\n" for p in pedacos), encoding="utf-8")

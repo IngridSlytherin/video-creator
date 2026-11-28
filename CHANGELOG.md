@@ -3,6 +3,24 @@
 Para atualizar: no painel, clique em **Atualizar agora** quando aparecer o aviso de versão nova.
 Ou, na pasta do projeto: `git pull`.
 
+## 1.21 — 28/11/2026
+- **Sons relaxantes pelo painel**: em Novo vídeo, a opção **🌧️ Sons relaxantes**. Escolha os sons
+  (chuva fraca, chuva, vento e pássaros; botão ▶ para ouvir), a duração (30 min a 3 horas) e clique em
+  Criar vídeo. O Claude escreve título, descrição e hashtags; o resto é automático.
+  Deixe os sons desmarcados e escreva para que é o vídeo (ex.: "para meditar"): o Claude pesquisa como são
+  os vídeos mais vistos desse tema, escolhe os sons e o título e conta no painel o que escolheu.
+- Vídeos de sons de **horas** ficam prontos bem mais rápido e sem pesar no computador: o som é feito em
+  blocos de 6 min que se repetem sem emenda, e as imagens formam um ciclo que se repete. O arquivo também
+  ficou mais leve (compressão maior; o YouTube recomprime de qualquer jeito).
+- **Só vídeo longo**: em Pedir ideias, a opção nova faz o vídeo longo sem os Shorts tirados dele.
+
+## 1.20 — 26/11/2026
+- **Legenda pronta para o TikTok**: o `publicacao.txt` de cada Short ganha a seção "PARA O TIKTOK"
+  (e o painel, um botão para copiar): o título sem as hashtags do YouTube, a pergunta do canal e
+  poucas hashtags (3 do assunto + 1 do nicho + #fyp). Também avisa se o vídeo passa de 1 minuto
+  (o TikTok só paga vídeos acima disso) e lembra de marcar "Conteúdo gerado por IA".
+  Para vídeos já feitos: botão **Só textos** na aba Vídeos.
+
 ## 1.19 — 24/11/2026
 - Nada de sobra no disco: quando um vídeo dá erro no meio (ou é cancelado), os clipes baixados
   também são apagados. Antes eles ficavam na pasta e podiam somar centenas de MB.

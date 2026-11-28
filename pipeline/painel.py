@@ -139,6 +139,18 @@ class Tarefa:
             self.video += 1
             self.nome_video = m.group(1)
             self.etapa, self.pct = "Começando", 0.0
+        elif "Sintetizando som" in linha:
+            self.etapa, self.pct = "Criando o som", max(self.pct, 0.02)
+        elif "Juntando os sons" in linha:
+            self.etapa, self.pct = "Criando o som", 0.10
+        elif "Buscando imagens para" in linha:
+            self.etapa, self.pct = "Baixando as imagens", max(self.pct, 0.15)
+        elif "trechos de imagem" in linha:
+            self.etapa, self.pct = "Preparando as imagens", 0.30
+        elif "Montando as transições" in linha:
+            self.etapa, self.pct = "Montando o vídeo", 0.60
+        elif "Juntando imagem e som" in linha:
+            self.etapa, self.pct = "Juntando imagem e som", 0.85
         elif "Cortando o trecho" in linha:
             self.etapa, self.pct = "Cortando o trecho", 0.03
         elif "Preparando o seu vídeo" in linha:
@@ -173,7 +185,7 @@ class Tarefa:
     def _rodar(self, comando, entrada):
         env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
         env.pop("CLAUDECODE", None)
-        claude = self.tipo in ("ideias", "roteiro", "temas", "pronto")
+        claude = self.tipo in ("ideias", "roteiro", "temas", "pronto", "relaxtextos")
         try:
             proc = subprocess.Popen(
                 comando, cwd=RAIZ, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -541,15 +553,21 @@ def ao_terminar_ideias(pedido, formato):
     return tratar
 
 
-def ao_terminar_roteiro(resposta):
-    slug = str(extrair_json(resposta).get("slug", ""))
-    arq = ROTEIROS / f"{slug}.json"
-    if not NOME_SEGURO.match(slug) or not arq.exists():
-        raise ValueError(f"o roteiro '{slug}' não foi salvo")
-    r = json.loads(arq.read_text(encoding="utf-8"))
-    if not r.get("publicacao", {}).get("titulo") or not (r.get("segmentos") or r.get("capitulos")):
-        raise ValueError("o roteiro salvo está incompleto")
-    return {"slug": slug}
+def ao_terminar_roteiro(sem_shorts=False):
+    def tratar(resposta):
+        slug = str(extrair_json(resposta).get("slug", ""))
+        arq = ROTEIROS / f"{slug}.json"
+        if not NOME_SEGURO.match(slug) or not arq.exists():
+            raise ValueError(f"o roteiro '{slug}' não foi salvo")
+        r = json.loads(arq.read_text(encoding="utf-8"))
+        if not r.get("publicacao", {}).get("titulo") or not (r.get("segmentos") or r.get("capitulos")):
+            raise ValueError("o roteiro salvo está incompleto")
+        if sem_shorts and any("short" in c for c in r.get("capitulos", [])):
+            for c in r["capitulos"]:
+                c.pop("short", None)  # a pessoa pediu só o vídeo longo
+            arq.write_text(json.dumps(r, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return {"slug": slug}
+    return tratar
 
 
 def ao_terminar_pronto(voz, formato, animacoes=True):
@@ -604,6 +622,127 @@ def amostra_de_voz(voz):
     return None
 
 
+# ---------------------------------------------------------------- sons relaxantes
+SONS_RELAX = {"chuva_fraca": "Chuva fraca", "chuva_media": "Chuva", "vento_passaros": "Vento e pássaros"}
+DURACOES_RELAX = (30, 60, 120, 180)  # minutos
+AMOSTRAS_SONS = RAIZ / "trabalho" / "sons"
+RELAX = RAIZ / "relax"
+
+PROMPT_RELAX = """{canal}
+
+Vamos publicar um vídeo longo de SONS RELAXANTES (sem narração): {duracao}. As imagens são paisagens
+de natureza do Pexels.
+{sons}
+{ideia}{pesquisa}
+Escreva os textos na língua do canal ({lingua}), pensando em quem procura no YouTube um som para dormir,
+estudar ou relaxar. Títulos desse nicho são diretos: o som, a duração e o uso
+(ex.: "Chuva fraca para dormir 🌧️ 3 horas de som relaxante"). Nada de clickbait ou promessa médica.
+
+Responda SOMENTE com JSON válido, sem nenhum texto antes ou depois:
+{{"sons": ["ids dos sons, na ordem em que tocam"],
+  "porque": "1 frase: por que esses sons e esse título (o que a pesquisa mostrou)",
+  "slug": "minusculas-com-hifen-curto (ex.: chuva-para-dormir-3h)",
+  "tituloTela": "2 a 4 palavras em MAIÚSCULAS para a thumbnail",
+  "titulos": ["nome curto de cada parte, na ordem dos sons (vira capítulo na descrição)"],
+  "publicacao": {{"titulo": "até 90 caracteres, com 1 emoji",
+                  "descricao": "2 a 3 frases calmas: o que a pessoa vai ouvir e para que serve",
+                  "hashtags": ["12 a 15 hashtags sem #, na língua do canal"]}}}}"""
+
+
+def prompt_relax(lista_sons, minutos, ideia=""):
+    """Pedido ao Claude para os textos (e, sem sons marcados, a escolha dos sons) do vídeo relaxante."""
+    duracao = f"{minutos // 60} hora{'s' if minutos >= 120 else ''}" if minutos >= 60 else f"{minutos} minutos"
+    ideia = ideia.strip()[:300]
+    disponiveis = "; ".join(f'"{k}" = {v}' for k, v in SONS_RELAX.items())
+    if lista_sons:
+        sons = ("Sons escolhidos pela pessoa, nesta ordem (cada um ocupa uma parte igual do tempo): "
+                + ", ".join(SONS_RELAX[s] for s in lista_sons) + f'. Devolva em "sons" estes ids: '
+                + json.dumps(lista_sons) + ".")
+    else:
+        sons = (f"A pessoa deixou você escolher os sons. Disponíveis: {disponiveis}. Escolha de 1 a 3, na "
+                "ordem em que devem tocar (cada um ocupa uma parte igual do tempo), o que combinar melhor "
+                "com o uso do vídeo (ex.: dormir pede sons constantes e suaves; meditar e estudar, sons "
+                "calmos e sem mudanças bruscas).")
+    pesquisa = ("Antes de escrever, faça 1 ou 2 buscas rápidas (WebSearch) sobre os vídeos de sons mais "
+                "vistos no YouTube para esse uso (ex.: \"som para meditar\", \"chuva para meditar 1 hora\"): "
+                "que palavras os títulos usam e que sons aparecem. Use isso no título" +
+                (" e na escolha dos sons." if not lista_sons else ".") + "\n")
+    prompt = PROMPT_RELAX.format(
+        canal=descricao_canal(), duracao=duracao, lingua=lingua_canal(), sons=sons, pesquisa=pesquisa,
+        ideia=(f"Uso/clima que a pessoa quer: {ideia}. O título, a descrição e a escolha dos sons precisam seguir "
+               "esse uso (se ela disse meditar, o vídeo é para meditar, não para dormir).\n") if ideia else "")
+    return prompt, duracao
+
+
+def ao_terminar_relax(lista_sons, minutos):
+    def tratar(resposta):
+        dados = extrair_json(resposta)
+        if not lista_sons:  # a pessoa deixou o Claude escolher
+            escolhidos = [s for s in (dados.get("sons") or []) if s in SONS_RELAX]
+            lista_sons[:] = list(dict.fromkeys(escolhidos))[:3] or ["chuva_fraca"]
+        pub = dados.get("publicacao") or {}
+        if not pub.get("titulo") or not pub.get("descricao"):
+            raise ValueError("a resposta veio sem título ou descrição")
+        slug = re.sub(r"[^a-z0-9-]", "", gv_hashtag_slug(str(dados.get("slug") or pub["titulo"])))[:50].strip("-")
+        slug = slug or f"sons-relaxantes-{minutos}min"
+        base, n = slug, 2
+        while (SAIDA / slug).exists() or (RELAX / f"{slug}.json").exists():
+            slug, n = f"{base}-{n}", n + 1
+        textos = {"tituloTela": str(dados.get("tituloTela", ""))[:40], "titulos": dados.get("titulos") or [],
+                  "publicacao": {"titulo": str(pub["titulo"])[:100], "descricao": str(pub["descricao"])[:1500],
+                                 "hashtags": [str(h) for h in (pub.get("hashtags") or [])][:20]}}
+        roteiro = modulo("relaxante").montar_roteiro(slug, lista_sons, minutos, textos)
+        RELAX.mkdir(exist_ok=True)
+        (RELAX / f"{slug}.json").write_text(json.dumps(roteiro, ensure_ascii=False, indent=2) + "\n",
+                                            encoding="utf-8")
+        cmd = [sys.executable, "-I", "-u", "pipeline/relaxante.py", f"relax/{slug}.json"]
+        nomes = " → ".join(SONS_RELAX[s] for s in lista_sons)
+        porque = str(dados.get("porque") or "").strip()[:300]
+        info = [f"Sons: {nomes}. Título: {textos['publicacao']['titulo']}"] + ([porque] if porque else [])
+        return {"slug": slug, "avisos": info, "seguir": {"tipo": "relax", "alvo": slug, "comando": cmd}}
+    return tratar
+
+
+def gv_hashtag_slug(texto):
+    """'Chuva para dormir 3h' -> 'chuva-para-dormir-3h'."""
+    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", sem_acento).strip("-")
+
+
+_MODULOS = {}
+
+
+def modulo(nome):
+    """Carrega um módulo de pipeline/ só quando precisa (relaxante puxa numpy/scipy)."""
+    if nome not in _MODULOS:
+        spec = importlib.util.spec_from_file_location(nome, RAIZ / "pipeline" / f"{nome}.py")
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        _MODULOS[nome] = m
+    return _MODULOS[nome]
+
+
+def amostra_de_som(som):
+    """20 s do som (mp3), para ouvir antes de escolher (fica guardado em trabalho/sons)."""
+    if som not in SONS_RELAX:
+        return None
+    arq = AMOSTRAS_SONS / f"{som}.mp3"
+    if arq.exists() and arq.stat().st_size > 5000:
+        return arq
+    AMOSTRAS_SONS.mkdir(parents=True, exist_ok=True)
+    wav = AMOSTRAS_SONS / f"{som}.wav"
+    sem_janela = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    subprocess.run([sys.executable, "-I", "pipeline/sons.py", som, "20", str(wav)], cwd=RAIZ,
+                   capture_output=True, timeout=120, creationflags=sem_janela)
+    if not wav.exists():
+        return None
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-af",
+                    "loudnorm=I=-24:TP=-3,afade=t=in:d=1,afade=t=out:st=18:d=2", "-b:a", "160k", str(arq)],
+                   capture_output=True, timeout=60, creationflags=sem_janela)
+    wav.unlink(missing_ok=True)
+    return arq if arq.exists() else None
+
+
 def texto_roteiro(r):
     """Narração em texto corrido, para revisar antes de gerar o vídeo."""
     if r.get("capitulos"):
@@ -643,6 +782,7 @@ def ler_publicacao(pasta):
         "descricao": entre(r"=+ DESCRIÇÃO[^\n]*", r"={10,}"),
         "hashtags": entre(r"HASHTAGS COM #", r"\n"),
         "tags": entre(r"HASHTAGS SEM #[^\n]*", r"\n"),
+        "tiktok": entre(r"=+ PARA O TIKTOK[^\n]*", r"={10,}"),
         "duracao": duracao,
         "completo": t,
     }
@@ -858,6 +998,12 @@ class Painel(BaseHTTPRequestHandler):
             if arq:
                 return self.enviar_arquivo(arq)
             return self.erro("vídeo não encontrado", 404)
+        if caminho == "/api/som-amostra":
+            som = parse_qs(urlparse(self.path).query).get("som", [""])[0]
+            arq = amostra_de_som(som)
+            if not arq:
+                return self.erro("não consegui gerar a amostra do som", 503)
+            return self.enviar_arquivo(arq)
         if caminho == "/api/voz-amostra":
             voz = parse_qs(urlparse(self.path).query).get("voz", [""])[0]
             arq = amostra_de_voz(voz)
@@ -1056,7 +1202,8 @@ class Painel(BaseHTTPRequestHandler):
 
         if caminho == "/api/ideias":
             pedido = str(dados.get("pedido", "")).strip()[:600]
-            formato = {"short": "Short (vertical)", "longo": "vídeo longo horizontal + Shorts"}.get(
+            formato = {"short": "Short (vertical)", "longo": "vídeo longo horizontal + Shorts",
+                       "so-longo": "vídeo longo horizontal (sem Shorts)"}.get(
                 dados.get("formato"), "escolha o melhor (Short ou vídeo longo)")
             if not pedido:
                 return self.erro("escreva sobre o que é o vídeo")
@@ -1079,7 +1226,10 @@ class Painel(BaseHTTPRequestHandler):
             if not cmd:
                 return self.erro("não achei o Claude Code neste computador", 500)
             longo = angulo.get("formato") == "longo"
-            modelo = ("exemplos/longo-exemplo.json (vídeo longo com capítulos e blocos short)"
+            sem_shorts = longo and bool(dados.get("semShorts"))
+            modelo = ("exemplos/longo-exemplo.json (vídeo longo com capítulos; NÃO inclua os blocos \"short\": "
+                      "a pessoa quer só o vídeo longo)" if sem_shorts else
+                      "exemplos/longo-exemplo.json (vídeo longo com capítulos e blocos short)"
                       if longo else "exemplos/short-exemplo.json (Short)")
             obs = str(dados.get("obs", "")).strip()[:600]
             prompt = PROMPT_ROTEIRO.format(
@@ -1087,7 +1237,8 @@ class Painel(BaseHTTPRequestHandler):
                 angulo=json.dumps({k: angulo.get(k) for k in ("titulo", "formato", "duracao", "gancho", "resumo")},
                                   ensure_ascii=False, indent=1),
                 obs=f"Observações do usuário: {obs}\n" if obs else "")
-            ok = TAREFA.iniciar("roteiro", angulo["titulo"], cmd, entrada=prompt, ao_terminar=ao_terminar_roteiro)
+            ok = TAREFA.iniciar("roteiro", angulo["titulo"], cmd, entrada=prompt,
+                                ao_terminar=ao_terminar_roteiro(sem_shorts))
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
         if caminho == "/api/chaves":
@@ -1135,6 +1286,23 @@ class Painel(BaseHTTPRequestHandler):
             (CORTES / slug / "montar.json").write_text(json.dumps(
                 {"cortes": escolhidos, "legendas": bool(dados.get("legendas", True))}, ensure_ascii=False), encoding="utf-8")
             ok = TAREFA.iniciar("cortar", slug, py + ["pipeline/cortes.py", "montar", slug], total_videos=len(escolhidos))
+            return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
+
+        if caminho == "/api/relax":
+            lista_sons = [s for s in (dados.get("sons") or []) if s in SONS_RELAX]
+            lista_sons = list(dict.fromkeys(lista_sons))  # vazia: o Claude escolhe
+            try:
+                minutos = int(dados.get("minutos", 60))
+            except (TypeError, ValueError):
+                minutos = 60
+            if minutos not in DURACOES_RELAX:
+                return self.erro("duração inválida")
+            cmd = comando_claude(["Read", "WebSearch"])
+            if not cmd:
+                return self.erro("não achei o Claude Code neste computador", 500)
+            prompt, duracao = prompt_relax(lista_sons, minutos, str(dados.get("ideia", "")))
+            ok = TAREFA.iniciar("relaxtextos", duracao, cmd, entrada=prompt,
+                                ao_terminar=ao_terminar_relax(lista_sons, minutos))
             return self.responder({"ok": ok}) if ok else self.erro("já tem uma tarefa rodando", 409)
 
         if caminho == "/api/roteiro-pronto":

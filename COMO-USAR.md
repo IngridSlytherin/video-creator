@@ -84,7 +84,7 @@ python -I pipeline/gerar_video.py roteiros/meu-video.json
 3. O resultado fica em `saida/<nome-do-video>/`:
    - `video.mp4` — o vídeo pronto
    - `thumbnail.png` — a capa (só no vídeo longo; no Short o YouTube não deixa escolher)
-   - `publicacao.txt` — título, descrição, tags, horário sugerido e créditos
+   - `publicacao.txt` — título, descrição, tags, horário sugerido, legenda para o TikTok (Shorts) e créditos
 
 ## Vídeo longo (horizontal) + Shorts
 - Use `"formato": "longo"` e divida o roteiro em `capitulos` (modelo: `exemplos/longo-exemplo.json`).
@@ -97,9 +97,16 @@ python -I pipeline/gerar_video.py roteiros/meu-video.json
 - Opções: `--sem-shorts` (só o longo) e `--manter-clipes` (não apaga os clipes baixados,
   útil para abrir no Remotion Studio).
 
-## Vídeos de sons relaxantes (10 min a horas)
+## Vídeos de sons relaxantes (30 min a horas)
 Chuva, vento, pássaros... com imagens de natureza do Pexels. O som é **sintetizado por computador**
 (`pipeline/sons.py`), então não tem direitos autorais de terceiros.
+
+**Pelo painel:** Novo vídeo → **🌧️ Sons relaxantes** → marque os sons (▶ ouvir), escolha a duração
+(30 min, 1, 2 ou 3 horas) e clique em **Criar vídeo**. O Claude escreve título, descrição e hashtags;
+o roteiro fica em `relax/` e o vídeo em `saida/`. Com os sons desmarcados, o Claude escolhe por você:
+escreva para que é o vídeo (ex.: "para meditar") e ele pesquisa o que funciona nesse tema.
+
+**Pelo terminal:**
 
 ```bash
 python -I pipeline/sons.py amostras

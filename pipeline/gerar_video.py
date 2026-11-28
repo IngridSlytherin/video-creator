@@ -1098,6 +1098,7 @@ def escrever_publicacao(roteiro, props, pasta):
 {com_cerquilha}"""
 
     thumb = ("- Thumbnail: envie o arquivo thumbnail.png desta pasta.\n" if eh_longo else "")
+    tiktok = "" if eh_longo else secao_tiktok(roteiro, pub, canal, tags, duracao)
     texto = f"""TÍTULO
 {pub['titulo']}
 
@@ -1122,8 +1123,37 @@ SUGESTÃO DE DIA E HORÁRIO
 
 DURAÇÃO: {tempo(duracao)}
 
-{secao_creditos}"""
+{tiktok}{secao_creditos}"""
     (pasta / "publicacao.txt").write_text(texto, encoding="utf-8")
+
+
+def secao_tiktok(roteiro, pub, canal, tags, duracao):
+    """Legenda no jeito do TikTok: o título sem as hashtags do YouTube, a pergunta do canal e
+    poucas hashtags (lá, 3 a 5 funcionam melhor que 30; #shorts não serve)."""
+    titulo = re.sub(r"\s*#\S+", "", pub["titulo"]).strip()
+    # 3 do próprio vídeo (o assunto) + 1 geral do canal (o nicho)
+    fora = ("shorts", "short", "youtubeshorts")
+    do_video = [t for t in map(hashtag, pub.get("hashtags", pub.get("tags", []))) if t and t not in fora]
+    do_canal = [t for t in map(hashtag, canal.get("hashtagsFim", []) + canal.get("hashtagsInicio", []))
+                if t and t not in fora]
+    proprias = list(dict.fromkeys(do_video[:3] + do_canal[:1] + do_video[3:] + do_canal[1:]))[:4]
+    hashtags = " ".join(f"#{t}" for t in [*proprias, "fyp"])
+    legenda = f"{titulo}\n\n{canal['pergunta']}\n\n{hashtags}"
+    if duracao > 60:
+        paga = f"- Duração {tempo(duracao)}: passa de 1 minuto, então conta para as Recompensas para criadores."
+    else:
+        paga = (f"- Duração {tempo(duracao)}: o TikTok só paga (Recompensas para criadores) vídeos com mais "
+                "de 1 minuto. Para os temas mais fortes, use a duração \"longo\" do Short.")
+    ia = ("" if roteiro.get("vozPropria") else
+          '- Em "Mais opções", ative "Conteúdo gerado por IA" (a narração é voz sintética).\n')
+    return f"""================ PARA O TIKTOK (legenda: copie até a próxima linha) ================
+{legenda}
+=============================================================================
+- Envie o video.mp4 desta pasta (não um baixado do YouTube: marca d'água de outra rede é menos mostrada).
+{paga}
+{ia}- Horário: no TikTok o público costuma ser maior à noite (19h às 22h).
+
+"""
 
 
 def so_publicacao(caminho_roteiro):

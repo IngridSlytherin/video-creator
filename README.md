@@ -21,7 +21,7 @@ tags, thumbnail and the best time to post.
 - **Offline backup voice**: if Microsoft's voice service goes down, the video is narrated by a neural voice running on your computer
 - **Cuts from your long videos**: upload a long video of yours; it transcribes the speech locally (Whisper) and Claude picks the best 3–5 moments, which become vertical Shorts with title and captions
 - **Dub your own videos**: paste a script and your video gets voice-over and captions
-- **Relaxing sound videos** (rain, wind, birds) from 10 minutes to hours, with synthesized audio
+- **Relaxing sound videos** (rain, wind, birds) from 30 minutes to 3 hours, straight from the panel, with synthesized audio
 - Videos in **English, Spanish or Portuguese**: voice, captions, script, description and the radar's country all follow the language
 - Everything in a browser panel; you just upload to YouTube
 
@@ -208,6 +208,9 @@ channel; pick one and it writes the script and renders the video. To change how 
 ask ("captions with a dark background", "a map showing where the animal lives"...).
 
 ### Relaxing sound videos
+
+In the panel: **Novo vídeo → 🌧️ Sons relaxantes**. Pick the sounds (with a play button) and the length
+(30 min to 3 hours) and click Criar vídeo. From the terminal:
 
 ```bash
 python -I pipeline/relaxante.py relax/chuva-vento-passaros-12min.json

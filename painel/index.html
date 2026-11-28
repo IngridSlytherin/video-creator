@@ -451,6 +451,39 @@
     <div class="formatos modos" role="radiogroup" aria-label="Como criar o vídeo">
       <label><input type="radio" name="modo" value="ideias" checked> 💡 Pedir ideias ao Claude</label>
       <label><input type="radio" name="modo" value="pronto"> 📋 Já tenho o roteiro</label>
+      <label><input type="radio" name="modo" value="relax"> 🌧️ Sons relaxantes</label>
+    </div>
+    <div class="pedido cartao" id="modo-relax" hidden>
+      <h2>Vídeo longo de sons relaxantes</h2>
+      <p class="sub">Som de natureza sem narração, com paisagens do Pexels. O som é feito pelo computador
+        (sem direitos autorais). O Claude escreve título, descrição e hashtags; o resto é automático.</p>
+      <div class="pronto-opcoes">
+        <div><span class="rotulo">Sons (na ordem; cada um ocupa uma parte igual do vídeo)</span>
+          <p class="sinais" style="margin:0 0 6px">Deixe todos desmarcados para o Claude escolher pela sua ideia.</p>
+          <div class="formatos" id="relax-sons">
+            <label class="voz-op"><input type="checkbox" value="chuva_fraca"> Chuva fraca
+              <button type="button" class="leve pequeno ouvir" data-som="chuva_fraca">▶ ouvir</button></label>
+            <label class="voz-op"><input type="checkbox" value="chuva_media"> Chuva
+              <button type="button" class="leve pequeno ouvir" data-som="chuva_media">▶ ouvir</button></label>
+            <label class="voz-op"><input type="checkbox" value="vento_passaros"> Vento e pássaros
+              <button type="button" class="leve pequeno ouvir" data-som="vento_passaros">▶ ouvir</button></label>
+          </div></div>
+        <div><span class="rotulo">Duração</span>
+          <div class="formatos" role="radiogroup">
+            <label><input type="radio" name="relax-min" value="30"> 30 min</label>
+            <label><input type="radio" name="relax-min" value="60" checked> 1 hora</label>
+            <label><input type="radio" name="relax-min" value="120"> 2 horas</label>
+            <label><input type="radio" name="relax-min" value="180"> 3 horas</label>
+          </div>
+          <p class="sinais" style="margin-top:6px">Nesse nicho, vídeos de 1 a 3 horas costumam render mais.
+            Leva uns 20 a 40 minutos para ficar pronto.</p></div>
+        <div><span class="rotulo">Para que é o vídeo? (opcional; o Claude pesquisa o que funciona nesse tema)</span>
+          <input type="text" id="relax-ideia" maxlength="300" placeholder="Ex.: para meditar, para dormir, para estudar, chuva na floresta"></div>
+      </div>
+      <div class="linha-pedido">
+        <span class="sinais">Você acompanha pela barra lá em cima.</span>
+        <button class="destaque" id="relax-criar">Criar vídeo</button>
+      </div>
     </div>
     <div class="pedido cartao" id="modo-pronto" hidden>
       <h2>Cole o seu roteiro</h2>
@@ -490,6 +523,7 @@
           <label><input type="radio" name="formato" value="" checked> Deixar o Claude escolher</label>
           <label><input type="radio" name="formato" value="short"> Short</label>
           <label><input type="radio" name="formato" value="longo"> Vídeo longo + Shorts</label>
+          <label><input type="radio" name="formato" value="so-longo"> Só vídeo longo</label>
         </div>
         <button class="destaque" id="pedir-ideias">Pedir ideias</button>
       </div>
@@ -747,7 +781,7 @@ function desenharIdeias(dados) {
     </div>`;
   el.querySelectorAll("[data-angulo]").forEach(b => b.onclick = () => {
     const angulo = ideiasAtuais.angulos[+b.dataset.angulo];
-    iniciar("/api/escrever", { angulo, obs: $("#obs-texto").value });
+    iniciar("/api/escrever", { angulo, obs: $("#obs-texto").value, semShorts: ideiasAtuais.formato === "so-longo" });
   });
 }
 
@@ -756,10 +790,31 @@ function lerModo() { try { return localStorage.getItem("modoNovo"); } catch { re
 function salvarModo(v) { try { localStorage.setItem("modoNovo", v); } catch {} }
 function mostrarModo(modo) {
   $("#modo-pronto").hidden = modo !== "pronto";
-  $("#modo-ideias").hidden = modo === "pronto";
+  $("#modo-relax").hidden = modo !== "relax";
+  $("#modo-ideias").hidden = modo === "pronto" || modo === "relax";
 }
 document.querySelectorAll('input[name="modo"]').forEach(r => r.onchange = () => { salvarModo(r.value); mostrarModo(r.value); });
-if (lerModo() === "pronto") { document.querySelector('input[name="modo"][value="pronto"]').checked = true; mostrarModo("pronto"); }
+if (["pronto", "relax"].includes(lerModo())) {
+  document.querySelector(`input[name="modo"][value="${lerModo()}"]`).checked = true;
+  mostrarModo(lerModo());
+}
+
+// ---------- novo vídeo: sons relaxantes
+$("#relax-sons").querySelectorAll("[data-som]").forEach(b => b.onclick = e => {
+  e.preventDefault();
+  const texto = b.textContent;
+  b.textContent = "preparando…";
+  const audio = new Audio("/api/som-amostra?som=" + encodeURIComponent(b.dataset.som));
+  audio.onplaying = () => { b.textContent = "🔊 tocando"; };
+  audio.onended = () => { b.textContent = texto; };
+  audio.onerror = () => { b.textContent = texto; avisar("Não consegui preparar a amostra agora.", 4000); };
+  audio.play().catch(() => {});
+});
+$("#relax-criar").onclick = () => {
+  const sons = [...$("#relax-sons").querySelectorAll("input:checked")].map(i => i.value);
+  const minutos = +document.querySelector('input[name="relax-min"]:checked').value;
+  iniciar("/api/relax", { sons, minutos, ideia: $("#relax-ideia").value });
+};
 
 let vozesDesenhadas = "";
 function desenharVozes() {
@@ -1311,6 +1366,7 @@ async function abrirVideo(pasta) {
           ${campo("Descrição", pub.descricao, "Descrição copiada!")}
           ${campo("Tags — cole no campo Tags do YouTube Studio", pub.tags, "Tags copiadas!")}
           ${campo("Hashtags com #", pub.hashtags, "Hashtags copiadas!")}
+          ${pub.tiktok ? campo("Legenda para o TikTok (título, pergunta e poucas hashtags)", pub.tiktok, "Legenda do TikTok copiada!") : ""}
           ${v.thumbnail ? `<div class="campo thumb"><div class="rot">Thumbnail
               <a href="${arq(pasta, "thumbnail.png")}" download="${esc(pasta)}-thumbnail.png"><button class="leve pequeno">Baixar</button></a></div>
               <img src="${arq(pasta, "thumbnail.png")}" alt="thumbnail"></div>` : ""}
@@ -1462,6 +1518,8 @@ const ETAPAS = {
   temas: ["Lendo o que funciona no canal", "Criando a lista de temas", "Pronto"],
   roteiro: ["Lendo o que funciona no canal", "Conferindo os fatos", "Escrevendo o roteiro", "Pronto"],
   pronto: ["Lendo o que funciona no canal", "Escrevendo o roteiro", "Pronto"],
+  relaxtextos: ["Escrevendo título e descrição", "Pronto"],
+  relax: ["Criando o som", "Baixando as imagens", "Preparando as imagens", "Montando o vídeo", "Juntando imagem e som", "Pronto"],
   cortes: ["Preparando o vídeo", "Transcrevendo a fala", "Escolhendo os melhores momentos", "Pronto"],
   cortar: ["Cortando o trecho", "Preparando a montagem", "Montando o vídeo", "Finalizando o arquivo", "Pronto"],
 };
@@ -1476,10 +1534,12 @@ const NOMES_TAREFA = {
   temas: t => `Preparando o radar para "${t.alvo}"`,
   roteiro: t => `Roteiro: ${t.alvo}`,
   pronto: () => "Preparando o seu roteiro",
+  relaxtextos: t => `Sons relaxantes (${t.alvo})`,
+  relax: t => `Sons relaxantes: ${t.alvo}`,
   cortes: () => "Procurando os melhores momentos",
   cortar: () => "Criando os Shorts dos cortes",
 };
-const DICA_TEMPO = { cortes: "a transcrição leva ~1/3 do tempo do vídeo", cortar: "uns 2 a 4 min por corte", pronto: "1 a 2 min; depois o vídeo começa sozinho", ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
+const DICA_TEMPO = { cortes: "a transcrição leva ~1/3 do tempo do vídeo", cortar: "uns 2 a 4 min por corte", pronto: "1 a 2 min; depois o vídeo começa sozinho", relaxtextos: "uns 30 s; depois o vídeo começa sozinho", relax: "uns 20 a 40 min", ideias: "costuma levar 30 s", roteiro: "costuma levar 1 a 3 min", temas: "costuma levar 2 a 4 min" };
 
 async function iniciar(caminho, corpo) {
   try { await api(caminho, corpo); }
@@ -1523,10 +1583,13 @@ function desenharTarefa() {
   $("#dub-botao").disabled = t.rodando;
   document.querySelectorAll("[data-angulo], #gerar-previa").forEach(b => b.disabled = t.rodando);
   $("#pronto-criar").disabled = t.rodando || estado.claude !== true;
+  $("#relax-criar").disabled = t.rodando || estado.claude !== true;
   $("#corte-analisar").disabled = t.rodando || !corteArquivo;
   document.querySelectorAll("#cortes-criar").forEach(b => b.disabled = t.rodando);
   $("#tarefa-avisos").innerHTML = (t.avisos || []).length
-    ? `<strong>⚠️ Pontos para conferir no seu texto</strong> (o vídeo usa o texto como está):<ul>${t.avisos.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`
+    ? (t.tipo === "relax" ? "<strong>🌧️ O que o Claude escolheu</strong>"
+       : "<strong>⚠️ Pontos para conferir no seu texto</strong> (o vídeo usa o texto como está):") +
+      `<ul>${t.avisos.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`
     : "";
 }
 $("#tarefa-fechar").onclick = () => { tarefaFechada = true; desenharTarefa(); };
@@ -1564,7 +1627,7 @@ async function acompanhar() {
     desenharTarefa();
     mostrarPrevia(resultado.slug);
   }
-  if (tipo === "gerar") avisar("Vídeo pronto! Veja na aba Vídeos prontos.", 5000);
+  if (tipo === "gerar" || tipo === "relax") avisar("Vídeo pronto! Veja na aba Vídeos prontos.", 5000);
   if (tipo === "cortes") { tarefaFechada = true; desenharTarefa(); irPara("cortes"); carregarCortes(estado.tarefa.alvo); }
   if (tipo === "cortar") { avisar("Shorts prontos! Veja na aba Vídeos prontos.", 5000); irPara("videos"); }
   if (tipo === "dublar") {

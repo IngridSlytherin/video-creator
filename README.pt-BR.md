@@ -20,7 +20,7 @@ para publicar: vídeo, título, descrição, tags, thumbnail e o melhor horário
 - **Voz reserva offline**: se a voz da Microsoft cair, o vídeo sai com uma voz neural que roda no seu computador
 - **Cortes dos seus vídeos longos**: envie um vídeo longo seu; o app transcreve a fala no seu computador (Whisper) e o Claude escolhe os 3 a 5 melhores momentos, que viram Shorts verticais com título e legenda
 - **Dublar o seu próprio vídeo**: cole um texto e ele ganha narração e legenda
-- **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 10 minutos a horas, com som sintetizado
+- **Vídeos de sons relaxantes** (chuva, vento, pássaros) de 30 minutos a 3 horas, direto pelo painel, com som sintetizado
 - Vídeos em **português, inglês ou espanhol**: voz, legenda, roteiro, descrição e radar do país mudam juntos
 - Tudo numa interface no navegador; você só publica no YouTube
 
@@ -197,6 +197,9 @@ você escolhe um e ele escreve o roteiro e gera o vídeo. Para mudar o visual do
 ("legenda com fundo escuro", "mapa mostrando onde o animal vive"...).
 
 ### Vídeos de sons relaxantes
+
+No painel: **Novo vídeo → 🌧️ Sons relaxantes**. Escolha os sons (com botão para ouvir) e a duração
+(30 min a 3 horas) e clique em Criar vídeo. Pelo terminal:
 
 ```bash
 python -I pipeline/relaxante.py relax/chuva-vento-passaros-12min.json
